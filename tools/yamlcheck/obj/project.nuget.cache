@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "uxaz5WNzi/U=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Craig\\Desktop\\Misc\\Prototypes\\waypoint-app\\tools\\yamlcheck\\YamlCheck.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Craig\\.nuget\\packages\\yamldotnet\\16.2.0\\yamldotnet.16.2.0.nupkg.sha512"
+  ],
+  "logs": []
+}

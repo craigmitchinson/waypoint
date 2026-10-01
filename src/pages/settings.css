@@ -1,0 +1,171 @@
+/* Settings only: the tab rows, the field grids, the inline add forms and the Data actions.
+   Tokens only. */
+.wp-settings-tabs button {
+  height: 28px;
+  padding: 0 10px;
+  font-size: var(--wp-fs-label);
+  font-weight: 500;
+}
+
+.wp-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 16px;
+  margin-bottom: 10px;
+}
+
+.wp-settings-card__wide {
+  grid-column: 1 / -1;
+}
+
+.wp-settings-grid .wp-field input:not([type="checkbox"]),
+.wp-settings-grid .wp-field select,
+.wp-settings-table input,
+.wp-settings-table select {
+  height: 28px;
+  padding: 0 8px;
+}
+
+.wp-settings-table input,
+.wp-settings-table select {
+  font: inherit;
+  font-size: var(--wp-fs-body);
+  color: var(--c-ink);
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+}
+
+.wp-settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.wp-settings-add {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.wp-settings-add .wp-field {
+  flex: 1;
+  max-width: 320px;
+}
+
+.wp-settings-preview {
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+  background: var(--c-panel);
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  font-size: var(--wp-fs-label);
+}
+
+.wp-settings-preview p {
+  margin: 0 0 4px;
+}
+
+/* Activity: the log scrolls on its own so the search and the count stay put. */
+.wp-settings-activity {
+  border-top: 1px solid var(--c-line);
+}
+
+.wp-settings-when {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.wp-settings-data {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.wp-settings-data p {
+  margin: 0 0 8px;
+  color: var(--c-muted);
+  font-size: var(--wp-fs-label);
+}
+
+/* The Export card: the buttons stack, and the caption sits under the one that produced it. */
+.wp-settings-data .wp-settings-export {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.wp-settings-data .wp-settings-export p {
+  margin: 0;
+}
+
+.wp-settings-data label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: var(--wp-fs-label);
+  font-weight: 500;
+  color: var(--c-muted);
+}
+
+/* Power Apps preview: 32px controls and a roomier field grid. */
+html[data-mode="power"] .wp-settings-grid {
+  gap: 12px 16px;
+}
+
+html[data-mode="power"] .wp-settings-grid .wp-field input:not([type="checkbox"]),
+html[data-mode="power"] .wp-settings-grid .wp-field select,
+html[data-mode="power"] .wp-settings-table input,
+html[data-mode="power"] .wp-settings-table select {
+  height: var(--pa-control-height);
+  padding: 0 10px;
+  font-size: var(--pa-fs-body);
+  border-radius: var(--pa-radius);
+  border-color: var(--pa-neutral-stroke-1);
+}
+
+html[data-mode="power"] .wp-settings-preview {
+  border-color: var(--pa-neutral-stroke-2);
+  border-radius: var(--pa-radius);
+  padding: 12px 16px;
+  font-size: var(--pa-fs-body);
+}
+
+html[data-mode="power"] .wp-settings-data p,
+html[data-mode="power"] .wp-settings-data label {
+  font-size: var(--pa-fs-caption);
+}
+
+html[data-mode="power"] .wp-settings-data label {
+  color: var(--pa-neutral-fg-1);
+  font-weight: 600;
+}
+
+html[data-mode="power"] .wp-settings-data button {
+  height: var(--pa-control-height);
+  padding: 0 12px;
+  font: inherit;
+  font-size: var(--pa-fs-body);
+  color: var(--pa-neutral-fg-1);
+  background: var(--pa-neutral-bg-1);
+  border: 1px solid var(--pa-neutral-stroke-1);
+  border-radius: var(--pa-radius);
+  cursor: pointer;
+}
+
+html[data-mode="power"] .wp-settings-data button:not([disabled]):hover {
+  background: var(--pa-neutral-bg-3);
+}
+
+html[data-mode="power"] .wp-settings-data button[disabled] {
+  color: var(--pa-neutral-fg-3);
+  border-color: var(--pa-neutral-stroke-2);
+  cursor: not-allowed;
+}
+
+html[data-mode="power"] .wp-settings-data input[type="file"] {
+  font: inherit;
+  font-size: var(--pa-fs-body);
+  color: var(--pa-neutral-fg-1);
+}

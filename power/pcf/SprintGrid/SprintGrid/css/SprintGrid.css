@@ -1,0 +1,298 @@
+/* The sprint grid, self-contained. The colours are the Power skin's own resolved values
+   (Fluent roles mapped onto the suite's tokens), written literally because a code component
+   cannot read the host page's custom properties. Light and dark are switched on data-theme. */
+
+.wp-sg {
+  --c-surface: #FFFFFF;
+  --c-panel: #F7F5F0;
+  --c-panel-alt: #EFECE5;
+  --c-line: #D9D4CC;
+  --c-gridline: #E4DFD6;
+  --c-ink: #0B3239;
+  --c-muted: #838E8F;
+  --c-focus: #0B3239;
+  --c-red: #E0432E;
+  --c-purple-dk: #6A5BA8;
+  --c-pink-mid: #FFCCD9;
+  --c-brand-mid: #1C4A52;
+  --c-brand-soft: #3E6B72;
+  --c-warn: #B5762B;
+  --c-bad: #E0432E;
+
+  --wp-fs-label: 12px;
+  --radius: 4px;
+  --wp-sg-name: 200px;
+
+  box-sizing: border-box;
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system, sans-serif;
+  font-size: var(--wp-fs-label);
+}
+
+.wp-sg[data-theme="dark"] {
+  --c-surface: #17201F;
+  --c-panel: #1C2522;
+  --c-panel-alt: #1F2A27;
+  --c-line: #2C3835;
+  --c-gridline: #283431;
+  --c-ink: #EAF1EE;
+  --c-muted: #7D8C8A;
+  --c-focus: #EAF1EE;
+  --c-red: #FF6052;
+  --c-purple-dk: #B6A8E8;
+  --c-pink-mid: #4A3038;
+  --c-brand-mid: #2A6E7A;
+  --c-brand-soft: #357E8A;
+  --c-warn: #D6A23D;
+  --c-bad: #FF6052;
+}
+
+.wp-sg *,
+.wp-sg *::before,
+.wp-sg *::after {
+  box-sizing: border-box;
+}
+
+.wp-sg__grid {
+  font-size: var(--wp-fs-label);
+}
+
+.wp-sg__row {
+  display: grid;
+  grid-template-columns: var(--wp-sg-name) repeat(var(--wp-sg-days), minmax(0, 1fr));
+  height: 32px;
+  border-bottom: 1px solid var(--c-gridline);
+}
+
+.wp-sg__row--head {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  height: 32px;
+  background: var(--c-panel);
+}
+
+/* The squad's name stays under the day header while its own people scroll past. */
+.wp-sg__row--group {
+  position: sticky;
+  top: 32px;
+  z-index: 3;
+  height: 28px;
+  background: var(--c-panel-alt);
+}
+
+.wp-sg__name {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px;
+  background: var(--c-surface);
+  border-right: 1px solid var(--c-line);
+  overflow: hidden;
+}
+
+.wp-sg__name--head,
+.wp-sg__row--head .wp-sg__name {
+  background: var(--c-panel);
+  font-weight: 500;
+  color: var(--c-muted);
+}
+
+.wp-sg__row--group .wp-sg__name {
+  background: var(--c-panel-alt);
+}
+
+.wp-sg__avatar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--c-panel-alt);
+  color: var(--c-ink);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.wp-sg__day {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 8px;
+  line-height: 1.3;
+  border-right: 1px solid var(--c-gridline);
+  overflow: hidden;
+}
+
+.wp-sg__day-name {
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--c-muted);
+}
+
+.wp-sg__day-date {
+  min-width: 0;
+  font-weight: 500;
+  color: var(--c-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* A day outside the quarter carries a dot; the header's title says so in words. */
+.wp-sg__day-dot {
+  flex: none;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--c-muted);
+}
+
+.wp-sg__group-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wp-sg__group-meta {
+  grid-column: 2 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 10px;
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.wp-sg__person {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.wp-sg__person-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wp-sg__person-line {
+  display: flex;
+  align-items: baseline;
+  min-width: 0;
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.wp-sg__person-role {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wp-sg__person-figs {
+  flex: none;
+}
+
+/* One line of text per cell; the status is a border down its left edge and a word in the text. */
+.wp-sg__cell {
+  font: inherit;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  padding: 0 6px;
+  background: transparent;
+  color: inherit;
+  border: 0;
+  border-left: 6px solid transparent;
+  border-right: 1px solid var(--c-gridline);
+  cursor: pointer;
+  overflow: hidden;
+  text-align: left;
+}
+
+.wp-sg__cell:focus-visible {
+  outline: 2px solid var(--c-focus);
+  outline-offset: -2px;
+}
+
+.wp-sg__cell-plus {
+  flex: none;
+  font-weight: 600;
+  color: var(--c-muted);
+}
+
+.wp-sg__cell-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wp-sg__cell.wp-cell-open {
+  border-left-color: var(--c-red);
+}
+
+.wp-sg__cell.wp-cell-leave {
+  border-left-color: var(--c-purple-dk);
+}
+
+.wp-sg__cell.wp-cell-training {
+  border-left-color: var(--c-pink-mid);
+}
+
+.wp-sg__cell.wp-cell-bankhol {
+  border-left-color: var(--c-brand-mid);
+}
+
+.wp-sg__cell.wp-cell-work {
+  border-left-color: var(--c-brand-soft);
+}
+
+.wp-sg__cell.wp-cell-atrisk {
+  border-left-color: var(--c-warn);
+}
+
+.wp-sg__cell.wp-cell-blocked {
+  border-left-color: var(--c-bad);
+}
+
+.wp-sg__empty {
+  padding: 12px;
+  color: var(--c-muted);
+}
+
+.wp-sg__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

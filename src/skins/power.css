@@ -1,0 +1,863 @@
+/* Power Apps preview skin: the app dressed as a canvas app built with Fluent 2
+   modern controls. Applied under html[data-mode="power"] only; Studio mode never
+   sees a line of it.
+
+   The --pa-* definitions map Fluent's roles (neutral backgrounds, foregrounds and
+   strokes, brand, status) onto the suite's own tokens rather than reproducing
+   Fluent's literal neutral ramp: the mock reads as Fluent in layout and type, but
+   its colours still come from @ccs/ui. */
+
+html[data-mode="power"] {
+  /* Fluent roles, mapped onto the suite's light neutrals */
+  --pa-neutral-bg-1: var(--c-surface);
+  --pa-neutral-bg-2: var(--c-cream);
+  --pa-neutral-bg-3: var(--c-panel);
+  --pa-neutral-fg-1: var(--c-ink);
+  --pa-neutral-fg-2: var(--c-muted);
+  --pa-neutral-fg-3: color-mix(in srgb, var(--c-muted) 75%, var(--c-bg));
+  --pa-neutral-stroke-1: var(--c-line);
+  --pa-neutral-stroke-2: var(--c-gridline);
+
+  /* Brand and status, from the suite's own tokens */
+  --pa-brand-bg: var(--c-brand);
+  --pa-brand-bg-hover: var(--c-brand-mid);
+  --pa-brand-fg: #ffffff;
+  --pa-status-good: var(--c-good);
+  --pa-status-warn: var(--c-warn);
+  --pa-status-bad: var(--c-bad);
+  --pa-focus-stroke: var(--c-focus);
+
+  /* Fluent metrics */
+  --pa-radius: 4px;
+  --pa-control-height: 32px;
+  --pa-shadow-2: 0 1px 2px color-mix(in srgb, var(--c-ink) 7%, transparent);
+  --pa-row: 36px;
+  --pa-font: "Segoe UI", "Segoe UI Web (West European)", -apple-system, sans-serif;
+
+  /* Fluent 2 type ramp, each size with the line height it is drawn on. --pa-fs-dense
+     is the DetailsList body: Fluent runs lists at 12 to 14, and 13 keeps a row on one
+     line. --pa-fs-large-title is the figure size for the brand band, not Fluent's 40. */
+  --pa-fs-caption: 12px;
+  --pa-lh-caption: 16px;
+  --pa-fs-dense: 13px;
+  --pa-lh-dense: 18px;
+  --pa-fs-body: 14px;
+  --pa-lh-body: 20px;
+  --pa-fs-subtitle: 16px;
+  --pa-lh-subtitle: 22px;
+  --pa-fs-title: 20px;
+  --pa-lh-title: 26px;
+  --pa-fs-large-title: 28px;
+  --pa-lh-large-title: 36px;
+
+  /* Fluent renders the whole surface in Segoe. The mono face stays for figures. */
+  --font-body: var(--pa-font);
+  --font-display: var(--pa-font);
+
+  /* The one type scale, scaled out to Fluent's sizes. */
+  --wp-fs-display: var(--pa-fs-title);
+  --wp-fs-number: var(--pa-fs-title);
+  --wp-fs-heading: var(--pa-fs-subtitle);
+  --wp-fs-body: var(--pa-fs-dense);
+  --wp-fs-label: var(--pa-fs-caption);
+  --wp-fs-kicker: var(--pa-fs-caption);
+  --wp-track: normal;
+  --wp-row: var(--pa-row);
+  --wp-rail-w: 240px;
+}
+
+/* Fluent roles, mapped onto the suite's dark neutrals: the app header and nav sit on
+   --c-cream/--c-panel, a band lifted against the --c-bg content region, cards on
+   --c-surface. */
+html[data-mode="power"][data-theme="dark"] {
+  --pa-neutral-bg-1: var(--c-surface);
+  --pa-neutral-bg-2: var(--c-cream);
+  --pa-neutral-bg-3: var(--c-panel);
+  --pa-neutral-fg-1: var(--c-ink);
+  --pa-neutral-fg-2: var(--c-muted);
+  --pa-neutral-fg-3: color-mix(in srgb, var(--c-muted) 75%, var(--c-bg));
+  --pa-neutral-stroke-1: var(--c-line);
+  --pa-neutral-stroke-2: var(--c-gridline);
+  --pa-shadow-2: none;
+  --pa-focus-stroke: var(--c-focus);
+}
+
+/* The app's named colours point at the Fluent ramp for the length of the mock. They sit on the
+   body, a level under the --pa-* definitions, so the ramp still reads the theme's own tokens from
+   the root instead of chasing these aliases back into a cycle that resolves to nothing. */
+html[data-mode="power"] body {
+  --c-bg: var(--pa-neutral-bg-3);
+  --c-surface: var(--pa-neutral-bg-1);
+  --c-panel: var(--pa-neutral-bg-2);
+  --c-panel-alt: var(--pa-neutral-bg-3);
+  --c-line: var(--pa-neutral-stroke-1);
+  --c-gridline: var(--pa-neutral-stroke-2);
+  --c-ink: var(--pa-neutral-fg-1);
+  --c-muted: var(--pa-neutral-fg-3);
+  --c-focus: var(--pa-focus-stroke);
+  --radius: var(--pa-radius);
+}
+
+/* ---- the canvas: fixed 1600x900, centred on a neutral backdrop ---- */
+html[data-mode="power"] body {
+  background: color-mix(in srgb, var(--c-panel-alt) 70%, var(--c-ink) 6%);
+}
+
+html[data-mode="power"][data-theme="dark"] body {
+  background: color-mix(in srgb, var(--c-bg) 80%, black);
+}
+
+.pa-stage {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: color-mix(in srgb, var(--c-panel-alt) 70%, var(--c-ink) 6%);
+}
+
+html[data-mode="power"][data-theme="dark"] .pa-stage {
+  background: color-mix(in srgb, var(--c-bg) 80%, black);
+}
+
+
+.pa-fit {
+  flex: none;
+  overflow: hidden;
+}
+
+.pa-canvas {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--c-bg);
+  color: var(--pa-neutral-fg-1);
+  border: 1px solid var(--c-line);
+  border-radius: 8px;
+  box-shadow: var(--glass-shadow);
+}
+
+/* ---- app header ---- */
+.pa-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 48px;
+  padding: 0 16px;
+  background: var(--pa-neutral-bg-2);
+  border-bottom: 1px solid var(--pa-neutral-stroke-2);
+}
+
+.pa-header__icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--pa-radius);
+  background: var(--pa-brand-bg);
+  color: var(--pa-brand-fg);
+  font-size: var(--pa-fs-caption);
+  font-weight: 600;
+}
+
+.pa-header__title {
+  font-size: var(--pa-fs-body);
+  line-height: var(--pa-lh-body);
+  font-weight: 600;
+  color: var(--pa-neutral-fg-1);
+}
+
+.pa-header .wp-pill {
+  font-size: var(--pa-fs-caption);
+  line-height: var(--pa-lh-caption);
+  font-weight: 400;
+}
+
+.pa-header__search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 320px;
+  height: var(--pa-control-height);
+  margin-left: auto;
+  padding: 0 10px;
+  border: 1px solid var(--pa-neutral-stroke-1);
+  border-radius: var(--pa-radius);
+  background: var(--pa-neutral-bg-1);
+  color: var(--pa-neutral-fg-3);
+}
+
+.pa-header__search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--pa-fs-dense);
+  line-height: var(--pa-lh-dense);
+  color: var(--pa-neutral-fg-1);
+}
+
+.pa-header__search:focus-within {
+  border-bottom: 2px solid var(--pa-brand-bg);
+}
+
+.pa-header__btn {
+  display: grid;
+  place-items: center;
+  width: var(--pa-control-height);
+  height: var(--pa-control-height);
+  padding: 0;
+  border: 0;
+  border-radius: var(--pa-radius);
+  background: none;
+  color: var(--pa-neutral-fg-2);
+  cursor: pointer;
+}
+
+.pa-header__btn:hover {
+  background: var(--pa-neutral-bg-3);
+}
+
+.pa-header .wp-avatar {
+  width: var(--pa-control-height);
+  height: var(--pa-control-height);
+  font-family: var(--pa-font);
+  font-size: var(--pa-fs-caption);
+  font-weight: 600;
+  background: var(--pa-brand-bg);
+  color: var(--pa-brand-fg);
+}
+
+/* ---- shell, rail and nav: Creator Kit left navigation ---- */
+.pa-canvas .wp-shell {
+  flex: 1 1 auto;
+  min-height: 0;
+  align-items: stretch;
+  overflow: hidden;
+  font-size: var(--pa-fs-dense);
+  line-height: var(--pa-lh-dense);
+  background: var(--c-bg);
+}
+
+.pa-canvas .wp-rail {
+  position: static;
+  height: auto;
+  padding: 8px 0;
+  background: var(--pa-neutral-bg-2);
+  color: var(--pa-neutral-fg-1);
+  border: 0;
+  border-right: 1px solid var(--pa-neutral-stroke-2);
+  box-shadow: none;
+}
+
+/* The canvas content region never scrolls as a whole: it is a column, and the page
+   inside it hands the remaining height to its own scrolling region (.wp-fill). */
+.pa-canvas .wp-main {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  padding: 16px 20px;
+  background: var(--c-bg);
+}
+
+html[data-mode="power"] .wp-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* Once a page names its scrolling region the head stays put and only that region moves.
+   Until it does, the page itself scrolls rather than losing what falls off the canvas. */
+html[data-mode="power"] .wp-page:has(.wp-fill) {
+  overflow: hidden;
+}
+
+html[data-mode="power"] .wp-fill {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* The app header already carries the name, so the rail keeps only the hamburger, sitting on the
+   same 36px grid as the nav items. */
+html[data-mode="power"] .wp-rail__head,
+html[data-mode="power"] .wp-shell.is-collapsed .wp-rail__head {
+  display: flex;
+  align-items: center;
+  padding: 0 4px 8px;
+}
+
+html[data-mode="power"] .wp-rail__identity,
+html[data-mode="power"] .wp-monogram {
+  display: none;
+}
+
+/* 3px of border plus 4px of margin puts a nav icon 17px in; the toggle matches it. */
+html[data-mode="power"] .wp-nav-toggle {
+  width: 36px;
+  height: 36px;
+  margin: 0 0 0 3px;
+  border: 0;
+  background: none;
+  color: var(--pa-neutral-fg-2);
+  border-radius: var(--pa-radius);
+}
+
+html[data-mode="power"] .wp-nav-toggle:hover {
+  background: var(--pa-neutral-bg-3);
+}
+
+html[data-mode="power"] .wp-wordmark,
+html[data-mode="power"] .wp-monogram {
+  font-family: var(--pa-font);
+  font-size: var(--pa-fs-subtitle);
+  font-weight: 600;
+  color: var(--pa-neutral-fg-1);
+}
+
+html[data-mode="power"] .wp-monogram {
+  font-size: 24px;
+}
+
+html[data-mode="power"] .wp-kicker,
+html[data-mode="power"] .wp-nav__group-label {
+  font-family: var(--pa-font);
+  font-size: var(--pa-fs-caption);
+  line-height: var(--pa-lh-caption);
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--pa-neutral-fg-3);
+}
+
+html[data-mode="power"] .wp-nav__group-label {
+  padding: 0 12px;
+  margin: 12px 0 2px;
+}
+
+html[data-mode="power"] .wp-nav__link {
+  height: 36px;
+  gap: 10px;
+  margin: 0 4px;
+  padding: 0 10px;
+  border-radius: var(--pa-radius);
+  border-left: 3px solid transparent;
+  font-size: var(--pa-fs-body);
+  line-height: var(--pa-lh-body);
+  font-weight: 400;
+  color: var(--pa-neutral-fg-1);
+}
+
+html[data-mode="power"] .wp-nav__link:hover {
+  background: var(--pa-neutral-bg-3);
+  color: var(--pa-neutral-fg-1);
+}
+
+html[data-mode="power"] .wp-nav__link[aria-current="page"] {
+  background: var(--pa-neutral-bg-3);
+  border-left-color: var(--pa-brand-bg);
+  color: var(--pa-neutral-fg-1);
+  font-weight: 600;
+}
+
+html[data-mode="power"] .wp-shell.is-collapsed .wp-nav__link,
+html[data-mode="power"] .wp-shell.is-collapsed .wp-theme-toggle {
+  justify-content: center;
+  padding: 0;
+}
+
+html[data-mode="power"] .wp-theme-toggle {
+  height: var(--pa-control-height);
+  margin: 6px 4px 0;
+  padding: 0 10px;
+  font-size: var(--pa-fs-caption);
+  line-height: var(--pa-lh-caption);
+  font-weight: 400;
+  border: 1px solid var(--pa-neutral-stroke-1);
+  border-radius: var(--pa-radius);
+  background: var(--pa-neutral-bg-1);
+  color: var(--pa-neutral-fg-1);
+}
+
+html[data-mode="power"] .wp-theme-toggle:hover {
+  background: var(--pa-neutral-bg-3);
+}
+
+html[data-mode="power"] .ccs-on-brand :focus-visible {
+  outline-color: var(--pa-focus-stroke);
+}
+
+/* ---- headings: Subtitle 1 for the view, Subtitle 2 for everything under it ---- */
+html[data-mode="power"] .wp-main h1 {
+  font-size: var(--pa-fs-title);
+  line-height: var(--pa-lh-title);
+  font-weight: 600;
+}
+
+html[data-mode="power"] .wp-lede {
+  display: none;
+}
+
+html[data-mode="power"] .wp-section-head {
+  flex: 0 0 44px;
+  height: 44px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+html[data-mode="power"] .wp-section-head__row {
+  display: flex;
+  align-items: baseline;
+}
+
+html[data-mode="power"] .wp-section-eyebrow {
+  margin: 0;
+  font-size: var(--pa-fs-caption);
+  line-height: var(--pa-lh-caption);
+  font-weight: 400;
+  color: var(--pa-neutral-fg-2);
+}
+
+html[data-mode="power"] .wp-section-eyebrow::after {
+  content: "\00b7";
+  margin: 0 8px;
+  color: var(--pa-neutral-fg-2);
+}
+
+html[data-mode="power"] .wp-h2,
+html[data-mode="power"] .wp-card-title,
+html[data-mode="power"] .wp-drawer__head h2,
+html[data-mode="power"] .wp-dialog h2 {
+  font-size: var(--pa-fs-subtitle);
+  line-height: var(--pa-lh-subtitle);
+  font-weight: 600;
+}
+
+/* ---- cards, tiles and bands ---- */
+html[data-mode="power"] .wp-card,
+html[data-mode="power"] .wp-tile {
+  padding: 16px;
+  background: var(--pa-neutral-bg-1);
+  border: 1px solid var(--pa-neutral-stroke-2);
+  border-radius: var(--pa-radius);
+  box-shadow: var(--pa-shadow-2);
+}
+
+html[data-mode="power"] .wp-band {
+  background: var(--pa-brand-bg);
+  border-radius: var(--pa-radius);
+  padding: 16px;
+}
+
+/* Labels are Caption 1 regular: only headings, table headers, form labels, the selected
+   pivot tab and primary buttons carry a 600 in this mode. */
+html[data-mode="power"] .wp-band__kicker,
+html[data-mode="power"] .wp-stat__label,
+html[data-mode="power"] .wp-eyebrow,
+html[data-mode="power"] .wp-tile dt {
+  font-family: var(--pa-font);
+  font-size: var(--pa-fs-caption);
+  line-height: var(--pa-lh-caption);
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+html[data-mode="power"] .wp-eyebrow,
+html[data-mode="power"] .wp-tile dt,
+html[data-mode="power"] .wp-stat:not(.wp-stat--on-brand) .wp-stat__label {
+  color: var(--pa-neutral-fg-2);
+}
+
+html[data-mode="power"] .wp-stat__sub,
+html[data-mode="power"] .wp-tile p {
+  font-size: var(--pa-fs-caption);
+  line-height: var(--pa-lh-caption);
+  font-weight: 400;
+}
+
+html[data-mode="power"] .wp-stat:not(.wp-stat--on-brand) .wp-stat__sub {
+  color: var(--pa-neutral-fg-2);
+  opacity: 1;
+}
+
+/* Fluent renders figures in Segoe, not a mono face; tabular digits keep them aligned. */
+html[data-mode="power"] .wp-stat__value,
+html[data-mode="power"] .wp-stat__unit,
+html[data-mode="power"] .wp-tile dd,
+html[data-mode="power"] .wp-lifecycle__count,
+html[data-mode="power"] .wp-num {
+  font-family: var(--pa-font);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Subtitle 1 on a surface; the brand band is the one place a figure grows. */
+html[data-mode="power"] .wp-stat__value,
+html[data-mode="power"] .wp-tile dd,
+html[data-mode="power"] .wp-lifecycle__count {
+  font-size: var(--pa-fs-title);
+  line-height: var(--pa-lh-title);
+}
+
+html[data-mode="power"] .wp-stat--on-brand .wp-stat__value {
+  font-size: var(--pa-fs-large-title);
+  line-height: var(--pa-lh-large-title);
+}
+
+html[data-mode="power"] .wp-stat__unit {
+  font-size: var(--pa-fs-caption);
+  line-height: var(--pa-lh-caption);
+  font-weight: 400;
+}
+
+html[data-mode="power"] .wp-stat-row > * {
+  border-left: 1px solid var(--pa-neutral-stroke-2);
+}
+
+/* ---- tables: the Fluent DetailsList ---- */
+html[data-mode="power"] .wp-table {
+  font-size: var(--pa-fs-dense);
+  line-height: var(--pa-lh-dense);
+}
+
+html[data-mode="power"] .wp-table th {
+  height: 40px;
+  font-size: var(--pa-fs-caption);
+  line-height: var(--pa-lh-caption);
+  font-weight: 600;
+  color: var(--pa-neutral-fg-2);
+  border-bottom: 1px solid var(--pa-neutral-stroke-2);
+}
+
+html[data-mode="power"] .wp-table tbody tr {
+  height: var(--pa-row);
+}
+
+html[data-mode="power"] .wp-table tbody tr:hover {
+  background: var(--pa-neutral-bg-2);
+}
+
+html[data-mode="power"] .wp-table td {
+  border-bottom: 1px solid var(--pa-neutral-stroke-2);
+}
+
+/* ---- buttons ---- */
+html[data-mode="power"] .wp-btn-primary,
+html[data-mode="power"] .wp-drawer__foot button,
+html[data-mode="power"] .wp-dialog__actions button {
+  height: var(--pa-control-height);
+  padding: 0 12px;
+  border-radius: var(--pa-radius);
+  font-size: var(--pa-fs-body);
+  line-height: var(--pa-lh-body);
+}
+
+html[data-mode="power"] .wp-btn-primary {
+  background: var(--pa-brand-bg);
+  border: 1px solid var(--pa-brand-bg);
+  color: var(--pa-brand-fg);
+}
+
+html[data-mode="power"] .wp-btn-primary:hover {
+  background: var(--pa-brand-bg-hover);
+  border-color: var(--pa-brand-bg-hover);
+}
+
+html[data-mode="power"] .wp-drawer__foot button,
+html[data-mode="power"] .wp-dialog__actions button {
+  background: var(--pa-neutral-bg-1);
+  border: 1px solid var(--pa-neutral-stroke-1);
+  color: var(--pa-neutral-fg-1);
+}
+
+/* ---- tabs: Fluent pivot. The skin owns it; no page repeats these rules. ---- */
+html[data-mode="power"] .wp-tabs {
+  gap: 0;
+  border-bottom: 1px solid var(--pa-neutral-stroke-2);
+}
+
+html[data-mode="power"] .wp-tabs button {
+  height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: var(--pa-neutral-fg-2);
+  font-size: var(--pa-fs-body);
+  line-height: var(--pa-lh-body);
+  font-weight: 400;
+}
+
+html[data-mode="power"] .wp-tabs button:hover {
+  background: var(--pa-neutral-bg-3);
+  color: var(--pa-neutral-fg-1);
+}
+
+html[data-mode="power"] .wp-tabs button[aria-pressed="true"],
+html[data-mode="power"] .wp-tabs button[aria-current] {
+  background: none;
+  border-bottom-color: var(--pa-brand-bg);
+  color: var(--pa-neutral-fg-1);
+  font-weight: 600;
+}
+
+html[data-mode="power"] .wp-row-btn {
+  height: 24px;
+  border-radius: var(--pa-radius);
+  border: 1px solid var(--pa-neutral-stroke-1);
+  background: var(--pa-neutral-bg-1);
+  font-size: var(--pa-fs-caption);
+  line-height: var(--pa-lh-caption);
+  font-weight: 400;
+}
+
+/* ---- badges ---- */
+html[data-mode="power"] .wp-pill,
+html[data-mode="power"] .wp-chip {
+  border-radius: var(--pa-radius);
+  font-size: var(--pa-fs-caption);
+  line-height: var(--pa-lh-caption);
+  font-weight: 400;
+  padding: 2px 8px;
+}
+
+/* The one badge that has to be read before the row around it. */
+html[data-mode="power"] .wp-pill--bad {
+  font-weight: 600;
+}
+
+html[data-mode="power"] .wp-table td .wp-pill {
+  font-size: var(--pa-fs-caption);
+  padding: 2px 8px;
+}
+
+html[data-mode="power"] .wp-legend__badge {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  font-family: var(--pa-font);
+  font-size: var(--pa-fs-caption);
+  line-height: 1;
+  border-radius: var(--pa-radius);
+  background: var(--pa-brand-bg);
+  color: var(--pa-brand-fg);
+}
+
+html[data-mode="power"] .wp-avatar {
+  font-family: var(--pa-font);
+  font-size: var(--pa-fs-caption);
+  background: var(--pa-brand-bg);
+  color: var(--pa-brand-fg);
+}
+
+/* ---- command bar and side pane ---- */
+html[data-mode="power"] .wp-toolbar {
+  min-height: 44px;
+  gap: 8px;
+  padding: 6px 0;
+}
+
+html[data-mode="power"] .wp-toolbar__filters,
+html[data-mode="power"] .wp-toolbar__actions {
+  gap: 8px;
+}
+
+/* Fluent side pane and dialog: solid, never glass, and the scrim stays behind the panel. */
+html[data-mode="power"] .wp-drawer-wrap > .ccs-scrim,
+html[data-mode="power"] .wp-dialog-wrap > .ccs-scrim {
+  background: color-mix(in srgb, var(--c-ink) 40%, transparent);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+html[data-mode="power"] .wp-drawer,
+html[data-mode="power"] .wp-dialog {
+  background: var(--pa-neutral-bg-1);
+  box-shadow: 0 8px 32px color-mix(in srgb, var(--c-ink) 28%, transparent);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+html[data-mode="power"] .wp-drawer {
+  width: min(480px, 100%);
+  padding: 0;
+  border: 0;
+  border-left: 1px solid var(--pa-neutral-stroke-1);
+  border-radius: 0;
+}
+
+html[data-mode="power"] .wp-drawer__head {
+  flex: 0 0 48px;
+  height: 48px;
+  margin: 0;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--pa-neutral-stroke-2);
+}
+
+html[data-mode="power"] .wp-drawer__body {
+  padding: 24px;
+}
+
+html[data-mode="power"] .wp-drawer__foot {
+  margin: 0;
+  padding: 16px 24px;
+  border-top: 1px solid var(--pa-neutral-stroke-2);
+}
+
+html[data-mode="power"] .wp-dialog {
+  width: min(400px, calc(100% - 32px));
+  padding: 24px;
+  border: 1px solid var(--pa-neutral-stroke-1);
+  border-radius: 8px;
+}
+
+html[data-mode="power"] .wp-form-dialog {
+  width: min(480px, calc(100% - 32px));
+}
+
+html[data-mode="power"] .wp-dialog h2 {
+  font-size: var(--pa-fs-title);
+  line-height: var(--pa-lh-title);
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+html[data-mode="power"] .wp-dialog p,
+html[data-mode="power"] .wp-form-dialog__body {
+  font-size: var(--pa-fs-body);
+  line-height: var(--pa-lh-body);
+}
+
+html[data-mode="power"] .wp-dialog__actions {
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 0;
+  border-top: 0;
+}
+
+html[data-mode="power"] .wp-dialog__actions button.wp-btn-primary,
+html[data-mode="power"] .wp-drawer__foot button.wp-btn-primary {
+  background: var(--pa-brand-bg);
+  border-color: var(--pa-brand-bg);
+  color: var(--pa-brand-fg);
+}
+
+html[data-mode="power"] .wp-dialog__actions button.wp-btn-primary:hover,
+html[data-mode="power"] .wp-drawer__foot button.wp-btn-primary:hover {
+  background: var(--pa-brand-bg-hover);
+  border-color: var(--pa-brand-bg-hover);
+}
+
+/* ---- form fields ---- */
+html[data-mode="power"] .wp-field label {
+  font-size: var(--pa-fs-caption);
+  line-height: var(--pa-lh-caption);
+  font-weight: 600;
+  color: var(--pa-neutral-fg-1);
+}
+
+/* Every control in the mock is drawn here: the ones a Field labels, and the bare ones a page puts
+   in a command bar with an aria-label of their own. */
+html[data-mode="power"] .wp-field input,
+html[data-mode="power"] .wp-field select,
+html[data-mode="power"] .wp-field textarea,
+html[data-mode="power"] .wp-page input:not([type="checkbox"]):not([type="radio"]),
+html[data-mode="power"] .wp-page select {
+  height: var(--pa-control-height);
+  padding: 0 8px;
+  font: inherit;
+  font-size: var(--pa-fs-body);
+  line-height: var(--pa-lh-body);
+  color: var(--pa-neutral-fg-1);
+  background: var(--pa-neutral-bg-1);
+  border: 1px solid var(--pa-neutral-stroke-1);
+  border-radius: var(--pa-radius);
+}
+
+html[data-mode="power"] .wp-field textarea,
+html[data-mode="power"] .wp-page select[multiple] {
+  height: auto;
+  padding: 8px;
+}
+
+html[data-mode="power"] .wp-field input:focus,
+html[data-mode="power"] .wp-field select:focus,
+html[data-mode="power"] .wp-field textarea:focus,
+html[data-mode="power"] .wp-page input:focus,
+html[data-mode="power"] .wp-page select:focus {
+  border-bottom: 2px solid var(--pa-brand-bg);
+  outline: none;
+}
+
+/* ---- planner cells: the same meanings, Fluent tints ---- */
+html[data-mode="power"] .wp-cell-open,
+html[data-mode="power"] .wp-cell-leave,
+html[data-mode="power"] .wp-cell-training,
+html[data-mode="power"] .wp-cell-nonworking,
+html[data-mode="power"] .wp-cell-bankhol,
+html[data-mode="power"] .wp-cell-work,
+html[data-mode="power"] .wp-cell-blocked,
+html[data-mode="power"] .wp-cell-atrisk {
+  border-radius: var(--pa-radius);
+}
+
+html[data-mode="power"] .wp-cell-work {
+  background: var(--pa-neutral-bg-1);
+  color: var(--pa-neutral-fg-1);
+}
+
+html[data-mode="power"] .wp-cell-nonworking {
+  background: var(--pa-neutral-bg-3);
+  color: var(--pa-neutral-fg-3);
+}
+
+html[data-mode="power"] .wp-cell-blocked {
+  background: var(--pa-status-bad);
+  color: var(--pa-brand-fg);
+}
+
+html[data-mode="power"] .wp-cell-atrisk {
+  border: 1px solid var(--pa-status-warn);
+  color: var(--pa-status-warn);
+}
+
+html[data-mode="power"] .wp-cell-bankhol {
+  background: var(--pa-brand-bg);
+  color: var(--pa-brand-fg);
+}
+
+html[data-mode="power"] .wp-util-bar__fill--good {
+  background: var(--pa-status-good);
+}
+
+html[data-mode="power"] .wp-util-bar__fill--warn {
+  background: var(--pa-status-warn);
+}
+
+html[data-mode="power"] .wp-util-bar__fill--bad {
+  background: var(--pa-status-bad);
+}
+
+
+/* ---- scrollbars ---- */
+html[data-mode="power"] * {
+  scrollbar-color: var(--pa-neutral-stroke-1) transparent;
+}
+
+html[data-mode="power"] *::-webkit-scrollbar-thumb {
+  background: var(--pa-neutral-stroke-1);
+}
+
+html[data-mode="power"] *::-webkit-scrollbar-thumb:hover {
+  background: var(--pa-neutral-fg-3);
+}

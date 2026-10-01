@@ -1,0 +1,1987 @@
+# Waypoint canvas app: the Command screen.
+#
+# Valid against pa.schema.yaml (v3.0): a Screens map, each screen with a Properties formula map and a
+# Children sequence whose items are single-key maps of control name to control instance.
+#
+# Command is src/pages/Command.tsx: the quarter's position in a brand band, everything that needs a
+# decision on the left, and the squads, the sprint and the benefit year on the right. Every rule here
+# is the engine's, through the named formulas in Formulas.pa.yaml; nothing is worked twice.
+#
+# The screen is one auto-layout tree, not a set of placed boxes: cmdRoot is a vertical
+# GroupContainer the size of the screen, holding the 48px header and a horizontal row of the rail
+# and the body. Everything under that is a container with FillPortions or a fixed band height, so
+# the app fills the window at any size from 1280 wide upwards. X and Y appear only inside gallery
+# templates, which are not auto-layout.
+#
+# Every control identifier and property name here was read off Craig's configured sample of every
+# modern control, downloaded from Studio (power/canvas/source/Src/Screen1.pa.yaml):
+# Label@2.5.1, ModernButton@1.0.0 and Badge@0.0.24 for the text, the buttons and the pills.
+# Gallery@2.15.0 and GroupContainer@1.5.0 with the Variants Studio wrote, and Image@2.2.3, have no
+# verified modern equivalent for what they do here and stay as they are. The header bar stays a
+# GroupContainer too: Header@0.0.44 carries no title-text property in the sample, so it cannot say
+# what our header says. The Fluent look comes from the theme formulas, now on modern properties.
+
+Screens:
+  scrCommand:
+    Properties:
+      Fill: =NeutralCanvas
+
+    Children:
+
+      # ---- the root: one vertical auto-layout container the size of the screen ----
+      - cmdRoot:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            LayoutOverflowX: =LayoutOverflow.Hide
+            LayoutOverflowY: =LayoutOverflow.Hide
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =Parent.Height
+            Fill: =NeutralCanvas
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutGap: =0
+          Children:
+
+            # ---- shell: the app header ----
+            - cmdHeader:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  LayoutOverflowX: =LayoutOverflow.Hide
+                  LayoutOverflowY: =LayoutOverflow.Hide
+                  FillPortions: =0
+                  Height: =AppHeaderH
+                  Fill: =BrandBg
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                  LayoutGap: =Gap
+                  PaddingLeft: =Pad
+                  PaddingRight: =Pad
+                Children:
+                  - cmdHeaderName:
+                      Control: Label@2.5.1
+                      Properties:
+                        Width: =Parent.Width / 3
+                        Height: =AppHeaderH
+                        Text: ="Waypoint"
+                        Size: =TypeSubtitle
+                        FontWeight: =FontWeight.Semibold
+                        Font: =FontUI
+                        VerticalAlign: =VerticalAlign.Middle
+                        Color: =BrandFg
+                        Wrap: =true
+                        Overflow: =Overflow.Hidden
+                        PaddingTop: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        AutoHeight: =true
+                  # ---- shell: the scope selector, one cmpScope instance for every screen ----
+                  - cmdHeaderScope:
+                      Control: CanvasComponent
+                      ComponentName: cmpScope
+                      Properties:
+                        Width: =Max(Parent.Width * 0.14, 180)
+                        Height: =ControlHeight
+                        Visible: =IncludeScope
+                  # ---- shell: the header search, one cmpSearch instance for every screen ----
+                  - cmdHeaderSearch:
+                      Control: CanvasComponent
+                      ComponentName: cmpSearch
+                      Properties:
+                        Width: =Max(Parent.Width * 0.24, 280)
+                        Height: =ControlHeight
+                  - cmdHeaderQuarter:
+                      Control: Label@2.5.1
+                      Properties:
+                        Width: =Parent.Width / 3
+                        Height: =AppHeaderH
+                        Text: =CurrentQuarter.Label & " · capacity planner"
+                        Size: =TypeCaption
+                        Font: =FontUI
+                        Align: =Align.Right
+                        VerticalAlign: =VerticalAlign.Middle
+                        Color: =ColorFade(BrandFg, -0.2)
+                        Wrap: =true
+                        Overflow: =Overflow.Hidden
+                        PaddingTop: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        AutoHeight: =true
+
+            # ---- shell: the rail, and the body beside it ----
+            - cmdMain:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  LayoutOverflowX: =LayoutOverflow.Hide
+                  LayoutOverflowY: =LayoutOverflow.Hide
+                  FillPortions: =1
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutGap: =0
+                Children:
+
+                  # ---- shell: the rail, one cmpRail instance for every screen ----
+                  - cmdRail:
+                      Control: CanvasComponent
+                      ComponentName: cmpRail
+                      Properties:
+                        LayoutMinWidth: =If(RailCollapsed, RailWidthTight, NavW)
+                        Width: =If(RailCollapsed, RailWidthTight, NavW)
+                        Height: =Parent.Height
+                        Active: ="Command"
+
+                  # ---- shell: the body everything else sits inside ----
+                  - cmdBody:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        LayoutOverflowX: =LayoutOverflow.Hide
+                        LayoutOverflowY: =LayoutOverflow.Scroll
+                        FillPortions: =1
+                        Fill: =NeutralBg3
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutGap: =Gap
+                        PaddingLeft: =Pad
+                        PaddingRight: =Pad
+                        PaddingTop: =Pad
+                        PaddingBottom: =Pad
+                      Children:
+
+                        # ---- page head: the eyebrow and one h1 on the left, the lede on the right ----
+                        - cmdPageHead:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =0
+                              Height: =PageHeadH
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutGap: =Gap
+                            Children:
+                              - cmdHeadText:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =1
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutGap: =0
+                                  Children:
+                                    - cmdEyebrow:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeKickerLine
+                                          Text: |
+                                            =CurrentQuarter.Label & " · "
+                                             & If(SprintInQuarter < 1, "before the quarter",
+                                                  SprintInQuarter > Sprints, "after the quarter",
+                                                  "sprint " & SprintInQuarter & " of " & Sprints)
+                                             & If(InQuarter, " · " & SprintDaysLeft & " days left", "")
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - cmdTitle:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeDisplayLine
+                                          Text: ="Command"
+                                          Size: =TypeTitle
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                              - cmdLede:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Width: =Parent.Width / 3
+                                    Height: =TypeLabelLine * 2
+                                    Visible: =!IsCompact
+                                    Text: ="The quarter's position, and what needs a decision today."
+                                    Size: =TypeCaption
+                                    Font: =FontUI
+                                    Align: =Align.Right
+                                    Color: =NeutralFg2
+                                    Wrap: =true
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    AutoHeight: =true
+
+                        # ---- the brand band: the quarter's headline figures ----
+                        - cmdBand:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =0
+                              Height: |
+                                =If(Parent.Width < (5 * (180 + Gap) + BandKickerW), BandH * 2, BandH)
+                              LayoutWrap: =true
+                              Fill: =BrandBg
+                              RadiusTopLeft: =CardR
+                              RadiusTopRight: =CardR
+                              RadiusBottomLeft: =CardR
+                              RadiusBottomRight: =CardR
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutGap: =Gap
+                              PaddingLeft: =Pad
+                              PaddingRight: =Pad
+                              PaddingTop: =10
+                              PaddingBottom: =10
+                            Children:
+                              # The band's kicker, the first cell of the row rather than a line above
+                              # it: the band is one 96px band, and cmpStat's three lines take the rest
+                              # of its height.
+                              - cmdBandKicker:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Width: =BandKickerW
+                                    Height: =TypeKickerLine * 2
+                                    Text: ="Capacity this quarter"
+                                    Size: =TypeCaption
+                                    FontWeight: =FontWeight.Normal
+                                    Font: =FontUI
+                                    Color: =ColorFade(BrandFg, -0.2)
+                                    Wrap: =true
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    AutoHeight: =true
+                              - cmdStatAvailable:
+                                  Control: CanvasComponent
+                                  ComponentName: cmpStat
+                                  Properties:
+                                    Width: =Max((Parent.Width - Pad * 2 - BandKickerW - Gap * 5) / 5, 180)
+                                    LayoutMinWidth: =180
+                                    Height: =BandH - 20
+                                    OnBrand: =true
+                                    Label: ="Available"
+                                    Value: =Text(NetTotal, "[$-en-US]#,##0.0")
+                                    Unit: ="MW"
+                                    Sub: |
+                                      =TeamInSquadCount & " people · "
+                                       & CountRows(colSquads) & " squads · "
+                                       & Text(QuarterAbsenceMW, "[$-en-US]#,##0.0") & " MW lost to absence"
+                              - cmdStatCommitted:
+                                  Control: CanvasComponent
+                                  ComponentName: cmpStat
+                                  Properties:
+                                    Width: =Max((Parent.Width - Pad * 2 - BandKickerW - Gap * 5) / 5, 180)
+                                    LayoutMinWidth: =180
+                                    Height: =BandH - 20
+                                    OnBrand: =true
+                                    Label: ="Committed"
+                                    Value: =Text(CommittedTotal, "[$-en-US]#,##0.0")
+                                    Unit: ="MW"
+                                    Sub: |
+                                      =Round(If(NetTotal = 0, 0, CommittedTotal / NetTotal) * 100, 0)
+                                       & "% of available"
+                              - cmdStatRemaining:
+                                  Control: CanvasComponent
+                                  ComponentName: cmpStat
+                                  Properties:
+                                    Width: =Max((Parent.Width - Pad * 2 - BandKickerW - Gap * 5) / 5, 180)
+                                    LayoutMinWidth: =180
+                                    Height: =BandH - 20
+                                    OnBrand: =true
+                                    Color: =RemainingTone
+                                    Label: ="Remaining"
+                                    Value: =Text(NetTotal - CommittedTotal - ReservedTotal, "[$-en-US]#,##0.0")
+                                    Unit: ="MW"
+                                    Sub: =Text(ReservedTotal, "[$-en-US]#,##0.0") & " MW held in reservations"
+                              - cmdStatUtilisation:
+                                  Control: CanvasComponent
+                                  ComponentName: cmpStat
+                                  Properties:
+                                    Width: =Max((Parent.Width - Pad * 2 - BandKickerW - Gap * 5) / 5, 180)
+                                    LayoutMinWidth: =180
+                                    Height: =BandH - 20
+                                    OnBrand: =true
+                                    Color: =UtilisationTone
+                                    Label: ="Utilisation"
+                                    Value: =Round(If(NetTotal = 0, 0, CommittedTotal / NetTotal) * 100, 0) & "%"
+                                    Sub: |
+                                      =Text(CommittedTotal, "[$-en-US]#,##0.0") & " of "
+                                       & Text(NetTotal, "[$-en-US]#,##0.0") & " MW net"
+                              - cmdStatOnTime:
+                                  Control: CanvasComponent
+                                  ComponentName: cmpStat
+                                  Properties:
+                                    Width: =Max((Parent.Width - Pad * 2 - BandKickerW - Gap * 5) / 5, 180)
+                                    LayoutMinWidth: =180
+                                    Height: =BandH - 20
+                                    OnBrand: =true
+                                    Label: ="On time"
+                                    Value: =Round(OnTimePct * 100, 0) & "%"
+                                    Sub: =OnTimeCount & " of " & DeliveredCount & " delivered"
+
+                        # ---- the two columns: CmdLeftW to the decisions, CmdRightW to the cards ----
+                        - cmdColumns:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              FillPortions: =1
+                              # Below IsStacked the pair is one column above the other and the
+                              # container scrolls, rather than two columns too narrow to read.
+                              LayoutDirection: |
+                                =If(IsStacked, LayoutDirection.Vertical, LayoutDirection.Horizontal)
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutOverflowY: |
+                                =If(IsStacked, LayoutOverflow.Scroll, LayoutOverflow.Hide)
+                              LayoutGap: =Gap
+                            Children:
+
+                              # ---- left column: decisions ----
+                              # ---- left column: Today, three blocks, each hidden when empty ----
+                              - cmdToday:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =If(IsStacked, 0, CmdLeftW)
+                                    LayoutMinWidth: =CmdLeftMinW
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutGap: =Gap
+                                  Children:
+
+                                    # ---- block one: the commit calls ----
+                                    # Content-sized: title, the head row, one RowHeight a call.
+                                    - cmdCommitCard:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Visible: =CmdCommitCount > 0
+                                          Height: |
+                                            =CmdBlockHeadH + 8 + CmdBlockRowH
+                                             + CmdBlockRowH * CmdCommitCount + Pad * 2
+                                             + If(IsBlank(varCmdCommitMsg), 0, TypeBodyLine + 8)
+                                          Fill: =NeutralBg1
+                                          BorderColor: =NeutralStroke1
+                                          BorderThickness: =1
+                                          RadiusTopLeft: =CardR
+                                          RadiusTopRight: =CardR
+                                          RadiusBottomLeft: =CardR
+                                          RadiusBottomRight: =CardR
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutGap: =8
+                                          PaddingLeft: =Pad
+                                          PaddingRight: =Pad
+                                          PaddingTop: =Pad
+                                          PaddingBottom: =Pad
+                                        Children:
+                                          - cmdCommitTitle:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeHeadingLine
+                                                Text: |
+                                                  =If(CmdCommitReadyCount = CmdCommitCount,
+                                                      "Commit calls · " & CmdCommitCount,
+                                                      "Commit calls · " & CmdCommitReadyCount
+                                                      & " ready of " & CmdCommitCount)
+                                                Size: =TypeSubtitle
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          # The head row is a ManualLayout container carrying the same
+                                          # cells the template carries, sized by the table compiler.
+                                          - cmdCommitHead:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: ManualLayout
+                                              Properties:
+                                                FillPortions: =0
+                                                Height: =CmdBlockRowH
+                                                Width: =Parent.Width - Pad * 2
+                                              Children:
+                                                - ccHeadPriority:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: =0
+                                                      Y: =(CmdBlockRowH - TypeLabelLine) / 2
+                                                      Width: =60
+                                                      Height: =TypeLabelLine
+                                                      Text: ="Priority"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - ccHeadTitle:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: =60
+                                                      Y: =(CmdBlockRowH - TypeLabelLine) / 2
+                                                      Width: =150
+                                                      Height: =TypeLabelLine
+                                                      Text: ="Work"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - ccHeadSquad:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: =210
+                                                      Y: =(CmdBlockRowH - TypeLabelLine) / 2
+                                                      Width: =70
+                                                      Height: =TypeLabelLine
+                                                      Text: ="Squad"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - ccHeadMW:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: =280
+                                                      Y: =(CmdBlockRowH - TypeLabelLine) / 2
+                                                      Width: =56
+                                                      Height: =TypeLabelLine
+                                                      Text: ="MW"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Align: =Align.Right
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - ccHeadVerdict:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: =336
+                                                      Y: =(CmdBlockRowH - TypeLabelLine) / 2
+                                                      Width: =100
+                                                      Height: =TypeLabelLine
+                                                      Text: ="Verdict"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                          - cmdCommitList:
+                                              Control: Gallery@2.15.0
+                                              Variant: Vertical
+                                              Properties:
+                                                BorderColor: =RGBA(0, 0, 0, 0)
+                                                ShowScrollbar: =false
+                                                FillPortions: =0
+                                                Width: =Parent.Width - Pad * 2
+                                                Height: =CmdBlockRowH * CmdCommitCount
+                                                Items: =CmdCommitCalls
+                                                TemplatePadding: =0
+                                                TemplateSize: =CmdBlockRowH
+                                                AccessibleLabel: ="Commit calls, by priority"
+                                              Children:
+                                                - ccPriority:
+                                                    Control: Badge@0.0.24
+                                                    Properties:
+                                                      X: =0
+                                                      Y: =(CmdBlockRowH - TypeLabelLine) / 2
+                                                      Width: =Min(Max(Len(ThisItem.PriorityText) * 7 + 20, 56), 200)
+                                                      Height: =TypeLabelLine
+                                                      Appearance: ='BadgeCanvas.Appearance'.Filled
+                                                      Shape: ='BadgeCanvas.Shape'.Rounded
+                                                      ThemeColor: |
+                                                        =If(ThisItem.PriorityText = "Must",
+                                                            'BadgeCanvas.ThemeColor'.Brand,
+                                                            'BadgeCanvas.ThemeColor'.Subtle)
+                                                      Content: =ThisItem.PriorityText
+                                                      FontSize: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Align: =Align.Center
+                                                      VerticalAlign: =VerticalAlign.Middle
+                                                - ccTitle:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: =60
+                                                      Y: =(CmdBlockRowH - TypeBodyLine) / 2
+                                                      Width: =150
+                                                      Height: =TypeBodyLine
+                                                      Text: =ThisItem.Title
+                                                      Size: =TypeBody
+                                                      Font: =FontUI
+                                                      VerticalAlign: =VerticalAlign.Middle
+                                                      Color: =NeutralFg1
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - ccSquad:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: =210
+                                                      Y: =(CmdBlockRowH - TypeLabelLine) / 2
+                                                      Width: =70
+                                                      Height: =TypeLabelLine
+                                                      Text: =If(ThisItem.SquadName = "", "—", ThisItem.SquadName)
+                                                      Size: =TypeCaption
+                                                      Font: =FontUI
+                                                      VerticalAlign: =VerticalAlign.Middle
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - ccMW:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: =280
+                                                      Y: =(CmdBlockRowH - TypeBodyLine) / 2
+                                                      Width: =56
+                                                      Height: =TypeBodyLine
+                                                      Text: =Text(ThisItem.MW, "[$-en-US]#,##0.0")
+                                                      Size: =TypeBody
+                                                      Font: =FontUI
+                                                      Align: =Align.Right
+                                                      VerticalAlign: =VerticalAlign.Middle
+                                                      Color: =NeutralFg1
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                # The verdict proxy, toned by the slip row of NumberTones:
+                                                # a window ending past the horizon is bad, one ending on
+                                                # the horizon's own last sprint is warn.
+                                                - ccVerdict:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: =336
+                                                      Y: =(CmdBlockRowH - TypeBodyLine) / 2
+                                                      Width: =100
+                                                      Height: =TypeBodyLine
+                                                      Text: |
+                                                        =If(ThisItem.CommitReady,
+                                                            ThisItem.Verdict,
+                                                            ThisItem.CommitMissing)
+                                                      Size: =TypeCaption
+                                                      Font: =FontUI
+                                                      VerticalAlign: =VerticalAlign.Middle
+                                                      Color: |
+                                                        =If(!ThisItem.CommitReady, StatusWarn,
+                                                         With({ t: LookUp(NumberTones, Metric = "slip"),
+                                                                v: ThisItem.EndSlip },
+                                                            If(t.HigherIsWorse,
+                                                               If(v >= t.BadAt, ToneBad,
+                                                                  If(v >= t.WarnAt, ToneWarn, ToneNeutral)),
+                                                               If(v <= t.BadAt, ToneBad,
+                                                                  If(v <= t.WarnAt, ToneWarn, ToneNeutral)))))
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                # The row's own hit target, under the two buttons: a later
+                                                # child draws in front, so the buttons still take their click.
+                                                - ccHit:
+                                                    Control: Classic/Button@2.2.0
+                                                    Properties:
+                                                      X: =2
+                                                      Y: =2
+                                                      Width: =Parent.TemplateWidth - 4
+                                                      Height: =CmdBlockRowH - 4
+                                                      Text: =""
+                                                      Fill: =RGBA(0, 0, 0, 0)
+                                                      HoverFill: =RGBA(0, 0, 0, 0)
+                                                      PressedFill: =RGBA(0, 0, 0, 0)
+                                                      BorderThickness: =0
+                                                      FocusedBorderThickness: =2
+                                                      TabIndex: =0
+                                                      Tooltip: |
+                                                        =ThisItem.Title & " · " & ThisItem.PriorityText & " · "
+                                                         & Text(ThisItem.MW, "[$-en-US]#,##0.0") & " MW · "
+                                                         & ThisItem.Verdict
+                                                      FocusedBorderColor: =FocusStroke
+                                                      OnSelect: |
+                                                        =Set(varItem, LookUp(colWork, Title = ThisItem.Title));
+                                                         Navigate(scrWorkItem, ScreenTransition.None)
+                                                # Commit, on the gate and the write the item's
+                                                # Assess tab uses (power/design-work-flow.md,
+                                                # section 6): CommitReady is the row's copy of
+                                                # ItemCommitReady, and the Patch below is the same
+                                                # move to Delivery, with the span the row carries.
+                                                - ccCommit:
+                                                    Control: ModernButton@1.0.0
+                                                    Properties:
+                                                      Appearance: =ButtonAppearance.Primary
+                                                      BasePaletteColor: =BrandBg
+                                                      Color: =BrandFg
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      RadiusTopLeft: =CtrlR
+                                                      RadiusTopRight: =CtrlR
+                                                      RadiusBottomLeft: =CtrlR
+                                                      RadiusBottomRight: =CtrlR
+                                                      X: =436
+                                                      Y: =(CmdBlockRowH - CmdBtnH) / 2
+                                                      Width: =Max(Len("Commit") * 7 + 24, 72)
+                                                      Height: =CmdBtnH
+                                                      Text: ="Commit"
+                                                      AccessibleLabel: ="Commit " & ThisItem.Title
+                                                      DisplayMode: |
+                                                        =If(ThisItem.CommitReady,
+                                                            DisplayMode.Edit,
+                                                            DisplayMode.Disabled)
+                                                      OnSelect: |
+                                                        =Set(varCmdCommitMsg, "");
+                                                         If(!ThisItem.CommitReady,
+                                                             Set(varCmdCommitMsg, ThisItem.CommitMissing),
+                                                             IfError(
+                                                              Patch('Work items',
+                                                                    LookUp('Work items', Title = ThisItem.Title),
+                                                                    { Commitment: 'Commitment (Work items)'.Committed,
+                                                                      Phase: 'Phase (Work items)'.Delivery,
+                                                                      'Absolute start sprint': ThisItem.CommitStart,
+                                                                      'Start sprint':
+                                                                          ThisItem.CommitStart - FirstSprint + 1,
+                                                                      'Absolute end sprint': ThisItem.CommitEnd,
+                                                                      'End sprint':
+                                                                          ThisItem.CommitEnd - FirstSprint + 1 }),
+                                                              Set(varCmdCommitMsg, FirstError.Message),
+                                                              Patch('Activity log', Defaults('Activity log'),
+                                                                    { Label: ThisItem.Title & " · committed",
+                                                                      Summary: Coalesce(ItemMeName, "Someone")
+                                                                               & " committed this to delivery"
+                                                                               & " from the commit calls.",
+                                                                      Action: 'Action (Activity log)'.'Stage action',
+                                                                      Table: "wp_workitem",
+                                                                      Record: Text(ThisItem.'Work item id'),
+                                                                      'Record name': ThisItem.Title,
+                                                                      Before: "Assessment",
+                                                                      After: "Delivery",
+                                                                      At: Now() });
+                                                              Concurrent(ClearCollect(colWork, 'Work items'),
+                                                                         ClearCollect(colActivity, 'Activity log'));
+                                                              Set(varCmdCommitMsg,
+                                                                  ThisItem.Title & " is committed to delivery.")))
+                                                - ccDefer:
+                                                    Control: ModernButton@1.0.0
+                                                    Properties:
+                                                      Appearance: =ButtonAppearance.Outline
+                                                      BasePaletteColor: =NeutralBg1
+                                                      Color: =NeutralFg1
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      RadiusTopLeft: =CtrlR
+                                                      RadiusTopRight: =CtrlR
+                                                      RadiusBottomLeft: =CtrlR
+                                                      RadiusBottomRight: =CtrlR
+                                                      X: =520
+                                                      Y: =(CmdBlockRowH - CmdBtnH) / 2
+                                                      Width: =Max(Len("Defer") * 7 + 24, 72)
+                                                      Height: =CmdBtnH
+                                                      Text: ="Defer"
+                                                      AccessibleLabel: ="Defer " & ThisItem.Title
+                                                      # The Deferred marker is the Deferred work
+                                                      # state, which is what the item screen's own
+                                                      # Defer action writes; there is no deferred
+                                                      # column to set.
+                                                      OnSelect: |
+                                                        =Set(varCmdCommitMsg, "");
+                                                         IfError(
+                                                          Patch('Work items',
+                                                                LookUp('Work items', Title = ThisItem.Title),
+                                                                { State: LookUp('Work states', State = "Deferred") }),
+                                                          Set(varCmdCommitMsg, FirstError.Message),
+                                                          Patch('Activity log', Defaults('Activity log'),
+                                                                { Label: ThisItem.Title & " · deferred",
+                                                                  Summary: Coalesce(ItemMeName, "Someone")
+                                                                           & " deferred this from the commit calls.",
+                                                                  Action: 'Action (Activity log)'.'Stage action',
+                                                                  Table: "wp_workitem",
+                                                                  Record: Text(ThisItem.'Work item id'),
+                                                                  'Record name': ThisItem.Title,
+                                                                  Before: "Ready",
+                                                                  After: "Deferred",
+                                                                  At: Now() });
+                                                          Concurrent(ClearCollect(colWork, 'Work items'),
+                                                                     ClearCollect(colActivity, 'Activity log'));
+                                                          Set(varCmdCommitMsg, ThisItem.Title & " is deferred."))
+
+                                          # What the last commit or defer did, cleared by the next
+                                          # one. One line, under the list, so the answer is where
+                                          # the button was.
+                                          - cmdCommitStatus:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeBodyLine
+                                                Visible: =!IsBlank(varCmdCommitMsg)
+                                                Text: =varCmdCommitMsg
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+
+                                    # ---- block zero: the front door ----
+                                    # The screening queue, which used to be a section of its own
+                                    # (power/design-work-flow.md, section 5). Six rows at most and
+                                    # the rest as one line. A row opens scrFrontDoor on that
+                                    # request; Promote opens its screening panel, where the two
+                                    # promotion moves and their one copy of the write live; Reject
+                                    # asks for a reason in the card's foot and writes it here.
+                                    - cmdFrontDoorCard:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Visible: =IncludeFrontDoor && CmdFrontDoorCount > 0
+                                          Height: |
+                                            =CmdBlockHeadH + CmdBlockRowH * CmdFrontDoorShown + Pad * 2
+                                             + If(CmdFrontDoorMore > 0, TypeBodyLine + 8, 0)
+                                             + If(varCmdFdRejectOpen, CmdBlockRowH + 8, 0)
+                                             + If(IsBlank(varCmdFdMsg), 0, TypeBodyLine + 8)
+                                          Fill: =NeutralBg1
+                                          BorderColor: =NeutralStroke1
+                                          BorderThickness: =1
+                                          RadiusTopLeft: =CardR
+                                          RadiusTopRight: =CardR
+                                          RadiusBottomLeft: =CardR
+                                          RadiusBottomRight: =CardR
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutGap: =8
+                                          PaddingLeft: =Pad
+                                          PaddingRight: =Pad
+                                          PaddingTop: =Pad
+                                          PaddingBottom: =Pad
+                                        Children:
+                                          - cmdFrontDoorTitle:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeHeadingLine
+                                                Text: ="Front door · " & CmdFrontDoorCount
+                                                Size: =TypeSubtitle
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - cmdFrontDoorList:
+                                              Control: Gallery@2.15.0
+                                              Variant: Vertical
+                                              Properties:
+                                                BorderColor: =RGBA(0, 0, 0, 0)
+                                                ShowScrollbar: =false
+                                                FillPortions: =0
+                                                Width: =Parent.Width - Pad * 2
+                                                Height: =CmdBlockRowH * CmdFrontDoorShown
+                                                Items: =CmdFrontDoorRows
+                                                TemplatePadding: =0
+                                                TemplateSize: =CmdBlockRowH
+                                                AccessibleLabel: |
+                                                  ="Front door queue, oldest first, with the "
+                                                   & "requester, the date it was received and the "
+                                                   & "benefit the requester claimed."
+                                              Children:
+                                                - cfdTitle:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: =0
+                                                      Y: =(CmdBlockRowH - TypeBodyLine) / 2
+                                                      Width: =181
+                                                      Height: =TypeBodyLine
+                                                      Text: =ThisItem.Title
+                                                      Size: =TypeBody
+                                                      Font: =FontUI
+                                                      VerticalAlign: =VerticalAlign.Middle
+                                                      Color: =NeutralFg1
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - cfdRequester:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: =189
+                                                      Y: =(CmdBlockRowH - TypeBodyLine) / 2
+                                                      Width: =98
+                                                      Height: =TypeBodyLine
+                                                      Text: =ThisItem.'Requester name'
+                                                      Size: =TypeBody
+                                                      Font: =FontUI
+                                                      VerticalAlign: =VerticalAlign.Middle
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - cfdReceived:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: =295
+                                                      Y: =(CmdBlockRowH - TypeLabelLine) / 2
+                                                      Width: =75
+                                                      Height: =TypeLabelLine
+                                                      Text: |
+                                                        =Text(ThisItem.'Created On',
+                                                              "[$-en-US]dd mmm yyyy")
+                                                      Size: =TypeCaption
+                                                      Font: =FontUI
+                                                      Align: =Align.Right
+                                                      VerticalAlign: =VerticalAlign.Middle
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                # The one figure a request carries: the benefit the
+                                                # requester put on it, in their own words.
+                                                - cfdValue:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: =378
+                                                      Y: =(CmdBlockRowH - TypeBodyLine) / 2
+                                                      Width: =63
+                                                      Height: =TypeBodyLine
+                                                      Text: =Coalesce(ThisItem.'Benefit size', "")
+                                                      Size: =TypeBody
+                                                      Font: =FontUI
+                                                      Align: =Align.Right
+                                                      VerticalAlign: =VerticalAlign.Middle
+                                                      Color: =NeutralFg1
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                # The row's own hit target, under the two buttons,
+                                                # as the commit calls row carries one: it opens the
+                                                # request on scrFrontDoor with the panel shut.
+                                                - cfdHit:
+                                                    Control: Classic/Button@2.2.0
+                                                    Properties:
+                                                      X: =2
+                                                      Y: =2
+                                                      Width: =Parent.TemplateWidth - 4
+                                                      Height: =CmdBlockRowH - 4
+                                                      Text: =""
+                                                      Fill: =RGBA(0, 0, 0, 0)
+                                                      HoverFill: =RGBA(0, 0, 0, 0)
+                                                      PressedFill: =RGBA(0, 0, 0, 0)
+                                                      BorderThickness: =0
+                                                      FocusedBorderThickness: =2
+                                                      TabIndex: =0
+                                                      Tooltip: |
+                                                        =ThisItem.Title & " · " & ThisItem.'Requester name'
+                                                         & " · " & Text(ThisItem.'Request status')
+                                                      FocusedBorderColor: =FocusStroke
+                                                      OnSelect: |
+                                                        =Set(varFrontDoorScreen, ThisItem);
+                                                         Set(varFrontDoorScreenError, "");
+                                                         Set(varFrontDoorScreenOpen, false);
+                                                         Navigate(scrFrontDoor, ScreenTransition.None)
+                                                # Promote is the screening panel: the promotion
+                                                # writes have one copy, on scrFrontDoor, because a
+                                                # promotion is to a spike or to a feature and only
+                                                # the panel asks which and holds the notes gate.
+                                                - cfdPromote:
+                                                    Control: ModernButton@1.0.0
+                                                    Properties:
+                                                      Appearance: =ButtonAppearance.Outline
+                                                      BasePaletteColor: =NeutralBg1
+                                                      Color: =NeutralFg1
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      RadiusTopLeft: =CtrlR
+                                                      RadiusTopRight: =CtrlR
+                                                      RadiusBottomLeft: =CtrlR
+                                                      RadiusBottomRight: =CtrlR
+                                                      X: =449
+                                                      Y: =(CmdBlockRowH - CmdBtnH) / 2
+                                                      Width: =84
+                                                      Height: =CmdBtnH
+                                                      Text: ="Promote"
+                                                      AccessibleLabel: ="Promote " & ThisItem.Title
+                                                      OnSelect: |
+                                                        =Set(varFrontDoorScreen, ThisItem);
+                                                         Set(varFrontDoorScreenError, "");
+                                                         Set(varFrontDoorScreenOpen, true);
+                                                         Navigate(scrFrontDoor, ScreenTransition.None)
+                                                # Reject opens the reason foot on this row, and
+                                                # shuts it again when it is already this row's.
+                                                - cfdReject:
+                                                    Control: ModernButton@1.0.0
+                                                    Properties:
+                                                      Appearance: =ButtonAppearance.Outline
+                                                      BasePaletteColor: =NeutralBg1
+                                                      Color: =NeutralFg1
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      RadiusTopLeft: =CtrlR
+                                                      RadiusTopRight: =CtrlR
+                                                      RadiusBottomLeft: =CtrlR
+                                                      RadiusBottomRight: =CtrlR
+                                                      X: =541
+                                                      Y: =(CmdBlockRowH - CmdBtnH) / 2
+                                                      Width: =84
+                                                      Height: =CmdBtnH
+                                                      Text: ="Reject"
+                                                      AccessibleLabel: |
+                                                        ="Reject " & ThisItem.Title & ", with a reason"
+                                                      OnSelect: |
+                                                        =Set(varCmdFdMsg, "");
+                                                         If(varCmdFdRejectOpen
+                                                            && varCmdFdReject.Title = ThisItem.Title,
+                                                            Set(varCmdFdRejectOpen, false),
+                                                            Set(varCmdFdReject, ThisItem);
+                                                            Set(varCmdFdRejectOpen, true);
+                                                            Reset(cmdFdReason))
+                                          - cmdFrontDoorMore:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeBodyLine
+                                                Visible: =CmdFrontDoorMore > 0
+                                                Text: ="and " & CmdFrontDoorMore & " more"
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          # The foot: the reason the rejected row needs, and the
+                                          # confirm that writes it. A reason is required, so the
+                                          # confirm is disabled until there is one.
+                                          - cmdFrontDoorFoot:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: ManualLayout
+                                              Properties:
+                                                FillPortions: =0
+                                                Height: =CmdBlockRowH
+                                                Visible: =varCmdFdRejectOpen
+                                              Children:
+                                                - cmdFdReason:
+                                                    Control: ModernTextInput@1.1.1
+                                                    Properties:
+                                                      X: =0
+                                                      Y: =(CmdBlockRowH - ControlHeight) / 2
+                                                      Width: =Parent.Width - 132
+                                                      Height: =ControlHeight
+                                                      Default: =""
+                                                      Placeholder: ="Why this request is rejected"
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      Color: =NeutralFg1
+                                                      BasePaletteColor: =BrandBg
+                                                      AccessibleLabel: |
+                                                        ="Rejection reason for "
+                                                         & Coalesce(varCmdFdReject.Title, "this request")
+                                                         & ", required"
+                                                      Appearance: =Appearance.Outline
+                                                      Fill: =NeutralBg1
+                                                - cmdFdConfirm:
+                                                    Control: ModernButton@1.0.0
+                                                    Properties:
+                                                      Appearance: =ButtonAppearance.Primary
+                                                      BasePaletteColor: =BrandBg
+                                                      Color: =BrandFg
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      RadiusTopLeft: =CtrlR
+                                                      RadiusTopRight: =CtrlR
+                                                      RadiusBottomLeft: =CtrlR
+                                                      RadiusBottomRight: =CtrlR
+                                                      X: =Parent.Width - 124
+                                                      Y: =(CmdBlockRowH - CmdBtnH) / 2
+                                                      Width: =124
+                                                      Height: =CmdBtnH
+                                                      Text: ="Confirm reject"
+                                                      AccessibleLabel: |
+                                                        ="Confirm the rejection of "
+                                                         & Coalesce(varCmdFdReject.Title, "this request")
+                                                      DisplayMode: |
+                                                        =If(IsBlank(Trim(cmdFdReason.Text)),
+                                                            DisplayMode.Disabled, DisplayMode.Edit)
+                                                      # The close the screen's Decline writes:
+                                                      # Declined is the terminal status the request
+                                                      # lifecycle carries, with the reason beside it
+                                                      # and a line in the log.
+                                                      OnSelect: |
+                                                        =Set(varCmdFdMsg, "");
+                                                         IfError(
+                                                          Patch('Requests', varCmdFdReject,
+                                                                { 'Request status':
+                                                                      'Request status (Requests)'.Declined,
+                                                                  'Decline reason': Trim(cmdFdReason.Text) }),
+                                                          Set(varCmdFdMsg, FirstError.Message),
+                                                          Patch('Activity log', Defaults('Activity log'),
+                                                                { Label: varCmdFdReject.Title & " · rejected",
+                                                                  Summary: Coalesce(ItemMeName, "Someone")
+                                                                           & " rejected this request at the front"
+                                                                           & " door: " & Trim(cmdFdReason.Text),
+                                                                  Action: 'Action (Activity log)'.'Stage action',
+                                                                  Table: "wp_request",
+                                                                  Record: Text(varCmdFdReject.'Request id'),
+                                                                  'Record name': varCmdFdReject.Title,
+                                                                  Before: Text(varCmdFdReject.'Request status'),
+                                                                  After: "Declined",
+                                                                  At: Now() });
+                                                          ClearCollect(colActivity, 'Activity log');
+                                                          Set(varCmdFdRejectOpen, false);
+                                                          Set(varCmdFdMsg,
+                                                              varCmdFdReject.Title & " is rejected."))
+                                          # What the last rejection did, cleared by the next move.
+                                          - cmdFrontDoorStatus:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeBodyLine
+                                                Visible: =!IsBlank(varCmdFdMsg)
+                                                Text: =varCmdFdMsg
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+
+                                    # ---- block two: attention ----
+                                    # The awaiting-validation line sits in this card's title block
+                                    # (power/design-work-flow.md, section 8), reading the one queue
+                                    # formula the Benefits block reads. The card is here when either
+                                    # the list or that queue has something in it.
+                                    - cmdAttentionCard:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Visible: =CmdAttentionCount + AwaitingValidationCount > 0
+                                          Height: |
+                                            =CmdBlockHeadH + CmdBlockRowH * CmdAttentionCount + Pad * 2
+                                             + If(AwaitingValidationCount > 0, CmdBlockRowH + 8, 0)
+                                          Fill: =NeutralBg1
+                                          BorderColor: =NeutralStroke1
+                                          BorderThickness: =1
+                                          RadiusTopLeft: =CardR
+                                          RadiusTopRight: =CardR
+                                          RadiusBottomLeft: =CardR
+                                          RadiusBottomRight: =CardR
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutGap: =8
+                                          PaddingLeft: =Pad
+                                          PaddingRight: =Pad
+                                          PaddingTop: =Pad
+                                          PaddingBottom: =Pad
+                                        Children:
+                                          - cmdAttentionTitle:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeHeadingLine
+                                                Text: ="Attention · " & CmdAttentionCount
+                                                Size: =TypeSubtitle
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - cmdAwaitLine:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: ManualLayout
+                                              Properties:
+                                                FillPortions: =0
+                                                Height: =CmdBlockRowH
+                                                Visible: =AwaitingValidationCount > 0
+                                              Children:
+                                                - cmdAwaitText:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: =0
+                                                      Y: =(CmdBlockRowH - TypeBodyLine) / 2
+                                                      Width: =Parent.Width - 120
+                                                      Height: =TypeBodyLine
+                                                      Text: |
+                                                        ="Awaiting validation: " & AwaitingValidationCount
+                                                         & If(AwaitingValidationCount = 1, " item", " items")
+                                                      Size: =TypeBody
+                                                      Font: =FontUI
+                                                      VerticalAlign: =VerticalAlign.Middle
+                                                      Color: =NeutralFg1
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - cmdAwaitOpen:
+                                                    Control: ModernButton@1.0.0
+                                                    Properties:
+                                                      Appearance: =ButtonAppearance.Outline
+                                                      BasePaletteColor: =NeutralBg1
+                                                      Color: =NeutralFg1
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      RadiusTopLeft: =CtrlR
+                                                      RadiusTopRight: =CtrlR
+                                                      RadiusBottomLeft: =CtrlR
+                                                      RadiusBottomRight: =CtrlR
+                                                      X: =Parent.Width - 72
+                                                      Y: =(CmdBlockRowH - CmdBtnH) / 2
+                                                      Width: =72
+                                                      Height: =CmdBtnH
+                                                      Text: ="Open"
+                                                      AccessibleLabel: |
+                                                        ="Open Benefits, awaiting validation"
+                                                      OnSelect: =Navigate(scrBenefits, ScreenTransition.None)
+                                          - cmdAttentionList:
+                                              Control: Gallery@2.15.0
+                                              Variant: Vertical
+                                              Properties:
+                                                BorderColor: =RGBA(0, 0, 0, 0)
+                                                ShowScrollbar: =false
+                                                FillPortions: =0
+                                                Width: =Parent.Width - Pad * 2
+                                                Height: =CmdBlockRowH * CmdAttentionCount
+                                                Items: =CmdAttentionRows
+                                                TemplatePadding: =0
+                                                TemplateSize: =CmdBlockRowH
+                                                AccessibleLabel: ="Late, at risk and over capacity"
+                                              Children:
+                                                - atPill:
+                                                    Control: Badge@0.0.24
+                                                    Properties:
+                                                      X: =0
+                                                      Y: =(CmdBlockRowH - TypeLabelLine) / 2
+                                                      Width: =Min(Max(Len(ThisItem.Group) * 7 + 20, 56), 200)
+                                                      Height: =TypeLabelLine
+                                                      Appearance: ='BadgeCanvas.Appearance'.Filled
+                                                      Shape: ='BadgeCanvas.Shape'.Rounded
+                                                      ThemeColor: |
+                                                        =Switch(ThisItem.Tone,
+                                                            "bad",  'BadgeCanvas.ThemeColor'.Danger,
+                                                            "warn", 'BadgeCanvas.ThemeColor'.Warning,
+                                                            'BadgeCanvas.ThemeColor'.Subtle)
+                                                      Content: =ThisItem.Group
+                                                      FontSize: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Align: =Align.Center
+                                                      VerticalAlign: =VerticalAlign.Middle
+                                                - atMessage:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: =100
+                                                      Y: =(CmdBlockRowH - TypeBodyLine) / 2
+                                                      Width: =200
+                                                      Height: =TypeBodyLine
+                                                      Text: =ThisItem.Message
+                                                      Size: =TypeBody
+                                                      Font: =FontUI
+                                                      VerticalAlign: =VerticalAlign.Middle
+                                                      Color: =NeutralFg1
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                # The number the row turns on, toned by the row's own tone:
+                                                # the ladder that set it is the judgement.
+                                                - atMeasure:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: =300
+                                                      Y: =(CmdBlockRowH - TypeBodyLine) / 2
+                                                      Width: =110
+                                                      Height: =TypeBodyLine
+                                                      Text: =ThisItem.Measure
+                                                      Size: =TypeCaption
+                                                      Font: =FontUI
+                                                      Align: =Align.Right
+                                                      VerticalAlign: =VerticalAlign.Middle
+                                                      Color: |
+                                                        =Switch(ThisItem.Tone,
+                                                            "bad", ToneBad, "warn", ToneWarn, ToneNeutral)
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - atHit:
+                                                    Control: Classic/Button@2.2.0
+                                                    Properties:
+                                                      X: =2
+                                                      Y: =2
+                                                      Width: =Parent.TemplateWidth - 4
+                                                      Height: =CmdBlockRowH - 4
+                                                      Text: =""
+                                                      Fill: =RGBA(0, 0, 0, 0)
+                                                      HoverFill: =RGBA(0, 0, 0, 0)
+                                                      PressedFill: =RGBA(0, 0, 0, 0)
+                                                      BorderThickness: =0
+                                                      FocusedBorderThickness: =2
+                                                      TabIndex: =0
+                                                      Tooltip: =ThisItem.Message & " " & ThisItem.Measure
+                                                      FocusedBorderColor: =FocusStroke
+                                                      OnSelect: |
+                                                        =If(ThisItem.Target = "WorkItem",
+                                                            Set(varItem, LookUp(colWork, Title = ThisItem.Key));
+                                                            Navigate(scrWorkItem, ScreenTransition.None),
+                                                            Set(varTeamSquad,
+                                                                If(ThisItem.Group = "Over capacity",
+                                                                   ThisItem.Key, ""));
+                                                            Navigate(scrTeam, ScreenTransition.None))
+                                                - atOpen:
+                                                    Control: ModernButton@1.0.0
+                                                    Properties:
+                                                      Appearance: =ButtonAppearance.Outline
+                                                      BasePaletteColor: =NeutralBg1
+                                                      Color: =NeutralFg1
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      RadiusTopLeft: =CtrlR
+                                                      RadiusTopRight: =CtrlR
+                                                      RadiusBottomLeft: =CtrlR
+                                                      RadiusBottomRight: =CtrlR
+                                                      X: =410
+                                                      Y: =(CmdBlockRowH - CmdBtnH) / 2
+                                                      Width: =Max(Len("Open") * 7 + 24, 72)
+                                                      Height: =CmdBtnH
+                                                      Text: ="Open"
+                                                      AccessibleLabel: ="Open " & ThisItem.Key
+                                                      OnSelect: =Select(atHit)
+
+                                    # ---- block three: spikes to conclude ----
+                                    - cmdSpikeCard:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          # Content-sized like the two cards above it: the column's
+                                          # three cards together are never taller than the column, so
+                                          # the leftover space is left empty rather than scrolled.
+                                          FillPortions: =0
+                                          Visible: =CmdSpikeCount > 0
+                                          Height: |
+                                            =CmdBlockHeadH + CmdBlockRowH * CmdSpikeCount + Pad * 2
+                                          Fill: =NeutralBg1
+                                          BorderColor: =NeutralStroke1
+                                          BorderThickness: =1
+                                          RadiusTopLeft: =CardR
+                                          RadiusTopRight: =CardR
+                                          RadiusBottomLeft: =CardR
+                                          RadiusBottomRight: =CardR
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutGap: =8
+                                          PaddingLeft: =Pad
+                                          PaddingRight: =Pad
+                                          PaddingTop: =Pad
+                                          PaddingBottom: =Pad
+                                        Children:
+                                          - cmdSpikeTitle:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeHeadingLine
+                                                Text: ="Spikes to conclude · " & CmdSpikeCount
+                                                Size: =TypeSubtitle
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - cmdSpikeList:
+                                              Control: Gallery@2.15.0
+                                              Variant: Vertical
+                                              Properties:
+                                                BorderColor: =RGBA(0, 0, 0, 0)
+                                                ShowScrollbar: =false
+                                                FillPortions: =0
+                                                Width: =Parent.Width - Pad * 2
+                                                Height: =CmdBlockRowH * CmdSpikeCount
+                                                Items: =CmdSpikeRows
+                                                TemplatePadding: =0
+                                                TemplateSize: =CmdBlockRowH
+                                                AccessibleLabel: ="Open spikes, with what is left of the timebox"
+                                              Children:
+                                                - spTitle:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: =0
+                                                      Y: =(CmdBlockRowH - TypeBodyLine) / 2
+                                                      Width: =220
+                                                      Height: =TypeBodyLine
+                                                      Text: =ThisItem.Key
+                                                      Size: =TypeBody
+                                                      Font: =FontUI
+                                                      VerticalAlign: =VerticalAlign.Middle
+                                                      Color: =NeutralFg1
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - spTimebox:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: =220
+                                                      Y: =(CmdBlockRowH - TypeBodyLine) / 2
+                                                      Width: =130
+                                                      Height: =TypeBodyLine
+                                                      Text: =ThisItem.Measure
+                                                      Size: =TypeCaption
+                                                      Font: =FontUI
+                                                      Align: =Align.Right
+                                                      VerticalAlign: =VerticalAlign.Middle
+                                                      Color: =If(ThisItem.Measure = "timebox spent", ToneWarn, ToneNeutral)
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - spHit:
+                                                    Control: Classic/Button@2.2.0
+                                                    Properties:
+                                                      X: =2
+                                                      Y: =2
+                                                      Width: =Parent.TemplateWidth - 4
+                                                      Height: =CmdBlockRowH - 4
+                                                      Text: =""
+                                                      Fill: =RGBA(0, 0, 0, 0)
+                                                      HoverFill: =RGBA(0, 0, 0, 0)
+                                                      PressedFill: =RGBA(0, 0, 0, 0)
+                                                      BorderThickness: =0
+                                                      FocusedBorderThickness: =2
+                                                      TabIndex: =0
+                                                      Tooltip: =ThisItem.Message & " " & ThisItem.Measure
+                                                      FocusedBorderColor: =FocusStroke
+                                                      OnSelect: |
+                                                        =Set(varItem, LookUp(colWork, Title = ThisItem.Key));
+                                                         Navigate(scrWorkItem, ScreenTransition.None)
+                                                - spConclude:
+                                                    Control: ModernButton@1.0.0
+                                                    Properties:
+                                                      Appearance: =ButtonAppearance.Outline
+                                                      BasePaletteColor: =NeutralBg1
+                                                      Color: =NeutralFg1
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      RadiusTopLeft: =CtrlR
+                                                      RadiusTopRight: =CtrlR
+                                                      RadiusBottomLeft: =CtrlR
+                                                      RadiusBottomRight: =CtrlR
+                                                      X: =350
+                                                      Y: =(CmdBlockRowH - CmdBtnH) / 2
+                                                      Width: =Max(Len("Conclude") * 7 + 24, 72)
+                                                      Height: =CmdBtnH
+                                                      Text: ="Conclude"
+                                                      AccessibleLabel: ="Conclude " & ThisItem.Key
+                                                      OnSelect: |
+                                                        =Set(varItemAction, "Conclude");
+                                                         Set(varItem, LookUp(colWork, Title = ThisItem.Key));
+                                                         Navigate(scrWorkItem, ScreenTransition.None)
+
+                                    # ---- all three blocks empty ----
+                                    - cmdTodayNothing:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeBodyLine
+                                          Visible: =CmdTodayEmpty
+                                          Text: ="Nothing needs a decision today."
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Color: =NeutralFg1
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+
+                              # ---- right column: squads, this sprint, benefits ----
+                              - cmdRight:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =If(IsStacked, 0, CmdRightW)
+                                    LayoutMinWidth: =CmdRightMinW
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutGap: =Gap
+                                  Children:
+                                    # The card's row count is known, so it sizes to its content: title,
+                                    # one RowHeight a squad, and its own padding. The chart card below
+                                    # is the one flexible card in this column.
+                                    - cmdSquadsCard:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Height: |
+                                            =TypeHeadingLine + Gap + RowHeight * Min(CountRows(SquadRows), 8)
+                                             + Pad * 2
+                                          Fill: =NeutralBg1
+                                          BorderColor: =NeutralStroke1
+                                          BorderThickness: =1
+                                          RadiusTopLeft: =CardR
+                                          RadiusTopRight: =CardR
+                                          RadiusBottomLeft: =CardR
+                                          RadiusBottomRight: =CardR
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutGap: =Gap
+                                          PaddingLeft: =Pad
+                                          PaddingRight: =Pad
+                                          PaddingTop: =Pad
+                                          PaddingBottom: =Pad
+                                        Children:
+                                          - cmdSquadsTitle:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeHeadingLine
+                                                Text: ="Squads"
+                                                Size: =TypeSubtitle
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - cmdSquadList:
+                                              Control: Gallery@2.15.0
+                                              Variant: Vertical
+                                              Properties:
+                                                TemplatePadding: =0
+                                                BorderColor: =RGBA(0, 0, 0, 0)
+                                                ShowScrollbar: =true
+                                                FillPortions: =0
+                                                Height: =RowHeight * Min(CountRows(SquadRows), 8)
+                                                Items: =SquadRows
+                                                TemplateSize: =RowHeight
+                                                AccessibleLabel: ="Squads, by utilisation"
+                                              Children:
+                                                # The whole row is the target, not a control inside it: a
+                                                # transparent button over the row carries the navigation the
+                                                # way grpHead carries its collapse.
+                                                - squadRow:
+                                                    Control: GroupContainer@1.5.0
+                                                    Variant: ManualLayout
+                                                    Properties:
+                                                      X: =0
+                                                      Y: =0
+                                                      Width: =Parent.TemplateWidth
+                                                      Height: =RowHeight
+                                                    Children:
+                                                      - squadName:
+                                                          Control: Label@2.5.1
+                                                          Properties:
+                                                            X: =0
+                                                            Y: =(RowHeight - TypeBodyLine) / 2
+                                                            Width: =CmdSquadNameW
+                                                            Height: =TypeBodyLine
+                                                            Text: =ThisItem.Name
+                                                            Size: =TypeBody
+                                                            FontWeight: =FontWeight.Semibold
+                                                            Font: =FontUI
+                                                            VerticalAlign: =VerticalAlign.Middle
+                                                            Color: =NeutralFg1
+                                                            Wrap: =false
+                                                            Overflow: =Overflow.Hidden
+                                                            PaddingTop: =0
+                                                            PaddingBottom: =0
+                                                            PaddingLeft: =0
+                                                            PaddingRight: =0
+                                                      - squadPeople:
+                                                          Control: Label@2.5.1
+                                                          Properties:
+                                                            X: =CmdSquadPeopleX
+                                                            Y: =(RowHeight - TypeLabelLine) / 2
+                                                            Width: =CmdSquadPeopleW
+                                                            Height: =TypeLabelLine
+                                                            Text: =ThisItem.People & If(ThisItem.People = 1, " person", " people")
+                                                            Size: =TypeCaption
+                                                            Font: =FontUI
+                                                            VerticalAlign: =VerticalAlign.Middle
+                                                            Color: =NeutralFg2
+                                                            Wrap: =false
+                                                            Overflow: =Overflow.Hidden
+                                                            PaddingTop: =0
+                                                            PaddingBottom: =0
+                                                            PaddingLeft: =0
+                                                            PaddingRight: =0
+                                                      - squadBarTrack:
+                                                          Control: GroupContainer@1.5.0
+                                                          Variant: ManualLayout
+                                                          Properties:
+                                                            X: =CmdSquadBarX
+                                                            Y: =(RowHeight - 6) / 2
+                                                            Width: =CmdSquadBarW
+                                                            Height: =6
+                                                            Fill: =NeutralBg3
+                                                      - squadBarFill:
+                                                          Control: GroupContainer@1.5.0
+                                                          Variant: ManualLayout
+                                                          Properties:
+                                                            X: =CmdSquadBarX
+                                                            Y: =(RowHeight - 6) / 2
+                                                            Width: =CmdSquadBarW * Min(1, ThisItem.Utilisation)
+                                                            Height: =6
+                                                            Fill: |
+                                                              =If(ThisItem.Utilisation > UtilisationBad, StatusBad,
+                                                                  ThisItem.Utilisation > UtilisationWarn, StatusWarn,
+                                                                  StatusGood)
+                                                      - squadPct:
+                                                          Control: Label@2.5.1
+                                                          Properties:
+                                                            X: =CmdSquadPctX
+                                                            Y: =(RowHeight - TypeBodyLine) / 2
+                                                            Width: =CmdSquadPctW
+                                                            Height: =TypeBodyLine
+                                                            Text: =Round(ThisItem.Utilisation * 100, 0) & "%"
+                                                            Size: =TypeBody
+                                                            FontWeight: =FontWeight.Semibold
+                                                            Font: =FontUI
+                                                            VerticalAlign: =VerticalAlign.Middle
+                                                            Color: |
+                                                              =If(ThisItem.Utilisation > UtilisationBad, ToneBad,
+                                                                  ThisItem.Utilisation > UtilisationWarn, ToneWarn,
+                                                                  ToneNeutral)
+                                                            Wrap: =false
+                                                            Overflow: =Overflow.Hidden
+                                                            PaddingTop: =0
+                                                            PaddingBottom: =0
+                                                            PaddingLeft: =0
+                                                            PaddingRight: =0
+                                                      - squadMW:
+                                                          Control: Label@2.5.1
+                                                          Properties:
+                                                            X: =CmdSquadMWX
+                                                            Y: =(RowHeight - TypeLabelLine) / 2
+                                                            Width: =Max(Parent.Width - CmdSquadMWX, 80)
+                                                            Height: =TypeLabelLine
+                                                            Text: |
+                                                              =Text(ThisItem.Committed, "[$-en-US]#,##0.0") & " of "
+                                                               & Text(ThisItem.Net, "[$-en-US]#,##0.0") & " MW"
+                                                            Size: =TypeCaption
+                                                            Font: =FontUI
+                                                            VerticalAlign: =VerticalAlign.Middle
+                                                            Color: =NeutralFg2
+                                                            Wrap: =false
+                                                            Overflow: =Overflow.Hidden
+                                                            PaddingTop: =0
+                                                            PaddingBottom: =0
+                                                            PaddingLeft: =0
+                                                            PaddingRight: =0
+                                                      - squadRowHit:
+                                                          Control: Classic/Button@2.2.0
+                                                          Properties:
+                                                            X: =2
+                                                            Y: =2
+                                                            Width: =Parent.Width - 4
+                                                            Height: =Parent.Height - 4
+                                                            Text: =""
+                                                            Fill: =RGBA(0, 0, 0, 0)
+                                                            HoverFill: =RGBA(0, 0, 0, 0)
+                                                            PressedFill: =RGBA(0, 0, 0, 0)
+                                                            BorderThickness: =0
+                                                            FocusedBorderThickness: =2
+                                                            TabIndex: =0
+                                                            Tooltip: |
+                                                              =ThisItem.Name & ", " & ThisItem.People & " people, "
+                                                               & Round(ThisItem.Utilisation * 100, 0) & " per cent committed"
+                                                            FocusedBorderColor: =FocusStroke
+                                                            OnSelect: |
+                                                              =Set(varTeamSquad, ThisItem.Name);
+                                                               Navigate(scrTeam, ScreenTransition.None)
+
+                                    # Content-sized too: title, the dates kicker and one stat row.
+                                    - cmdSprintCard:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Height: |
+                                            =TypeHeadingLine + 8 + TypeLabelLine + 8
+                                             + TypeLabelLine + 8
+                                             + TypeLabelLine + 2 + TypeNumberLine + Pad * 2
+                                          Fill: =NeutralBg1
+                                          BorderColor: =NeutralStroke1
+                                          BorderThickness: =1
+                                          RadiusTopLeft: =CardR
+                                          RadiusTopRight: =CardR
+                                          RadiusBottomLeft: =CardR
+                                          RadiusBottomRight: =CardR
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutGap: =8
+                                          PaddingLeft: =Pad
+                                          PaddingRight: =Pad
+                                          PaddingTop: =Pad
+                                          PaddingBottom: =Pad
+                                        Children:
+                                          - cmdSprintTitle:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeHeadingLine
+                                                Text: ="This sprint"
+                                                Size: =TypeSubtitle
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - cmdSprintDates:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeLabelLine
+                                                Text: |
+                                                  ="S" & (SprintNow - FirstSprint + 1) & " · "
+                                                   & Text(SprintNowStart, "[$-en-GB]d mmm") & " to "
+                                                   & Text(SprintNowEnd, "[$-en-GB]d mmm") & " · "
+                                                   & SprintNowWorkingDays & " working days"
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          # Sickness is a line here rather than a list of decisions.
+                                          - cmdSprintSickness:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeLabelLine
+                                                Text: =CmdSicknessLine
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                Color: =If(CmdSickPeople > 0, ToneWarn, NeutralFg2)
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - cmdSprintStats:
+                                              Control: Gallery@2.15.0
+                                              Variant: Horizontal
+                                              Properties:
+                                                TemplatePadding: =0
+                                                BorderColor: =RGBA(0, 0, 0, 0)
+                                                ShowScrollbar: =false
+                                                FillPortions: =0
+                                                Height: =TypeLabelLine + 2 + TypeNumberLine
+                                                TemplateSize: =(Parent.Width - Pad * 2) / 4
+                                                AccessibleLabel: ="This sprint, in figures"
+                                                Items: |
+                                                  =Table(
+                                                      { Name: "Days left", Value: Text(SprintDaysLeft, "[$-en-US]0") },
+                                                      { Name: "Open days", Value: Text(OpenDaysThisSprint, "0.0") },
+                                                      { Name: "Sick",  Value: Text(OnSickThisSprint, "0") },
+                                                      { Name: "Leave", Value: Text(OnLeaveThisSprint, "0") }
+                                                  )
+                                              Children:
+                                                - sprintStatLabel:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: =0
+                                                      Y: =0
+                                                      Width: =Parent.TemplateWidth
+                                                      Height: =TypeLabelLine
+                                                      Text: =ThisItem.Name
+                                                      Size: =TypeCaption
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - sprintStatValue:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: =0
+                                                      Y: =TypeLabelLine + 2
+                                                      Width: =Parent.TemplateWidth
+                                                      Height: =TypeNumberLine
+                                                      Text: =ThisItem.Value
+                                                      Size: =TypeNumberSize
+                                                      FontWeight: =TypeNumberWeight
+                                                      Font: =FontUI
+                                                      Color: =If(ThisItem.Name = "Days left", DaysLeftTone, NeutralFg1)
+                                                      Wrap: =true
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                      AutoHeight: =true
+
+                                    # The flexible card: it takes whatever the two above leave.
+                                    - cmdBenefitsCard:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =1
+                                          Fill: =NeutralBg1
+                                          BorderColor: =NeutralStroke1
+                                          BorderThickness: =1
+                                          RadiusTopLeft: =CardR
+                                          RadiusTopRight: =CardR
+                                          RadiusBottomLeft: =CardR
+                                          RadiusBottomRight: =CardR
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutGap: =8
+                                          PaddingLeft: =Pad
+                                          PaddingRight: =Pad
+                                          PaddingTop: =Pad
+                                          PaddingBottom: =Pad
+                                        Children:
+                                          - cmdBenefitsTitle:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeHeadingLine
+                                                Text: ="Benefits " & BenefitYear
+                                                Size: =TypeSubtitle
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          # One Image holding an SVG data URI, built by MonthBarsImage in Formulas.pa.yaml.
+                                          # src/charts/monthBars.ts draws the same picture. The figures are read out in the
+                                          # accessible label, which is the sr-only table the contract asks for.
+                                          # The picture and the hover strip are one manual-layout slot, so
+                                          # the gallery sits over the Image rather than beside it in the flow.
+                                          - cmdBenefitPlot:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: ManualLayout
+                                              Properties:
+                                                FillPortions: =0
+                                                Height: |
+                                                  =Max(Parent.Height - TypeHeadingLine - TypeLabelLine
+                                                        - 8 * 2 - Pad * 2, 120)
+                                              Children:
+                                                - cmdBenefitBars:
+                                                    Control: Image@2.2.3
+                                                    Properties:
+                                                      X: =0
+                                                      Y: =0
+                                                      Width: =Parent.Width
+                                                      Height: =Parent.Height
+                                                      Image: =MonthBarsImage
+                                                      AccessibleLabel: |
+                                                        ="Benefit by month in " & BenefitYear & ". "
+                                                         & Concat(BenefitMonths As M,
+                                                                  M.Name & " £" & Text(M.Gbp, "[$-en-US]#,##0"), ", ")
+                                                # One transparent cell a month over the picture, each carrying
+                                                # that month's figures as a Tooltip. Classic/Button is the control
+                                                # CONTROLS.md has Tooltip confirmed on; Label@2.5.1 has not.
+                                                - cmdBenefitHover:
+                                                    Control: Gallery@2.15.0
+                                                    Variant: Horizontal
+                                                    Properties:
+                                                      TemplatePadding: =0
+                                                      BorderColor: =RGBA(0, 0, 0, 0)
+                                                      ShowScrollbar: =false
+                                                      X: =0
+                                                      Y: =0
+                                                      Width: =Parent.Width
+                                                      Height: =Parent.Height
+                                                      Items: =BenefitMonths
+                                                      TemplateSize: =cmdBenefitBars.Width / CountRows(BenefitMonths)
+                                                      AccessibleLabel: ="Benefit by month, figures on hover"
+                                                    Children:
+                                                      # A round dot at each month's cumulative point, on the same
+                                                      # scale MonthCumulativePoints uses: preserveAspectRatio="none"
+                                                      # on the SVG picture stretches a circle drawn inside it, so
+                                                      # the dot is drawn here instead, against Parent.Height rather
+                                                      # than the viewBox.
+                                                      - benefitHoverDot:
+                                                          Control: Image@2.2.3
+                                                          Properties:
+                                                            X: =(Parent.TemplateWidth - 8) / 2
+                                                            Y: |
+                                                              =((MonthBarsH - 2
+                                                                 - (Max(0, ThisItem.Cumulative) / MaxMonthLine)
+                                                                   * (MonthBarsH - 4))
+                                                                / MonthBarsH) * Parent.Height - 4
+                                                            Width: =8
+                                                            Height: =8
+                                                            Image: |
+                                                              ="data:image/svg+xml;utf8," & EncodeUrl(
+                                                                  "<svg xmlns=""http://www.w3.org/2000/svg"" "
+                                                                  & "viewBox=""0 0 8 8""><circle cx=""4"" cy=""4"" "
+                                                                  & "r=""3"" fill=""" & HexBrand & """ stroke="""
+                                                                  & HexCard & """ stroke-width=""1""/></svg>")
+                                                            AccessibleLabel: =""
+                                                      - benefitHoverCell:
+                                                          Control: Classic/Button@2.2.0
+                                                          Properties:
+                                                            X: =2
+                                                            Y: =2
+                                                            Width: =Parent.TemplateWidth - 4
+                                                            Height: =Parent.Height - 4
+                                                            Text: =""
+                                                            Fill: =RGBA(0, 0, 0, 0)
+                                                            HoverFill: =RGBA(0, 0, 0, 0)
+                                                            PressedFill: =RGBA(0, 0, 0, 0)
+                                                            BorderColor: =RGBA(0, 0, 0, 0)
+                                                            HoverBorderColor: =RGBA(0, 0, 0, 0)
+                                                            PressedBorderColor: =RGBA(0, 0, 0, 0)
+                                                            Color: =RGBA(0, 0, 0, 0)
+                                                            HoverColor: =RGBA(0, 0, 0, 0)
+                                                            PressedColor: =RGBA(0, 0, 0, 0)
+                                                            Font: =FontUI
+                                                            Size: =TypeCaption
+                                                            Tooltip: |
+                                                              =ThisItem.Name & ": £" & Text(ThisItem.Gbp, "[$-en-US]#,##0")
+                                                               & " in month · £" & Text(ThisItem.Cumulative, "[$-en-US]#,##0")
+                                                               & " cumulative · target £" & Text(ThisItem.Target, "[$-en-US]#,##0")
+                                                            FocusedBorderThickness: =2
+                                                            FocusedBorderColor: =FocusStroke
+                                                            TabIndex: =0
+                                          - cmdBenefitsCaption:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeLabelLine
+                                                Text: |
+                                                  ="£" & Text(Last(BenefitMonths).Cumulative, "[$-en-US]#,##0") & " of "
+                                                   & "£" & Text(GbpTarget, "[$-en-US]#,##0") & " by year end"
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                FontWeight: =FontWeight.Normal

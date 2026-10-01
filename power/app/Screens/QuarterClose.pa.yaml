@@ -1,0 +1,2365 @@
+# Waypoint canvas app: the Quarter close screen, how a quarter ends and what it leaves behind.
+#
+# Valid against pa.schema.yaml (v3.0): a Screens map, each screen with a Properties formula map and a
+# Children sequence whose items are single-key maps of control name to control instance.
+#
+# Quarter close is src/pages/QuarterClose.tsx: the band of how the quarter ends, then one pivot over
+# six views — the close itself, the record of every close, this quarter against the last snapshot,
+# what the finished work says the size bands really cost, what the quarter hands on, and the archive.
+# Every number is the engine's, through the named formulas in Formulas.pa.yaml: DeliverySummary,
+# CarryOverRows, ToMarkDoneRows, ToArchiveRows, HistoryRows, CompareRows, CalibrationRows,
+# OutlookRows and ArchiveRows. Nothing here works a number out for itself.
+#
+# The shell is scrTeam's, unchanged: qcRoot is a vertical GroupContainer the size of the screen,
+# holding the 48px header and a horizontal row of the rail and the body. X and Y appear only inside
+# the gallery templates, which are not auto-layout.
+#
+# The pivot is one ModernTabList. Its selection lands in varQcTab, and QcTab is the formula every
+# gallery's Visible reads, so the screen opens on Close the quarter before the tab list is touched.
+#
+# The close itself is the one behaviour formula on the screen: a Patch sequence mirroring
+# src/store/useDataset.ts closeQuarter(). It is guarded rather than instant — the primary button
+# only arms the confirm, and the second button beside it is what writes.
+
+Screens:
+  scrQuarterClose:
+    Properties:
+      Fill: =NeutralCanvas
+      OnVisible: |
+        =Set(varQcConfirm, false);
+        Set(varQcRunning, false);
+        Set(varQcError, "");
+        Set(varQcTab, "");
+        Set(varQcForce, false);
+        Reset(qcTabs);
+        Reset(qcForce)
+
+    Children:
+
+      # ---- the root: one vertical auto-layout container the size of the screen ----
+      - qcRoot:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            LayoutOverflowX: =LayoutOverflow.Hide
+            LayoutOverflowY: =LayoutOverflow.Hide
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =Parent.Height
+            Fill: =NeutralCanvas
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutGap: =0
+          Children:
+
+            # ---- shell: the app header ----
+            - qcHeader:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  LayoutOverflowX: =LayoutOverflow.Hide
+                  LayoutOverflowY: =LayoutOverflow.Hide
+                  FillPortions: =0
+                  Height: =AppHeaderH
+                  Fill: =BrandBg
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                  LayoutGap: =Gap
+                  PaddingLeft: =Pad
+                  PaddingRight: =Pad
+                Children:
+                  - qcHeaderName:
+                      Control: Label@2.5.1
+                      Properties:
+                        Width: =Parent.Width / 3
+                        Height: =AppHeaderH
+                        Text: ="Waypoint"
+                        Size: =TypeSubtitle
+                        FontWeight: =FontWeight.Semibold
+                        Font: =FontUI
+                        VerticalAlign: =VerticalAlign.Middle
+                        Color: =BrandFg
+                        Wrap: =true
+                        Overflow: =Overflow.Hidden
+                        PaddingTop: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        AutoHeight: =true
+                  # ---- shell: the scope selector, one cmpScope instance for every screen ----
+                  - qcHeaderScope:
+                      Control: CanvasComponent
+                      ComponentName: cmpScope
+                      Properties:
+                        Width: =Max(Parent.Width * 0.14, 180)
+                        Height: =ControlHeight
+                        Visible: =IncludeScope
+                  # ---- shell: the header search, one cmpSearch instance for every screen ----
+                  - qcHeaderSearch:
+                      Control: CanvasComponent
+                      ComponentName: cmpSearch
+                      Properties:
+                        Width: =Max(Parent.Width * 0.24, 280)
+                        Height: =ControlHeight
+                  - qcHeaderQuarter:
+                      Control: Label@2.5.1
+                      Properties:
+                        Width: =Parent.Width / 3
+                        Height: =AppHeaderH
+                        Text: =CurrentQuarter.Label & " · capacity planner"
+                        Size: =TypeCaption
+                        Font: =FontUI
+                        Align: =Align.Right
+                        VerticalAlign: =VerticalAlign.Middle
+                        Color: =ColorFade(BrandFg, -0.2)
+                        Wrap: =true
+                        Overflow: =Overflow.Hidden
+                        PaddingTop: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        AutoHeight: =true
+
+            # ---- shell: the rail, and the body beside it ----
+            - qcMain:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  LayoutOverflowX: =LayoutOverflow.Hide
+                  LayoutOverflowY: =LayoutOverflow.Hide
+                  FillPortions: =1
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutGap: =0
+                Children:
+
+                  # ---- shell: the rail, one cmpRail instance for every screen ----
+                  - qcRail:
+                      Control: CanvasComponent
+                      ComponentName: cmpRail
+                      Properties:
+                        LayoutMinWidth: =If(RailCollapsed, RailWidthTight, NavW)
+                        Width: =If(RailCollapsed, RailWidthTight, NavW)
+                        Height: =Parent.Height
+                        Active: ="QuarterClose"
+
+                  # ---- shell: the body everything else sits inside ----
+                  - qcBody:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        LayoutOverflowX: =LayoutOverflow.Hide
+                        LayoutOverflowY: =LayoutOverflow.Scroll
+                        FillPortions: =1
+                        Fill: =NeutralBg3
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutGap: =Gap
+                        PaddingLeft: =Pad
+                        PaddingRight: =Pad
+                        PaddingTop: =Pad
+                        PaddingBottom: =Pad
+                      Children:
+
+                        # ---- page head: the eyebrow and one h1 ----
+                        - qcPageHead:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =0
+                              Height: =PageHeadH
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutGap: =Gap
+                            Children:
+                              - qcHeadText:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =1
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutGap: =0
+                                  Children:
+                                    - qcEyebrow:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeKickerLine
+                                          Visible: =!IsCompact
+                                          Text: =CurrentQuarter.Label
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - qcTitle:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeDisplayLine
+                                          Text: ="Quarter close"
+                                          Size: =TypeTitle
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+
+                        # ---- the brand band: how the quarter ends ----
+                        - qcBand:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =0
+                              Height: |
+                                =If(Parent.Width < (3 * 200 + BandKickerW), BandH * 2, BandH)
+                              LayoutWrap: =true
+                              Fill: =BrandBg
+                              RadiusTopLeft: =CardR
+                              RadiusTopRight: =CardR
+                              RadiusBottomLeft: =CardR
+                              RadiusBottomRight: =CardR
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutGap: =Gap
+                              PaddingLeft: =Pad
+                              PaddingRight: =Pad
+                              PaddingTop: =10
+                              PaddingBottom: =10
+                            Children:
+                              - qcBandKicker:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Width: =BandKickerW
+                                    Height: =TypeKickerLine * 2
+                                    Text: ="How the quarter ends"
+                                    Size: =TypeCaption
+                                    FontWeight: =FontWeight.Normal
+                                    Font: =FontUI
+                                    Color: =ColorFade(BrandFg, -0.2)
+                                    Wrap: =true
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    AutoHeight: =true
+                              - qcStatDelivered:
+                                  Control: CanvasComponent
+                                  ComponentName: cmpStat
+                                  Properties:
+                                    Width: =Max((Parent.Width - Pad * 2 - BandKickerW - Gap * 3) / 3, 180)
+                                    LayoutMinWidth: =180
+                                    Height: =BandH - 20
+                                    OnBrand: =true
+                                    Label: ="Delivered"
+                                    Value: =Text(DeliverySummary.DeliveredMW, "[$-en-US]#,##0.0")
+                                    Unit: ="MW"
+                                    Sub: ="Work that reached Released or later"
+                              - qcStatCarried:
+                                  Control: CanvasComponent
+                                  ComponentName: cmpStat
+                                  Properties:
+                                    Width: =Max((Parent.Width - Pad * 2 - BandKickerW - Gap * 3) / 3, 180)
+                                    LayoutMinWidth: =180
+                                    Height: =BandH - 20
+                                    OnBrand: =true
+                                    Label: ="Carried over"
+                                    Value: =Text(CarryOverMW, "[$-en-US]#,##0.0")
+                                    Unit: ="MW"
+                                    Sub: =CarryOverCount & " items run past the quarter"
+                              - qcStatOnTime:
+                                  Control: CanvasComponent
+                                  ComponentName: cmpStat
+                                  Properties:
+                                    Width: =Max((Parent.Width - Pad * 2 - BandKickerW - Gap * 3) / 3, 180)
+                                    LayoutMinWidth: =180
+                                    Height: =BandH - 20
+                                    OnBrand: =true
+                                    Tone: ="accent"
+                                    Label: ="On time"
+                                    Value: =Round(DeliverySummary.OnTimePct * 100, 0) & "%"
+                                    Sub: |
+                                      =DeliverySummary.OnTime & " of " & DeliverySummary.Delivered
+                                       & " delivered"
+
+                        # ---- the pivot: six views over the close ----
+                        - qcPivot:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =0
+                              Height: =ControlHeight + 16
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutGap: =Gap
+                            Children:
+                              - qcTabs:
+                                  Control: ModernTabList@1.0.1
+                                  Properties:
+                                    Width: =Max(Parent.Width * 0.38, 660)
+                                    Height: =ControlHeight + 8
+                                    # hidden 20 Sep 2026: unlikely to be used; restore by adding the
+                                    # tab back — {Value:"Compare"} and {Value:"Calibration"} sat
+                                    # between History and Outlook. Their panels are still here, with
+                                    # Visible on a tab that can no longer be selected.
+                                    Items: |
+                                      =Table({Value:"Close the quarter"}, {Value:"History"},
+                                        {Value:"Outlook"}, {Value:"Archive"})
+                                    Default: ={Value:"Close the quarter"}
+                                    Font: =FontUI
+                                    Size: =TypeBodyPx
+                                    Color: =NeutralFg1
+                                    BasePaletteColor: =BrandBg
+                                    AccessibleLabel: ="Close views"
+                                    OnChange: =Set(varQcTab, qcTabs.Selected.Value)
+                                    FontWeight: =FontWeight.Semibold
+
+                        # ---- the card the six views share ----
+                        - qcCard:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =1
+                              Fill: =NeutralBg1
+                              BorderColor: =NeutralStroke1
+                              BorderThickness: =1
+                              RadiusTopLeft: =CardR
+                              RadiusTopRight: =CardR
+                              RadiusBottomLeft: =CardR
+                              RadiusBottomRight: =CardR
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              # The grid inside is never narrower than its own column minimums, so the card
+                              # scrolls sideways rather than squeezing a cell (power/RUNBOOK.md, "Tables").
+                              LayoutOverflowX: =LayoutOverflow.Scroll
+                              LayoutJustifyContent: =LayoutJustifyContent.Start
+                              LayoutGap: =8
+                              PaddingLeft: =Pad
+                              PaddingRight: =Pad
+                              PaddingTop: =Pad
+                              PaddingBottom: =Pad
+                            Children:
+
+                              # ---- Close the quarter: the four figures the close is judged on ----
+                              - qcTiles:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =0
+                                    Height: |
+                                      =If(Parent.Width < (4 * (180 + Gap)), BandH * 2, BandH)
+                                    LayoutWrap: =true
+                                    Visible: =QcTab = "Close the quarter"
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutGap: =Gap
+                                  Children:
+                                    - qcTileNet:
+                                        Control: CanvasComponent
+                                        ComponentName: cmpStat
+                                        Properties:
+                                          Width: =Max((Parent.Width - Gap * 3) / 4, 180)
+                                          LayoutMinWidth: =180
+                                          Height: =BandH - 20
+                                          Label: ="Net capacity"
+                                          Value: =Text(NetTotal, "[$-en-US]#,##0.0")
+                                          Unit: ="MW"
+                                          Sub: ="The snapshot's net member weeks"
+                                    - qcTileInPlan:
+                                        Control: CanvasComponent
+                                        ComponentName: cmpStat
+                                        Properties:
+                                          Width: =Max((Parent.Width - Gap * 3) / 4, 180)
+                                          LayoutMinWidth: =180
+                                          Height: =BandH - 20
+                                          Label: ="In plan"
+                                          Value: =Text(InPlanMW, "[$-en-US]#,##0.0")
+                                          Unit: ="MW"
+                                          Sub: ="Committed work plus what is delivered"
+                                    - qcTileDelivered:
+                                        Control: CanvasComponent
+                                        ComponentName: cmpStat
+                                        Properties:
+                                          Width: =Max((Parent.Width - Gap * 3) / 4, 180)
+                                          LayoutMinWidth: =180
+                                          Height: =BandH - 20
+                                          Label: ="Delivered"
+                                          Value: =Text(DeliveredMW, "[$-en-US]#,##0.0")
+                                          Unit: ="MW"
+                                          Sub: ="Work that reached Released or later"
+                                    - qcTileGbp:
+                                        Control: CanvasComponent
+                                        ComponentName: cmpStat
+                                        Properties:
+                                          Width: =Max((Parent.Width - Gap * 3) / 4, 180)
+                                          LayoutMinWidth: =180
+                                          Height: =BandH - 20
+                                          Label: ="Benefit in-year"
+                                          Value: ="£" & Text(GbpInYear, "[$-en-US]#,##0")
+                                          Sub: ="Claims pro-rated by landing month"
+
+                              # ---- Close the quarter: the three cards of what the close will do ----
+                              - qcCloseGrid:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =1
+                                    Visible: =QcTab = "Close the quarter"
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutAlignItems: =LayoutAlignItems.Start
+                                    LayoutGap: =Gap
+                                  Children:
+                                    - qcDoneCard:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Scroll
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =1
+                                          Fill: =NeutralBg2
+                                          RadiusTopLeft: =CardR
+                                          RadiusTopRight: =CardR
+                                          RadiusBottomLeft: =CardR
+                                          RadiusBottomRight: =CardR
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutGap: =8
+                                          PaddingLeft: =Pad
+                                          PaddingRight: =Pad
+                                          PaddingTop: =Pad
+                                          PaddingBottom: =Pad
+                                        Children:
+                                          - qcDoneTitle:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeHeadingLine
+                                                Text: |
+                                                  =CountRows(ToMarkDoneRows)
+                                                   & If(CountRows(ToMarkDoneRows) = 1,
+                                                        " item to be marked Done",
+                                                        " items to be marked Done")
+                                                Size: =TypeSubtitle
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - qcDoneEmpty:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Parent.Width
+                                                Height: =TypeBodyLine
+                                                Align: =Align.Left
+                                                Visible: =CountRows(ToMarkDoneRows) = 0
+                                                Text: ="Nothing reaches its last sprint inside the quarter."
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - qcDoneList:
+                                              Control: Gallery@2.15.0
+                                              Variant: Vertical
+                                              Properties:
+                                                TemplatePadding: =0
+                                                BorderColor: =RGBA(0, 0, 0, 0)
+                                                ShowScrollbar: =true
+                                                Width: =Max(Parent.Width, QcDnMinW)
+                                                Height: =RowHeight * Min(CountRows(ToMarkDoneRows), 8)
+                                                Visible: =CountRows(ToMarkDoneRows) > 0
+                                                Items: =ToMarkDoneRows
+                                                TemplateSize: =RowHeight
+                                                AccessibleLabel: |
+                                                  ="The items the close marks Done: every counted item "
+                                                   & "whose last sprint is inside the quarter."
+                                              Children:
+                                                - qcDoneRowState:
+                                                    Control: Badge@0.0.24
+                                                    Properties:
+                                                      X: =0
+                                                      Y: =(RowHeight - TypeLabelLine) / 2
+                                                      Width: =Min(Max(Len(ThisItem.StateName) * 7 + 20, 56), 200)
+                                                      Height: =TypeLabelLine
+                                                      Appearance: ='BadgeCanvas.Appearance'.Filled
+                                                      ThemeColor: ='BadgeCanvas.ThemeColor'.Success
+                                                      Shape: ='BadgeCanvas.Shape'.Rounded
+                                                      Content: =ThisItem.StateName
+                                                      FontSize: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Align: =Align.Center
+                                                      VerticalAlign: =VerticalAlign.Middle
+                                                - qcDoneRowTitle:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: |
+                                                        =Max(Parent.TemplateWidth * QcDnShareState, QcDnMinState)
+                                                      Y: =0
+                                                      Width: |
+                                                        =Max(Parent.TemplateWidth * QcDnShareTitle, QcDnMinTitle) - 8
+                                                      Height: =RowHeight
+                                                      Text: |
+                                                        =ThisItem.Title & " (last sprint S"
+                                                         & ThisItem.LastSprintNum & ")"
+                                                      Size: =TypeBody
+                                                      Font: =FontUI
+                                                      VerticalAlign: =VerticalAlign.Middle
+                                                      Color: =NeutralFg1
+                                                      Wrap: =true
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                      AutoHeight: =true
+                                    - qcArchiveCard:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Scroll
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =1
+                                          Fill: =NeutralBg2
+                                          RadiusTopLeft: =CardR
+                                          RadiusTopRight: =CardR
+                                          RadiusBottomLeft: =CardR
+                                          RadiusBottomRight: =CardR
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutGap: =8
+                                          PaddingLeft: =Pad
+                                          PaddingRight: =Pad
+                                          PaddingTop: =Pad
+                                          PaddingBottom: =Pad
+                                        Children:
+                                          - qcArchiveTitle:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeHeadingLine
+                                                Text: |
+                                                  =CountRows(ToArchiveRows)
+                                                   & If(CountRows(ToArchiveRows) = 1,
+                                                        " item to be archived",
+                                                        " items to be archived")
+                                                Size: =TypeSubtitle
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - qcArchiveEmpty:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Parent.Width
+                                                Height: =TypeBodyLine
+                                                Align: =Align.Left
+                                                Visible: =CountRows(ToArchiveRows) = 0
+                                                Text: ="Nothing new goes on the record."
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - qcArchiveList:
+                                              Control: Gallery@2.15.0
+                                              Variant: Vertical
+                                              Properties:
+                                                TemplatePadding: =0
+                                                BorderColor: =RGBA(0, 0, 0, 0)
+                                                ShowScrollbar: =true
+                                                Width: =Max(Parent.Width, QcDnMinW)
+                                                Height: =RowHeight * Min(CountRows(ToArchiveRows), 8)
+                                                Visible: =CountRows(ToArchiveRows) > 0
+                                                Items: =ToArchiveRows
+                                                TemplateSize: =RowHeight
+                                                AccessibleLabel: |
+                                                  ="The items the close puts on the record, with the "
+                                                   & "state each one closes in."
+                                              Children:
+                                                - qcArchiveRowState:
+                                                    Control: Badge@0.0.24
+                                                    Properties:
+                                                      X: =0
+                                                      Y: =(RowHeight - TypeLabelLine) / 2
+                                                      Width: =Min(Max(Len(ThisItem.StateName) * 7 + 20, 56), 200)
+                                                      Height: =TypeLabelLine
+                                                      Appearance: ='BadgeCanvas.Appearance'.Filled
+                                                      ThemeColor: ='BadgeCanvas.ThemeColor'.Subtle
+                                                      Shape: ='BadgeCanvas.Shape'.Rounded
+                                                      Content: =ThisItem.StateName
+                                                      FontSize: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Align: =Align.Center
+                                                      VerticalAlign: =VerticalAlign.Middle
+                                                - qcArchiveRowTitle:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: |
+                                                        =Max(Parent.TemplateWidth * QcDnShareState, QcDnMinState)
+                                                      Y: =0
+                                                      Width: |
+                                                        =Max(Parent.TemplateWidth * QcDnShareTitle, QcDnMinTitle) - 8
+                                                      Height: =RowHeight
+                                                      Text: =ThisItem.Title & " · " & ThisItem.CloseStatus
+                                                      Size: =TypeBody
+                                                      Font: =FontUI
+                                                      VerticalAlign: =VerticalAlign.Middle
+                                                      Color: =NeutralFg1
+                                                      Wrap: =true
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                      AutoHeight: =true
+                                    - qcSnapCard:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =1
+                                          Fill: =NeutralBg2
+                                          RadiusTopLeft: =CardR
+                                          RadiusTopRight: =CardR
+                                          RadiusBottomLeft: =CardR
+                                          RadiusBottomRight: =CardR
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutGap: =8
+                                          PaddingLeft: =Pad
+                                          PaddingRight: =Pad
+                                          PaddingTop: =Pad
+                                          PaddingBottom: =Pad
+                                        Children:
+                                          - qcSnapTitle:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeHeadingLine
+                                                Text: ="Snapshot"
+                                                Size: =TypeSubtitle
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - qcSnapNote:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeBodyLine * 3
+                                                Text: =QcSnapshotLine
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                                FontWeight: =FontWeight.Normal
+                                          - qcSnapFigures:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeBodyLine * 2
+                                                Text: |
+                                                  =Text(NetTotal, "[$-en-US]#,##0.0") & " net MW · "
+                                                   & Text(InPlanMW, "[$-en-US]#,##0.0") & " in plan · "
+                                                   & Text(DeliveredMW, "[$-en-US]#,##0.0") & " delivered · £"
+                                                   & Text(GbpInYear, "[$-en-US]#,##0") & " in-year"
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - qcSnapNext:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeBodyLine
+                                                Text: |
+                                                  =If(QcNextLabel = "",
+                                                      "No later quarter is set up, so the current quarter stays where it is.",
+                                                      "The current quarter then moves on to " & QcNextLabel & ".")
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          # What Dataverse answered when it refused the close.
+                                          - qcSnapProblem:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeLabelLine
+                                                Visible: =!IsBlank(varQcError)
+                                                Text: =varQcError
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                Color: =StatusBad
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+
+                              # ---- Close the quarter: the guard, and the two-step close ----
+                              - qcGuard:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =TypeBodyLine
+                                    Visible: =QcTab = "Close the quarter" && QcEarly
+                                    Text: =QcGuardLine
+                                    Size: =TypeCaption
+                                    FontWeight: =FontWeight.Semibold
+                                    Font: =FontUI
+                                    Color: =StatusWarn
+                                    Wrap: =false
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+
+                              - qcActions:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =0
+                                    Height: =ControlHeight + 8
+                                    Visible: =QcTab = "Close the quarter"
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutGap: =Gap
+                                  Children:
+                                    - qcConfirmAskBox:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =1
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutGap: =0
+                                        Children:
+                                          - qcConfirmAsk:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeBodyLine
+                                                Text: |
+                                                  =If(varQcConfirm,
+                                                      "The close marks the ended items Done, writes a snapshot, archives what is closed, then moves the current quarter on.",
+                                                      QcCountLine)
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                    # The force the guard offers: the close is blocked before the
+                                    # quarter ends unless this is on, and it is only on show then.
+                                    - qcForce:
+                                        Control: ModernToggle@1.0.0
+                                        Properties:
+                                          Font: =FontUI
+                                          FontWeight: =FontWeight.Normal
+                                          Size: =TypeCaptionPx
+                                          Color: =NeutralFg2
+                                          Width: =Max(Parent.Width * 0.09, 160)
+                                          Height: =ControlHeight
+                                          Visible: =QcEarly && !varQcConfirm
+                                          Label: ="Force the close"
+                                          AccessibleLabel: ="Force the close before the quarter ends"
+                                          # ModernToggle has no Default and Checked is rejected by
+                                          # Studio (power/canvas/CONTROLS.md), so the force lives in
+                                          # varQcForce, set by OnCheck/OnUncheck; OnVisible resets the
+                                          # control's own visual state with Reset(qcForce).
+                                          OnCheck: =Set(varQcForce, true)
+                                          OnUncheck: =Set(varQcForce, false)
+                                    # The guard is a second button, not a dialog: the primary button
+                                    # only arms the close, and the confirm beside it is what writes.
+                                    - qcCloseBtn:
+                                        Control: ModernButton@1.0.0
+                                        Properties:
+                                          Appearance: =ButtonAppearance.Primary
+                                          BasePaletteColor: =BrandBg
+                                          Color: =BrandFg
+                                          Font: =FontUI
+                                          Size: =TypeBodyPx
+                                          RadiusTopLeft: =CtrlR
+                                          RadiusTopRight: =CtrlR
+                                          RadiusBottomLeft: =CtrlR
+                                          RadiusBottomRight: =CtrlR
+                                          Width: =Max(Parent.Width * 0.11, 180)
+                                          Height: =ControlHeight
+                                          DisplayMode: |
+                                            =If(varQcConfirm || (QcEarly && !varQcForce),
+                                                DisplayMode.Disabled, DisplayMode.Edit)
+                                          Text: =QcCloseLabel
+                                          AccessibleLabel: =QcCloseLabel
+                                          OnSelect: =Set(varQcConfirm, true)
+                                    - qcCancelBtn:
+                                        Control: ModernButton@1.0.0
+                                        Properties:
+                                          Appearance: =ButtonAppearance.Secondary
+                                          BasePaletteColor: =NeutralBg1
+                                          Color: =NeutralFg1
+                                          Font: =FontUI
+                                          Size: =TypeBodyPx
+                                          RadiusTopLeft: =CtrlR
+                                          RadiusTopRight: =CtrlR
+                                          RadiusBottomLeft: =CtrlR
+                                          RadiusBottomRight: =CtrlR
+                                          Width: =Max(Parent.Width * 0.06, 100)
+                                          Height: =ControlHeight
+                                          Visible: =varQcConfirm
+                                          Text: ="Cancel"
+                                          AccessibleLabel: ="Cancel the close"
+                                          OnSelect: =Set(varQcConfirm, false)
+                                    # The close itself: markEndedDone, takeSnapshot, archiveClosed
+                                    # and advanceQuarter, in the order useDataset.ts runs them.
+                                    - qcConfirmBtn:
+                                        Control: ModernButton@1.0.0
+                                        Properties:
+                                          Appearance: =ButtonAppearance.Primary
+                                          BasePaletteColor: =BrandBg
+                                          Color: =BrandFg
+                                          Font: =FontUI
+                                          Size: =TypeBodyPx
+                                          RadiusTopLeft: =CtrlR
+                                          RadiusTopRight: =CtrlR
+                                          RadiusBottomLeft: =CtrlR
+                                          RadiusBottomRight: =CtrlR
+                                          Width: =Max(Parent.Width * 0.13, 220)
+                                          Height: =ControlHeight
+                                          Visible: =varQcConfirm
+                                          DisplayMode: |
+                                            =If(varQcRunning, DisplayMode.Disabled, DisplayMode.Edit)
+                                          Text: ="Yes, " & Lower(QcCloseLabel)
+                                          AccessibleLabel: ="Yes, " & Lower(QcCloseLabel)
+                                          OnSelect: |
+                                            =Set(varQcRunning, true);
+                                             Set(varQcError, "");
+                                             // useDataset.ts closeQuarter(): the ended items are
+                                             // marked Done first, so the snapshot and the archive
+                                             // both read the marked figures, then the quarter
+                                             // moves on. A ; chain does not stop at an error, so
+                                             // every stage writes once and the next one only runs
+                                             // while varQcError is still blank.
+                                             With({ q: LookUp(Quarters, Label = CurrentQuarter.Label),
+                                                    n: QcNextQuarter,
+                                                    team: CurrentQuarter.Team,
+                                                    doneState: LookUp('Work states', State = "Done") },
+                                                 If(IsBlank(q) || IsBlank(doneState),
+                                                    Set(varQcError, "The current quarter or the Done state could not be found; nothing was written."),
+                                                     With({ done: Filter(ForAll(ToMarkDoneRows As D,
+                                                                                { Row: D, Item: LookUp(colWork, Title = D.Title) }),
+                                                                         !IsBlank(Item)) },
+                                                         If(CountRows(done) < CountRows(ToMarkDoneRows),
+                                                            Set(varQcError,
+                                                                CountRows(ToMarkDoneRows) - CountRows(done)
+                                                                 & " items to mark Done have no work item of that title, so nothing was written."),
+                                                            IfError(
+                                                                Patch('Work items',
+                                                                      ForAll(done As X, X.Item),
+                                                                      ForAll(done As X, { State: doneState,
+                                                                                          'Done in sprint': X.Row.DoneInSprint })),
+                                                                Set(varQcError, FirstError.Message), true)));
+                                                     If(IsBlank(varQcError),
+                                                        IfError(ClearCollect(colWork, 'Work items'),
+                                                                Set(varQcError, FirstError.Message), true));
+                                                     If(IsBlank(varQcError) && !QcSnapshotTaken,
+                                                        IfError(
+                                                            Patch('Quarter snapshots', Defaults('Quarter snapshots'),
+                                                                  { Name: "Snapshot " & CurrentQuarter.Label,
+                                                                    Quarter: q,
+                                                                    'Net capacity (MW)': NetTotal,
+                                                                    'In-plan MW': InPlanMW,
+                                                                    'Delivered MW': DeliveredMW,
+                                                                    'FTE released': FteClaimed,
+                                                                    'Benefit in-year': GbpInYear,
+                                                                    Note: "Snapshot " & Text(Today(), "[$-en-US]yyyy-mm-dd"),
+                                                                    'Taken on': Now(),
+                                                                    Team: If(IsBlank(team), q.Team, team) }),
+                                                            Set(varQcError, FirstError.Message), true));
+                                                     If(IsBlank(varQcError),
+                                                        With({ arch: Filter(ForAll(ToArchiveRows As A,
+                                                                                   { Row: A, Item: LookUp(colWork, Title = A.Title) }),
+                                                                            !IsBlank(Item)) },
+                                                            If(CountRows(arch) < CountRows(ToArchiveRows),
+                                                               Set(varQcError,
+                                                                   CountRows(ToArchiveRows) - CountRows(arch)
+                                                                    & " items to archive have no work item of that title, so nothing was written."),
+                                                               IfError(
+                                                                   Patch(Archive,
+                                                                         ForAll(arch As X, Defaults(Archive)),
+                                                                         ForAll(arch As X,
+                                                                             { Title: X.Row.Title,
+                                                                               Quarter: q,
+                                                                               'Row kind': 'Row kind (Archive)'.Work,
+                                                                               'Work item': X.Item,
+                                                                               'Jira key': X.Row.Jira,
+                                                                               Epic: X.Row.Epic,
+                                                                               Squad: X.Row.Squad,
+                                                                               State: X.Row.StateName,
+                                                                               Assignee: X.Row.Assignee,
+                                                                               'Close status': X.Row.CloseStatus,
+                                                                               Size: X.Row.Size,
+                                                                               'Original MW': X.Row.Original,
+                                                                               'Latest MW': X.Row.Latest,
+                                                                               'Actual MW': X.Row.Actual,
+                                                                               Team: If(IsBlank(team), X.Item.Team, team) })),
+                                                                   Set(varQcError, FirstError.Message), true);
+                                                               If(IsBlank(varQcError),
+                                                                  IfError(
+                                                                      Patch('Work items',
+                                                                            ForAll(arch As X, X.Item),
+                                                                            ForAll(arch As X, { 'Archived in quarter': q })),
+                                                                      Set(varQcError, FirstError.Message), true)))));
+                                                     If(IsBlank(varQcError),
+                                                        If(!IsBlank(n),
+                                                           IfError(
+                                                               Patch(Quarters, q, { 'Current quarter': false, 'Closed on': Now() }),
+                                                               Set(varQcError, FirstError.Message), true);
+                                                           If(IsBlank(varQcError),
+                                                              IfError(Patch(Quarters, n, { 'Current quarter': true }),
+                                                                      Set(varQcError, FirstError.Message), true)),
+                                                           IfError(Patch(Quarters, q, { 'Closed on': Now() }),
+                                                                   Set(varQcError, FirstError.Message), true)));
+                                                     If(IsBlank(varQcError),
+                                                        Concurrent(
+                                                            ClearCollect(colQuarters, Quarters),
+                                                            ClearCollect(colWork, 'Work items'),
+                                                            ClearCollect(colSnapshots, 'Quarter snapshots'),
+                                                            ClearCollect(colArchive, Archive));
+                                                        Notify("The quarter is closed and the record is written.",
+                                                               NotificationType.Success))));
+                                             Set(varQcConfirm, false);
+                                             Set(varQcRunning, false)
+
+                              # ---- History: the column heads, then one row per closed quarter ----
+                              - qcHistoryHead:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    FillPortions: =0
+                                    Width: =Max(Parent.Width, QcHiMinW)
+                                    Height: =RowHeight
+                                    Visible: =QcTab = "History"
+                                  Children:
+                                    - qcHiHeadQuarter:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * QcHiShareQuarter, QcHiMinQuarter) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Quarter"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - qcHiHeadNet:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =Max(Parent.Width * QcHiShareQuarter, QcHiMinQuarter)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * QcHiShareNet, QcHiMinNet) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Net MW"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - qcHiHeadInPlan:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * QcHiShareQuarter, QcHiMinQuarter)
+                                             + Max(Parent.Width * QcHiShareNet, QcHiMinNet)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * QcHiShareInPlan, QcHiMinInPlan) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="In plan MW"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - qcHiHeadDeliv:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * QcHiShareQuarter, QcHiMinQuarter)
+                                             + Max(Parent.Width * QcHiShareNet, QcHiMinNet)
+                                             + Max(Parent.Width * QcHiShareInPlan, QcHiMinInPlan)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * QcHiShareDeliv, QcHiMinDeliv) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Delivered MW"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - qcHiHeadFte:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * QcHiShareQuarter, QcHiMinQuarter)
+                                             + Max(Parent.Width * QcHiShareNet, QcHiMinNet)
+                                             + Max(Parent.Width * QcHiShareInPlan, QcHiMinInPlan)
+                                             + Max(Parent.Width * QcHiShareDeliv, QcHiMinDeliv)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * QcHiShareFte, QcHiMinFte) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="FTE in-year"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - qcHiHeadGbp:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * QcHiShareQuarter, QcHiMinQuarter)
+                                             + Max(Parent.Width * QcHiShareNet, QcHiMinNet)
+                                             + Max(Parent.Width * QcHiShareInPlan, QcHiMinInPlan)
+                                             + Max(Parent.Width * QcHiShareDeliv, QcHiMinDeliv)
+                                             + Max(Parent.Width * QcHiShareFte, QcHiMinFte)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * QcHiShareGbp, QcHiMinGbp) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="£ in-year"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - qcHiHeadLoad:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * QcHiShareQuarter, QcHiMinQuarter)
+                                             + Max(Parent.Width * QcHiShareNet, QcHiMinNet)
+                                             + Max(Parent.Width * QcHiShareInPlan, QcHiMinInPlan)
+                                             + Max(Parent.Width * QcHiShareDeliv, QcHiMinDeliv)
+                                             + Max(Parent.Width * QcHiShareFte, QcHiMinFte)
+                                             + Max(Parent.Width * QcHiShareGbp, QcHiMinGbp)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * QcHiShareLoad, QcHiMinLoad) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Plan load"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - qcHiHeadPred:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * QcHiShareQuarter, QcHiMinQuarter)
+                                             + Max(Parent.Width * QcHiShareNet, QcHiMinNet)
+                                             + Max(Parent.Width * QcHiShareInPlan, QcHiMinInPlan)
+                                             + Max(Parent.Width * QcHiShareDeliv, QcHiMinDeliv)
+                                             + Max(Parent.Width * QcHiShareFte, QcHiMinFte)
+                                             + Max(Parent.Width * QcHiShareGbp, QcHiMinGbp)
+                                             + Max(Parent.Width * QcHiShareLoad, QcHiMinLoad)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * QcHiSharePred, QcHiMinPred) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Predictability"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+
+                              - qcHistoryEmpty:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Width: =Parent.Width
+                                    Height: =TypeBodyLine
+                                    Align: =Align.Left
+                                    Visible: =QcTab = "History" && CountRows(HistoryRows) = 0
+                                    Text: ="No quarters closed yet."
+                                    Size: =TypeBody
+                                    Font: =FontUI
+                                    Color: =NeutralFg2
+                                    Wrap: =false
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+
+                              - qcHistory:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    TemplatePadding: =0
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Width: =Max(Parent.Width, QcHiMinW)
+                                    ShowScrollbar: =true
+                                    Height: |
+                                      =(TypeBodyLine + TypeLabelLine + 8) * Min(CountRows(HistoryRows), 8)
+                                    Visible: =QcTab = "History" && CountRows(HistoryRows) > 0
+                                    Items: =HistoryRows
+                                    TemplateSize: =TypeBodyLine + TypeLabelLine + 8
+                                    AccessibleLabel: |
+                                      ="History: one row per closed quarter, kept for audit and "
+                                       & "comparison."
+                                  Children:
+                                    - qcHiRowQuarter:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =0
+                                          Width: |
+                                            =Max(Parent.TemplateWidth * QcHiShareQuarter, QcHiMinQuarter) - 8
+                                          Height: =TypeBodyLine
+                                          Text: =ThisItem.Quarter
+                                          Size: =TypeBody
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - qcHiRowNote:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =TypeBodyLine + 2
+                                          Width: |
+                                            =Max(Parent.TemplateWidth * QcHiShareQuarter, QcHiMinQuarter) - 8
+                                          Height: =TypeLabelLine
+                                          Text: =If(ThisItem.Note = "", "No note", ThisItem.Note)
+                                          Size: =TypeCaption
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - qcHiRowNet:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =Max(Parent.TemplateWidth * QcHiShareQuarter, QcHiMinQuarter)
+                                          Y: =0
+                                          Width: =Max(Parent.TemplateWidth * QcHiShareNet, QcHiMinNet) - 8
+                                          Height: =TypeBodyLine + TypeLabelLine + 8
+                                          Text: =Text(ThisItem.Net, "[$-en-US]#,##0.0")
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - qcHiRowInPlan:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * QcHiShareQuarter, QcHiMinQuarter)
+                                             + Max(Parent.TemplateWidth * QcHiShareNet, QcHiMinNet)
+                                          Y: =0
+                                          Width: |
+                                            =Max(Parent.TemplateWidth * QcHiShareInPlan, QcHiMinInPlan) - 8
+                                          Height: =TypeBodyLine + TypeLabelLine + 8
+                                          Text: =Text(ThisItem.InPlan, "[$-en-US]#,##0.0")
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - qcHiRowDeliv:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * QcHiShareQuarter, QcHiMinQuarter)
+                                             + Max(Parent.TemplateWidth * QcHiShareNet, QcHiMinNet)
+                                             + Max(Parent.TemplateWidth * QcHiShareInPlan, QcHiMinInPlan)
+                                          Y: =0
+                                          Width: |
+                                            =Max(Parent.TemplateWidth * QcHiShareDeliv, QcHiMinDeliv) - 8
+                                          Height: =TypeBodyLine + TypeLabelLine + 8
+                                          Text: =Text(ThisItem.Delivered, "[$-en-US]#,##0.0")
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - qcHiRowFte:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * QcHiShareQuarter, QcHiMinQuarter)
+                                             + Max(Parent.TemplateWidth * QcHiShareNet, QcHiMinNet)
+                                             + Max(Parent.TemplateWidth * QcHiShareInPlan, QcHiMinInPlan)
+                                             + Max(Parent.TemplateWidth * QcHiShareDeliv, QcHiMinDeliv)
+                                          Y: =0
+                                          Width: =Max(Parent.TemplateWidth * QcHiShareFte, QcHiMinFte) - 8
+                                          Height: =TypeBodyLine + TypeLabelLine + 8
+                                          Text: =Text(ThisItem.Fte, "[$-en-US]#,##0.00")
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - qcHiRowGbp:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * QcHiShareQuarter, QcHiMinQuarter)
+                                             + Max(Parent.TemplateWidth * QcHiShareNet, QcHiMinNet)
+                                             + Max(Parent.TemplateWidth * QcHiShareInPlan, QcHiMinInPlan)
+                                             + Max(Parent.TemplateWidth * QcHiShareDeliv, QcHiMinDeliv)
+                                             + Max(Parent.TemplateWidth * QcHiShareFte, QcHiMinFte)
+                                          Y: =0
+                                          Width: =Max(Parent.TemplateWidth * QcHiShareGbp, QcHiMinGbp) - 8
+                                          Height: =TypeBodyLine + TypeLabelLine + 8
+                                          Text: ="£" & Text(ThisItem.Gbp, "[$-en-US]#,##0")
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - qcHiRowLoad:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * QcHiShareQuarter, QcHiMinQuarter)
+                                             + Max(Parent.TemplateWidth * QcHiShareNet, QcHiMinNet)
+                                             + Max(Parent.TemplateWidth * QcHiShareInPlan, QcHiMinInPlan)
+                                             + Max(Parent.TemplateWidth * QcHiShareDeliv, QcHiMinDeliv)
+                                             + Max(Parent.TemplateWidth * QcHiShareFte, QcHiMinFte)
+                                             + Max(Parent.TemplateWidth * QcHiShareGbp, QcHiMinGbp)
+                                          Y: =0
+                                          Width: =Max(Parent.TemplateWidth * QcHiShareLoad, QcHiMinLoad) - 8
+                                          Height: =TypeBodyLine + TypeLabelLine + 8
+                                          Text: =Round(ThisItem.Load * 100, 0) & "%"
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - qcHiRowPred:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * QcHiShareQuarter, QcHiMinQuarter)
+                                             + Max(Parent.TemplateWidth * QcHiShareNet, QcHiMinNet)
+                                             + Max(Parent.TemplateWidth * QcHiShareInPlan, QcHiMinInPlan)
+                                             + Max(Parent.TemplateWidth * QcHiShareDeliv, QcHiMinDeliv)
+                                             + Max(Parent.TemplateWidth * QcHiShareFte, QcHiMinFte)
+                                             + Max(Parent.TemplateWidth * QcHiShareGbp, QcHiMinGbp)
+                                             + Max(Parent.TemplateWidth * QcHiShareLoad, QcHiMinLoad)
+                                          Y: =0
+                                          Width: =Max(Parent.TemplateWidth * QcHiSharePred, QcHiMinPred) - 8
+                                          Height: =TypeBodyLine + TypeLabelLine + 8
+                                          Text: =Round(ThisItem.Predictability * 100, 0) & "%"
+                                          Size: =TypeBody
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          # Predictability (delivered against plan) is the History table's
+                                          # on-time-style measure: good at 100%, warn under 80%, bad under 60%.
+                                          # No NumberTones row fits these thresholds, so the tones are inline
+                                          # against the same table's colours (power/RUNBOOK.md, "Number tones").
+                                          Color: |
+                                            =With({ v: ThisItem.Predictability },
+                                                If(v >= 1, ToneGood,
+                                                   If(v < 0.6, ToneBad,
+                                                      If(v < 0.8, ToneWarn, ToneNeutral))))
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+
+                              # ---- Outlook: each squad over this quarter and the two after it ----
+                              - qcOutlookHead:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    FillPortions: =0
+                                    Width: =Max(Parent.Width, QcOuMinW)
+                                    Height: =RowHeight
+                                    Visible: =QcTab = "Outlook"
+                                  Children:
+                                    - qcOuHeadSquad:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * QcOuShareSquad, QcOuMinSquad) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Squad"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - qcOuHeadQuarter:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =Max(Parent.Width * QcOuShareSquad, QcOuMinSquad)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * QcOuShareQuarter, QcOuMinQuarter) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Quarter"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - qcOuHeadNet:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * QcOuShareSquad, QcOuMinSquad)
+                                             + Max(Parent.Width * QcOuShareQuarter, QcOuMinQuarter)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * QcOuShareNet, QcOuMinNet) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Net MW"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - qcOuHeadReserved:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * QcOuShareSquad, QcOuMinSquad)
+                                             + Max(Parent.Width * QcOuShareQuarter, QcOuMinQuarter)
+                                             + Max(Parent.Width * QcOuShareNet, QcOuMinNet)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * QcOuShareReserved, QcOuMinReserved) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Reserved"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - qcOuHeadInPlan:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * QcOuShareSquad, QcOuMinSquad)
+                                             + Max(Parent.Width * QcOuShareQuarter, QcOuMinQuarter)
+                                             + Max(Parent.Width * QcOuShareNet, QcOuMinNet)
+                                             + Max(Parent.Width * QcOuShareReserved, QcOuMinReserved)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * QcOuShareInPlan, QcOuMinInPlan) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="In plan"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - qcOuHeadRemaining:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * QcOuShareSquad, QcOuMinSquad)
+                                             + Max(Parent.Width * QcOuShareQuarter, QcOuMinQuarter)
+                                             + Max(Parent.Width * QcOuShareNet, QcOuMinNet)
+                                             + Max(Parent.Width * QcOuShareReserved, QcOuMinReserved)
+                                             + Max(Parent.Width * QcOuShareInPlan, QcOuMinInPlan)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: |
+                                            =Max(Parent.Width * QcOuShareRemaining, QcOuMinRemaining) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Remaining"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+
+                              - qcOutlookEmpty:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Width: =Parent.Width
+                                    Height: =TypeBodyLine
+                                    Align: =Align.Left
+                                    Visible: =QcTab = "Outlook" && CountRows(OutlookRows) = 0
+                                    Text: ="No squads to show an outlook for."
+                                    Size: =TypeBody
+                                    Font: =FontUI
+                                    Color: =NeutralFg2
+                                    Wrap: =false
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+
+                              - qcOutlook:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    TemplatePadding: =0
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Width: =Max(Parent.Width, QcOuMinW)
+                                    ShowScrollbar: =true
+                                    FillPortions: =1
+                                    Visible: =QcTab = "Outlook" && CountRows(OutlookRows) > 0
+                                    Items: =OutlookRows
+                                    TemplateSize: =RowHeight
+                                    AccessibleLabel: |
+                                      ="Outlook: each squad's net capacity, what is held and what is "
+                                       & "already in the plan, for this quarter and the two after it."
+                                  Children:
+                                    - qcOuRowSquad:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =0
+                                          Width: |
+                                            =Max(Parent.TemplateWidth * QcOuShareSquad, QcOuMinSquad) - 8
+                                          Height: =RowHeight
+                                          Text: =ThisItem.Squad
+                                          Size: =TypeBody
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - qcOuRowQuarter:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =Max(Parent.TemplateWidth * QcOuShareSquad, QcOuMinSquad)
+                                          Y: =0
+                                          Width: |
+                                            =Max(Parent.TemplateWidth * QcOuShareQuarter, QcOuMinQuarter) - 8
+                                          Height: =RowHeight
+                                          Text: =ThisItem.Quarter
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: |
+                                            =If(ThisItem.Quarter = CurrentQuarter.Label,
+                                                NeutralFg1, NeutralFg2)
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - qcOuRowNet:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * QcOuShareSquad, QcOuMinSquad)
+                                             + Max(Parent.TemplateWidth * QcOuShareQuarter, QcOuMinQuarter)
+                                          Y: =0
+                                          Width: =Max(Parent.TemplateWidth * QcOuShareNet, QcOuMinNet) - 8
+                                          Height: =RowHeight
+                                          Text: =Text(ThisItem.Net, "[$-en-US]#,##0.0")
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - qcOuRowReserved:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * QcOuShareSquad, QcOuMinSquad)
+                                             + Max(Parent.TemplateWidth * QcOuShareQuarter, QcOuMinQuarter)
+                                             + Max(Parent.TemplateWidth * QcOuShareNet, QcOuMinNet)
+                                          Y: =0
+                                          Width: |
+                                            =Max(Parent.TemplateWidth * QcOuShareReserved, QcOuMinReserved) - 8
+                                          Height: =RowHeight
+                                          Text: =Text(ThisItem.Reserved, "[$-en-US]#,##0.0")
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - qcOuRowInPlan:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * QcOuShareSquad, QcOuMinSquad)
+                                             + Max(Parent.TemplateWidth * QcOuShareQuarter, QcOuMinQuarter)
+                                             + Max(Parent.TemplateWidth * QcOuShareNet, QcOuMinNet)
+                                             + Max(Parent.TemplateWidth * QcOuShareReserved, QcOuMinReserved)
+                                          Y: =0
+                                          Width: |
+                                            =Max(Parent.TemplateWidth * QcOuShareInPlan, QcOuMinInPlan) - 8
+                                          Height: =RowHeight
+                                          Text: =Text(ThisItem.InPlan, "[$-en-US]#,##0.0")
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - qcOuRowRemaining:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * QcOuShareSquad, QcOuMinSquad)
+                                             + Max(Parent.TemplateWidth * QcOuShareQuarter, QcOuMinQuarter)
+                                             + Max(Parent.TemplateWidth * QcOuShareNet, QcOuMinNet)
+                                             + Max(Parent.TemplateWidth * QcOuShareReserved, QcOuMinReserved)
+                                             + Max(Parent.TemplateWidth * QcOuShareInPlan, QcOuMinInPlan)
+                                          Y: =0
+                                          Width: |
+                                            =Max(Parent.TemplateWidth * QcOuShareRemaining, QcOuMinRemaining) - 8
+                                          Height: =RowHeight
+                                          Text: |
+                                            =Text(ThisItem.Remaining, "[$-en-US]#,##0.0") & " · "
+                                             & If(ThisItem.Remaining < 0, "over", "free")
+                                          Size: =TypeBody
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          # Toned by the row's own utilisation against NumberTones' "utilisation"
+                                          # row (power/RUNBOOK.md, "Number tones"; per-row inline pattern from
+                                          # Formulas.pa.yaml's NumberTones region).
+                                          Color: |
+                                            =With({ t: LookUp(NumberTones, Metric = "utilisation"),
+                                                    v: If(Coalesce(ThisItem.Net, 0) = 0, 0,
+                                                          (Coalesce(ThisItem.Net, 0) - Coalesce(ThisItem.Remaining, 0)) / ThisItem.Net) },
+                                                If(t.HigherIsWorse,
+                                                   If(v >= t.BadAt, ToneBad,
+                                                      If(v >= t.WarnAt, ToneWarn, ToneNeutral)),
+                                                   If(v <= t.BadAt, ToneBad,
+                                                      If(v <= t.WarnAt, ToneWarn, ToneNeutral))))
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+
+                              # ---- Archive: what every close has put on the record ----
+                              - qcArchiveHead:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    FillPortions: =0
+                                    Width: =Max(Parent.Width, QcArMinW)
+                                    Height: =RowHeight
+                                    Visible: =QcTab = "Archive"
+                                  Children:
+                                    - qcArHeadTitle:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * QcArShareTitle, QcArMinTitle) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Title"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - qcArHeadQuarter:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =Max(Parent.Width * QcArShareTitle, QcArMinTitle)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * QcArShareQuarter, QcArMinQuarter) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Quarter"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - qcArHeadId:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * QcArShareTitle, QcArMinTitle)
+                                             + Max(Parent.Width * QcArShareQuarter, QcArMinQuarter)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * QcArShareId, QcArMinId) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="ID"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - qcArHeadEpic:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * QcArShareTitle, QcArMinTitle)
+                                             + Max(Parent.Width * QcArShareQuarter, QcArMinQuarter)
+                                             + Max(Parent.Width * QcArShareId, QcArMinId)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * QcArShareEpic, QcArMinEpic) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Epic"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - qcArHeadSquad:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * QcArShareTitle, QcArMinTitle)
+                                             + Max(Parent.Width * QcArShareQuarter, QcArMinQuarter)
+                                             + Max(Parent.Width * QcArShareId, QcArMinId)
+                                             + Max(Parent.Width * QcArShareEpic, QcArMinEpic)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * QcArShareSquad, QcArMinSquad) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Squad"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - qcArHeadState:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * QcArShareTitle, QcArMinTitle)
+                                             + Max(Parent.Width * QcArShareQuarter, QcArMinQuarter)
+                                             + Max(Parent.Width * QcArShareId, QcArMinId)
+                                             + Max(Parent.Width * QcArShareEpic, QcArMinEpic)
+                                             + Max(Parent.Width * QcArShareSquad, QcArMinSquad)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * QcArShareState, QcArMinState) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="State at close"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - qcArHeadStatus:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * QcArShareTitle, QcArMinTitle)
+                                             + Max(Parent.Width * QcArShareQuarter, QcArMinQuarter)
+                                             + Max(Parent.Width * QcArShareId, QcArMinId)
+                                             + Max(Parent.Width * QcArShareEpic, QcArMinEpic)
+                                             + Max(Parent.Width * QcArShareSquad, QcArMinSquad)
+                                             + Max(Parent.Width * QcArShareState, QcArMinState)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * QcArShareStatus, QcArMinStatus) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Delivery status"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - qcArHeadSize:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * QcArShareTitle, QcArMinTitle)
+                                             + Max(Parent.Width * QcArShareQuarter, QcArMinQuarter)
+                                             + Max(Parent.Width * QcArShareId, QcArMinId)
+                                             + Max(Parent.Width * QcArShareEpic, QcArMinEpic)
+                                             + Max(Parent.Width * QcArShareSquad, QcArMinSquad)
+                                             + Max(Parent.Width * QcArShareState, QcArMinState)
+                                             + Max(Parent.Width * QcArShareStatus, QcArMinStatus)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * QcArShareSize, QcArMinSize) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Size"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - qcArHeadOriginal:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * QcArShareTitle, QcArMinTitle)
+                                             + Max(Parent.Width * QcArShareQuarter, QcArMinQuarter)
+                                             + Max(Parent.Width * QcArShareId, QcArMinId)
+                                             + Max(Parent.Width * QcArShareEpic, QcArMinEpic)
+                                             + Max(Parent.Width * QcArShareSquad, QcArMinSquad)
+                                             + Max(Parent.Width * QcArShareState, QcArMinState)
+                                             + Max(Parent.Width * QcArShareStatus, QcArMinStatus)
+                                             + Max(Parent.Width * QcArShareSize, QcArMinSize)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * QcArShareOriginal, QcArMinOriginal) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Original MW"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - qcArHeadLatest:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * QcArShareTitle, QcArMinTitle)
+                                             + Max(Parent.Width * QcArShareQuarter, QcArMinQuarter)
+                                             + Max(Parent.Width * QcArShareId, QcArMinId)
+                                             + Max(Parent.Width * QcArShareEpic, QcArMinEpic)
+                                             + Max(Parent.Width * QcArShareSquad, QcArMinSquad)
+                                             + Max(Parent.Width * QcArShareState, QcArMinState)
+                                             + Max(Parent.Width * QcArShareStatus, QcArMinStatus)
+                                             + Max(Parent.Width * QcArShareSize, QcArMinSize)
+                                             + Max(Parent.Width * QcArShareOriginal, QcArMinOriginal)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * QcArShareLatest, QcArMinLatest) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Latest MW"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - qcArHeadActual:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * QcArShareTitle, QcArMinTitle)
+                                             + Max(Parent.Width * QcArShareQuarter, QcArMinQuarter)
+                                             + Max(Parent.Width * QcArShareId, QcArMinId)
+                                             + Max(Parent.Width * QcArShareEpic, QcArMinEpic)
+                                             + Max(Parent.Width * QcArShareSquad, QcArMinSquad)
+                                             + Max(Parent.Width * QcArShareState, QcArMinState)
+                                             + Max(Parent.Width * QcArShareStatus, QcArMinStatus)
+                                             + Max(Parent.Width * QcArShareSize, QcArMinSize)
+                                             + Max(Parent.Width * QcArShareOriginal, QcArMinOriginal)
+                                             + Max(Parent.Width * QcArShareLatest, QcArMinLatest)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * QcArShareActual, QcArMinActual) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Actual MW"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+
+                              - qcArchiveEmptyTab:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Width: =Parent.Width
+                                    Height: =TypeBodyLine
+                                    Align: =Align.Left
+                                    Visible: =QcTab = "Archive" && CountRows(ArchiveRows) = 0
+                                    Text: ="No quarters closed yet."
+                                    Size: =TypeBody
+                                    Font: =FontUI
+                                    Color: =NeutralFg2
+                                    Wrap: =false
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+
+                              - qcArchive:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    TemplatePadding: =0
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Width: =Max(Parent.Width, QcArMinW)
+                                    ShowScrollbar: =true
+                                    Height: =RowHeight * Min(CountRows(ArchiveRows), 8)
+                                    Visible: =QcTab = "Archive" && CountRows(ArchiveRows) > 0
+                                    Items: =ArchiveRows
+                                    TemplateSize: =RowHeight
+                                    AccessibleLabel: |
+                                      ="Archive: what each quarter held, written at its close."
+                                  Children:
+                                    - qcArRowTitle:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =0
+                                          Width: |
+                                            =Max(Parent.TemplateWidth * QcArShareTitle, QcArMinTitle) - 8
+                                          Height: =RowHeight
+                                          Text: =ThisItem.Title
+                                          Size: =TypeBody
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - qcArRowQuarter:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =Max(Parent.TemplateWidth * QcArShareTitle, QcArMinTitle)
+                                          Y: =0
+                                          Width: |
+                                            =Max(Parent.TemplateWidth * QcArShareQuarter, QcArMinQuarter) - 8
+                                          Height: =RowHeight
+                                          Text: =ThisItem.Quarter
+                                          Size: =TypeCaption
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - qcArRowId:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * QcArShareTitle, QcArMinTitle)
+                                             + Max(Parent.TemplateWidth * QcArShareQuarter, QcArMinQuarter)
+                                          Y: =0
+                                          Width: =Max(Parent.TemplateWidth * QcArShareId, QcArMinId) - 8
+                                          Height: =RowHeight
+                                          Text: =If(ThisItem.Id = "", "—", ThisItem.Id)
+                                          Size: =TypeCaption
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg2
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - qcArRowEpic:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * QcArShareTitle, QcArMinTitle)
+                                             + Max(Parent.TemplateWidth * QcArShareQuarter, QcArMinQuarter)
+                                             + Max(Parent.TemplateWidth * QcArShareId, QcArMinId)
+                                          Y: =0
+                                          Width: =Max(Parent.TemplateWidth * QcArShareEpic, QcArMinEpic) - 8
+                                          Height: =RowHeight
+                                          Text: =If(ThisItem.Epic = "", "—", ThisItem.Epic)
+                                          Size: =TypeCaption
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg2
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - qcArRowSquad:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * QcArShareTitle, QcArMinTitle)
+                                             + Max(Parent.TemplateWidth * QcArShareQuarter, QcArMinQuarter)
+                                             + Max(Parent.TemplateWidth * QcArShareId, QcArMinId)
+                                             + Max(Parent.TemplateWidth * QcArShareEpic, QcArMinEpic)
+                                          Y: =0
+                                          Width: |
+                                            =Max(Parent.TemplateWidth * QcArShareSquad, QcArMinSquad) - 8
+                                          Height: =RowHeight
+                                          Text: =If(ThisItem.Squad = "", "—", ThisItem.Squad)
+                                          Size: =TypeCaption
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - qcArRowState:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * QcArShareTitle, QcArMinTitle)
+                                             + Max(Parent.TemplateWidth * QcArShareQuarter, QcArMinQuarter)
+                                             + Max(Parent.TemplateWidth * QcArShareId, QcArMinId)
+                                             + Max(Parent.TemplateWidth * QcArShareEpic, QcArMinEpic)
+                                             + Max(Parent.TemplateWidth * QcArShareSquad, QcArMinSquad)
+                                          Y: =0
+                                          Width: |
+                                            =Max(Parent.TemplateWidth * QcArShareState, QcArMinState) - 8
+                                          Height: =RowHeight
+                                          Text: =If(ThisItem.State = "", "—", ThisItem.State)
+                                          Size: =TypeCaption
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - qcArRowStatus:
+                                        Control: Badge@0.0.24
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * QcArShareTitle, QcArMinTitle)
+                                             + Max(Parent.TemplateWidth * QcArShareQuarter, QcArMinQuarter)
+                                             + Max(Parent.TemplateWidth * QcArShareId, QcArMinId)
+                                             + Max(Parent.TemplateWidth * QcArShareEpic, QcArMinEpic)
+                                             + Max(Parent.TemplateWidth * QcArShareSquad, QcArMinSquad)
+                                             + Max(Parent.TemplateWidth * QcArShareState, QcArMinState)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: |
+                                            =With({t: If(ThisItem.CloseStatus = "", "—", ThisItem.CloseStatus)}, Min(Max(Len(t) * 7 + 20, 56), 200))
+                                          Height: =TypeLabelLine
+                                          Appearance: ='BadgeCanvas.Appearance'.Filled
+                                          ThemeColor: |
+                                            =If(ThisItem.CloseStatus = "Done on time", 'BadgeCanvas.ThemeColor'.Success,
+                                              ThisItem.CloseStatus = "Done late", 'BadgeCanvas.ThemeColor'.Warning,
+                                              'BadgeCanvas.ThemeColor'.Subtle)
+                                          Shape: ='BadgeCanvas.Shape'.Rounded
+                                          Content: =If(ThisItem.CloseStatus = "", "—", ThisItem.CloseStatus)
+                                          FontSize: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Center
+                                          VerticalAlign: =VerticalAlign.Middle
+                                    - qcArRowSize:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * QcArShareTitle, QcArMinTitle)
+                                             + Max(Parent.TemplateWidth * QcArShareQuarter, QcArMinQuarter)
+                                             + Max(Parent.TemplateWidth * QcArShareId, QcArMinId)
+                                             + Max(Parent.TemplateWidth * QcArShareEpic, QcArMinEpic)
+                                             + Max(Parent.TemplateWidth * QcArShareSquad, QcArMinSquad)
+                                             + Max(Parent.TemplateWidth * QcArShareState, QcArMinState)
+                                             + Max(Parent.TemplateWidth * QcArShareStatus, QcArMinStatus)
+                                          Y: =0
+                                          Width: =Max(Parent.TemplateWidth * QcArShareSize, QcArMinSize) - 8
+                                          Height: =RowHeight
+                                          Text: =If(ThisItem.Size = "", "—", ThisItem.Size)
+                                          Size: =TypeCaption
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg2
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - qcArRowOriginal:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * QcArShareTitle, QcArMinTitle)
+                                             + Max(Parent.TemplateWidth * QcArShareQuarter, QcArMinQuarter)
+                                             + Max(Parent.TemplateWidth * QcArShareId, QcArMinId)
+                                             + Max(Parent.TemplateWidth * QcArShareEpic, QcArMinEpic)
+                                             + Max(Parent.TemplateWidth * QcArShareSquad, QcArMinSquad)
+                                             + Max(Parent.TemplateWidth * QcArShareState, QcArMinState)
+                                             + Max(Parent.TemplateWidth * QcArShareStatus, QcArMinStatus)
+                                             + Max(Parent.TemplateWidth * QcArShareSize, QcArMinSize)
+                                          Y: =0
+                                          Width: |
+                                            =Max(Parent.TemplateWidth * QcArShareOriginal, QcArMinOriginal) - 8
+                                          Height: =RowHeight
+                                          Text: =Text(ThisItem.Original, "[$-en-US]#,##0.0")
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - qcArRowLatest:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * QcArShareTitle, QcArMinTitle)
+                                             + Max(Parent.TemplateWidth * QcArShareQuarter, QcArMinQuarter)
+                                             + Max(Parent.TemplateWidth * QcArShareId, QcArMinId)
+                                             + Max(Parent.TemplateWidth * QcArShareEpic, QcArMinEpic)
+                                             + Max(Parent.TemplateWidth * QcArShareSquad, QcArMinSquad)
+                                             + Max(Parent.TemplateWidth * QcArShareState, QcArMinState)
+                                             + Max(Parent.TemplateWidth * QcArShareStatus, QcArMinStatus)
+                                             + Max(Parent.TemplateWidth * QcArShareSize, QcArMinSize)
+                                             + Max(Parent.TemplateWidth * QcArShareOriginal, QcArMinOriginal)
+                                          Y: =0
+                                          Width: |
+                                            =Max(Parent.TemplateWidth * QcArShareLatest, QcArMinLatest) - 8
+                                          Height: =RowHeight
+                                          Text: =Text(ThisItem.Latest, "[$-en-US]#,##0.0")
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - qcArRowActual:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * QcArShareTitle, QcArMinTitle)
+                                             + Max(Parent.TemplateWidth * QcArShareQuarter, QcArMinQuarter)
+                                             + Max(Parent.TemplateWidth * QcArShareId, QcArMinId)
+                                             + Max(Parent.TemplateWidth * QcArShareEpic, QcArMinEpic)
+                                             + Max(Parent.TemplateWidth * QcArShareSquad, QcArMinSquad)
+                                             + Max(Parent.TemplateWidth * QcArShareState, QcArMinState)
+                                             + Max(Parent.TemplateWidth * QcArShareStatus, QcArMinStatus)
+                                             + Max(Parent.TemplateWidth * QcArShareSize, QcArMinSize)
+                                             + Max(Parent.TemplateWidth * QcArShareOriginal, QcArMinOriginal)
+                                             + Max(Parent.TemplateWidth * QcArShareLatest, QcArMinLatest)
+                                          Y: =0
+                                          Width: |
+                                            =Max(Parent.TemplateWidth * QcArShareActual, QcArMinActual) - 8
+                                          Height: =RowHeight
+                                          Text: =Text(ThisItem.Actual, "[$-en-US]#,##0.0")
+                                          Size: =TypeBody
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+
+                              # ---- the count under whichever view is showing ----
+                              - qcCount:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =TypeLabelLine
+                                    Visible: =QcTab <> "Close the quarter"
+                                    Text: =QcCountLine
+                                    Size: =TypeCaption
+                                    Font: =FontUI
+                                    Color: =NeutralFg2
+                                    Wrap: =false
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    FontWeight: =FontWeight.Normal

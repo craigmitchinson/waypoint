@@ -1,0 +1,2396 @@
+# Waypoint canvas app: the Timeline screen, four readings of the same bookings.
+#
+# Valid against pa.schema.yaml (v3.0): a Screens map, each screen with a Properties formula map and a
+# Children sequence whose items are single-key maps of control name to control instance.
+#
+# Timeline is src/pages/Timeline.tsx. Sprint is the planning grid, a column per working day of one
+# sprint; Quarter is the same people over the quarter's thirteen weeks; Sprints is the squad by
+# sprint matrix; Availability reads the weeks the other way round, where the free days are, a
+# person a row. Every number is the engine's, through the named formulas in Formulas.pa.yaml:
+# SprintGridRows and SprintGridJson,
+# QuarterGridRows over TlQuarterCells, SprintsMatrixRows with its totals, and the TlAvail* region
+# over NextFreeWindowRows. Nothing here works a number out for itself; Text() only formats at the cell.
+#
+# The shell is scrTeam's, unchanged: tlRoot is a vertical GroupContainer the size of the screen,
+# holding the 48px header and a horizontal row of the rail and the body. X and Y appear only inside
+# the gallery templates, which are not auto-layout.
+#
+# The reading is one ModernTabList. Its selection lands in varTlReading, and TlReading is the formula
+# every reading's Visible reads, so the screen opens on Sprint before the tab list is ever touched.
+# The stepper writes varTlSprint, the snap chips varSnapSquad.
+#
+# Sprint draws twice over: the code component wp_Waypoint.SprintGrid when varUseGridControl is true,
+# and the galleries behind it when it is not, so the fallback can be switched on without an app
+# change. The two are never both visible.
+#
+# The timeline books nothing: it is a reading. Bookings are logged on Team, in tmBookPanel, and the
+# row of a next free window hands that panel the person and the sprint and navigates there.
+
+Screens:
+  scrTimeline:
+    Properties:
+      Fill: =NeutralCanvas
+
+    Children:
+
+      # ---- the root: one vertical auto-layout container the size of the screen ----
+      - tlRoot:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            LayoutOverflowX: =LayoutOverflow.Hide
+            LayoutOverflowY: =LayoutOverflow.Hide
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =Parent.Height
+            Fill: =NeutralCanvas
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutGap: =0
+          Children:
+
+            # ---- shell: the app header ----
+            - tlHeader:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  LayoutOverflowX: =LayoutOverflow.Hide
+                  LayoutOverflowY: =LayoutOverflow.Hide
+                  FillPortions: =0
+                  Height: =AppHeaderH
+                  Fill: =BrandBg
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                  LayoutGap: =Gap
+                  PaddingLeft: =Pad
+                  PaddingRight: =Pad
+                Children:
+                  - tlHeaderName:
+                      Control: Label@2.5.1
+                      Properties:
+                        Width: =Parent.Width / 3
+                        Height: =AppHeaderH
+                        Text: ="Waypoint"
+                        Size: =TypeSubtitle
+                        FontWeight: =FontWeight.Semibold
+                        Font: =FontUI
+                        VerticalAlign: =VerticalAlign.Middle
+                        Color: =BrandFg
+                        Wrap: =true
+                        Overflow: =Overflow.Hidden
+                        PaddingTop: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        AutoHeight: =true
+                  # ---- shell: the scope selector, one cmpScope instance for every screen ----
+                  - tlHeaderScope:
+                      Control: CanvasComponent
+                      ComponentName: cmpScope
+                      Properties:
+                        Width: =Max(Parent.Width * 0.14, 180)
+                        Height: =ControlHeight
+                        Visible: =IncludeScope
+                  # ---- shell: the header search, one cmpSearch instance for every screen ----
+                  - tlHeaderSearch:
+                      Control: CanvasComponent
+                      ComponentName: cmpSearch
+                      Properties:
+                        Width: =Max(Parent.Width * 0.24, 280)
+                        Height: =ControlHeight
+                  - tlHeaderQuarter:
+                      Control: Label@2.5.1
+                      Properties:
+                        Width: =Parent.Width / 3
+                        Height: =AppHeaderH
+                        Text: =CurrentQuarter.Label & " · capacity planner"
+                        Size: =TypeCaption
+                        Font: =FontUI
+                        Align: =Align.Right
+                        VerticalAlign: =VerticalAlign.Middle
+                        Color: =ColorFade(BrandFg, -0.2)
+                        Wrap: =true
+                        Overflow: =Overflow.Hidden
+                        PaddingTop: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        AutoHeight: =true
+
+            # ---- shell: the rail, and the body beside it ----
+            - tlMain:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  LayoutOverflowX: =LayoutOverflow.Hide
+                  LayoutOverflowY: =LayoutOverflow.Hide
+                  FillPortions: =1
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutGap: =0
+                Children:
+
+                  # ---- shell: the rail, one cmpRail instance for every screen ----
+                  - tlRail:
+                      Control: CanvasComponent
+                      ComponentName: cmpRail
+                      Properties:
+                        LayoutMinWidth: =If(RailCollapsed, RailWidthTight, NavW)
+                        Width: =If(RailCollapsed, RailWidthTight, NavW)
+                        Height: =Parent.Height
+                        Active: ="Timeline"
+
+                  # ---- shell: the body everything else sits inside ----
+                  - tlBody:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        LayoutOverflowX: =LayoutOverflow.Hide
+                        LayoutOverflowY: =LayoutOverflow.Scroll
+                        FillPortions: =1
+                        Fill: =NeutralBg3
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutGap: =Gap
+                        PaddingLeft: =Pad
+                        PaddingRight: =Pad
+                        PaddingTop: =Pad
+                        PaddingBottom: =Pad
+                      Children:
+
+                        # ---- page head: the eyebrow and one h1 on the left, the reading right ----
+                        - tlPageHead:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =0
+                              Height: =PageHeadH
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutGap: =Gap
+                            Children:
+                              - tlHeadText:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =1
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutGap: =0
+                                  Children:
+                                    - tlEyebrow:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeKickerLine
+                                          Visible: =!IsCompact
+                                          Text: =CurrentQuarter.Label
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - tlTitle:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeDisplayLine
+                                          Text: ="Timeline"
+                                          Size: =TypeTitle
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                              # The reading. The tab list writes varTlReading; TlReading is what every
+                              # reading's Visible reads, so Sprint is the one the screen opens on.
+                              - tlTabsBox:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =0
+                                    Width: =Max(Parent.Width * 0.24, 460)
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutGap: =0
+                                  Children:
+                                    - tlTabs:
+                                        Control: ModernTabList@1.0.1
+                                        Properties:
+                                          Width: =Max(Parent.Width * 0.24, 460)
+                                          Height: =ControlHeight + 8
+                                          Items: |
+                                            =Table({Value:"This sprint"}, {Value:"Quarter"},
+                                                   {Value:"Sprint plan"}, {Value:"Availability"})
+                                          Default: ={Value:"This sprint"}
+                                          Font: =FontUI
+                                          Size: =TypeBodyPx
+                                          Color: =NeutralFg1
+                                          BasePaletteColor: =BrandBg
+                                          AccessibleLabel: ="Readings"
+                                          OnChange: =Set(varTlReading, tlTabs.Selected.Value)
+                                          FontWeight: =FontWeight.Semibold
+
+                        # ---- what the grids are actually showing, in one line ----
+                        - tlStateLine:
+                            Control: Label@2.5.1
+                            Properties:
+                              Width: =Parent.Width
+                              Height: =TypeKickerLine
+                              Text: |
+                                =CountRows(TlSnapPeople) & " people · sprint " & TlSprintNum
+                                 & " · " & If(TlSnapSquad = "", "all squads", TlSnapSquad)
+                                 & " · " & TlReadingName
+                                 & If(TlReading = "Sprints" || TlReading = "Quarter",
+                                      " · showing S" & TlSprintNum, "")
+                              Size: =TypeCaption
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+
+                        # ---- the stepper: the sprint the grid is on ----
+                        - tlStepper:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              # A row on the page, not a card: the fill is the page's own.
+                              Fill: =RGBA(0, 0, 0, 0)
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =0
+                              Width: =Parent.Width
+                              Height: =ControlHeight + 8
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutGap: =8
+                            Children:
+                              - tlPrev:
+                                  Control: ModernButton@1.0.0
+                                  Properties:
+                                    Appearance: =ButtonAppearance.Secondary
+                                    BasePaletteColor: =NeutralBg3
+                                    Color: =NeutralFg1
+                                    Font: =FontUI
+                                    Size: =TypeBodyPx
+                                    RadiusTopLeft: =CtrlR
+                                    RadiusTopRight: =CtrlR
+                                    RadiusBottomLeft: =CtrlR
+                                    RadiusBottomRight: =CtrlR
+                                    Width: =96
+                                    Height: =ControlHeight
+                                    Text: ="Previous"
+                                    AccessibleLabel: ="The previous sprint"
+                                    DisplayMode: |
+                                      =If(TlSprintNum <= FirstSprint, DisplayMode.Disabled, DisplayMode.Edit)
+                                    OnSelect: =Set(varTlSprint, Max(FirstSprint, TlSprintNum - 1))
+                              - tlSprintBadge:
+                                  Control: CanvasComponent
+                                  ComponentName: cmpPill
+                                  Properties:
+                                    Label: =TlSprintLabel
+                                    Width: =Min(Max(Len(TlSprintLabel) * 7 + 20, 56), 200)
+                                    Height: =TypeLabelLine
+                                    Tone: ="brand"
+                              - tlNext:
+                                  Control: ModernButton@1.0.0
+                                  Properties:
+                                    Appearance: =ButtonAppearance.Secondary
+                                    BasePaletteColor: =NeutralBg3
+                                    Color: =NeutralFg1
+                                    Font: =FontUI
+                                    Size: =TypeBodyPx
+                                    RadiusTopLeft: =CtrlR
+                                    RadiusTopRight: =CtrlR
+                                    RadiusBottomLeft: =CtrlR
+                                    RadiusBottomRight: =CtrlR
+                                    Width: =96
+                                    Height: =ControlHeight
+                                    Text: ="Next"
+                                    AccessibleLabel: ="The next sprint"
+                                    DisplayMode: |
+                                      =If(TlSprintNum >= LastSprint, DisplayMode.Disabled, DisplayMode.Edit)
+                                    OnSelect: =Set(varTlSprint, Min(LastSprint, TlSprintNum + 1))
+
+                        # ---- the legend row: the reading's figures on the left, the legend on
+                        # the right, in its own full-width row so neither squeezes the stepper.
+                        - tlLegendRow:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              Fill: =RGBA(0, 0, 0, 0)
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =0
+                              Width: =Parent.Width
+                              # The legend is never wrapped onto a line this row's height and
+                              # hidden overflow would clip: the figures line gives way instead,
+                              # taking what is left beside the legend and truncating.
+                              Height: =TlLegendRowH
+                              LayoutWrap: =false
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutJustifyContent: =LayoutJustifyContent.End
+                              LayoutGap: =8
+                            Children:
+                              # The figures line the reading writes for itself.
+                              - tlFigures:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Width: =Max(Parent.Width - TlLegendW - 8, 0)
+                                    Height: =TypeLabelLine
+                                    Text: |
+                                      =Switch(TlReading,
+                                          "Quarter", TlQuarterFigures,
+                                          "Sprints", SprintsFigures,
+                                          "Gaps", TlAvailFigures,
+                                          TlSprintFigures)
+                                    Size: =TypeCaption
+                                    Font: =FontUI
+                                    VerticalAlign: =VerticalAlign.Middle
+                                    Color: =NeutralFg2
+                                    Wrap: =false
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                              # The legend: a row a kind the grid can draw, TlLegend, drawn by one
+                              # gallery rather than a label a kind. Never colour alone — each
+                              # carries its name. Each is a Label, not a Badge, so its fill and its
+                              # text come off TlKindTone through the same TlKindFill/TlKindText
+                              # tokens a grid cell of that kind reads; a Badge would paint the
+                              # Fluent palette instead and could never match.
+                              - tlLegend:
+                                  Control: Gallery@2.15.0
+                                  Variant: Horizontal
+                                  Properties:
+                                    Fill: =RGBA(0, 0, 0, 0)
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    ShowScrollbar: =false
+                                    TemplatePadding: =0
+                                    FillPortions: =0
+                                    Width: =TlLegendW
+                                    Height: =TypeLabelLine
+                                    TemplateSize: =TlLegendItemW
+                                    Items: =TlLegend
+                                    AccessibleLabel: ="What each colour on the grid stands for"
+                                  Children:
+                                    - tlLegendSwatch:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =0
+                                          Width: =Parent.TemplateWidth - 6
+                                          Height: =TypeLabelLine
+                                          Text: =ThisItem.Label
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Center
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =ThisItem.Ink
+                                          Fill: =ThisItem.Fill
+                                          BorderThickness: =1
+                                          BorderColor: =ThisItem.Ink
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+
+                        # ---- the snap row: All, then a chip per squad in the grid ----
+                        - tlSnap:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              Fill: =RGBA(0, 0, 0, 0)
+                              LayoutOverflowX: =LayoutOverflow.Scroll
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =0
+                              Height: =ControlHeight
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutGap: =8
+                            Children:
+                              # The chip is toned by how used the squads are. The one that is
+                              # showing keeps that tone and takes a brand ring: a brand fill would
+                              # paint the figure's own tone out. The ring is the container's
+                              # border, so the button keeps only the properties Studio confirms.
+                              - tlSnapAllRing:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    Fill: =RGBA(0, 0, 0, 0)
+                                    BorderColor: =BrandBg
+                                    BorderThickness: =If(TlSnapSquad = "", 2, 0)
+                                    RadiusTopLeft: =CtrlR
+                                    RadiusTopRight: =CtrlR
+                                    RadiusBottomLeft: =CtrlR
+                                    RadiusBottomRight: =CtrlR
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =0
+                                    Width: |
+                                      =Max((Parent.Width - 8 * CountRows(TlSnapChips))
+                                           / (CountRows(TlSnapChips) + 1), 120)
+                                    Height: =ControlHeight
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutGap: =0
+                                    PaddingLeft: =2
+                                    PaddingRight: =2
+                                    PaddingTop: =2
+                                    PaddingBottom: =2
+                                  Children:
+                                    - tlSnapAll:
+                                        Control: ModernButton@1.0.0
+                                        Properties:
+                                          Appearance: =ButtonAppearance.Secondary
+                                          BasePaletteColor: =TlSnapAllFill
+                                          Color: =TlSnapAllInk
+                                          Font: =FontUI
+                                          Size: =TypeBodyPx
+                                          RadiusTopLeft: =CtrlR
+                                          RadiusTopRight: =CtrlR
+                                          RadiusBottomLeft: =CtrlR
+                                          RadiusBottomRight: =CtrlR
+                                          Width: =Parent.Width - 4
+                                          Height: =ControlHeight - 4
+                                          Text: =TlSnapAllLabel
+                                          AccessibleLabel: |
+                                            ="Every squad, " & TlSnapAllLabel
+                                             & If(TlSnapSquad = "", ", showing", "")
+                                          OnSelect: =Set(varSnapSquad, "")
+                              - tlSnapChips:
+                                  Control: Gallery@2.15.0
+                                  Variant: Horizontal
+                                  Properties:
+                                    Fill: =RGBA(0, 0, 0, 0)
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    ShowScrollbar: =false
+                                    Width: |
+                                      =(Max((Parent.Width - 8 * CountRows(TlSnapChips))
+                                            / (CountRows(TlSnapChips) + 1), 120)
+                                        + 8) * CountRows(TlSnapChips) - 8
+                                    Height: =ControlHeight
+                                    # The gallery sits on the All button's own line: the same
+                                    # Height, no template padding, and a template exactly one chip
+                                    # high, so nothing inside it is pushed down a few pixels.
+                                    TemplatePadding: =0
+                                    TemplateSize: |
+                                      =Max((Parent.Width - 8 * CountRows(TlSnapChips))
+                                           / (CountRows(TlSnapChips) + 1), 120)
+                                       + 8
+                                    Items: =TlSnapChips
+                                    AccessibleLabel: ="Jump to a squad"
+                                  Children:
+                                    - tlSnapChipRing:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          X: =0
+                                          Y: =0
+                                          Width: =Parent.TemplateWidth - 8
+                                          Height: =ControlHeight
+                                          Fill: =RGBA(0, 0, 0, 0)
+                                          BorderColor: =BrandBg
+                                          BorderThickness: =If(TlSnapSquad = ThisItem.Name, 2, 0)
+                                          RadiusTopLeft: =CtrlR
+                                          RadiusTopRight: =CtrlR
+                                          RadiusBottomLeft: =CtrlR
+                                          RadiusBottomRight: =CtrlR
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutGap: =0
+                                          PaddingLeft: =2
+                                          PaddingRight: =2
+                                          PaddingTop: =2
+                                          PaddingBottom: =2
+                                        Children:
+                                          - tlSnapChip:
+                                              Control: ModernButton@1.0.0
+                                              Properties:
+                                                Width: =Parent.Width - 4
+                                                Height: =ControlHeight - 4
+                                                Appearance: =ButtonAppearance.Secondary
+                                                BasePaletteColor: =ThisItem.Fill
+                                                Color: =ThisItem.Ink
+                                                Font: =FontUI
+                                                Size: =TypeBodyPx
+                                                RadiusTopLeft: =CtrlR
+                                                RadiusTopRight: =CtrlR
+                                                RadiusBottomLeft: =CtrlR
+                                                RadiusBottomRight: =CtrlR
+                                                Text: =ThisItem.Label
+                                                AccessibleLabel: |
+                                                  =ThisItem.Label
+                                                   & If(TlSnapSquad = ThisItem.Name, ", showing", "")
+                                                OnSelect: =Set(varSnapSquad, ThisItem.Name)
+
+                        # ---- the card the four readings share ----
+                        - tlCard:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              # The grid inside is never narrower than its own column minimums, so
+                              # the card scrolls sideways rather than squeezing a cell
+                              # (power/RUNBOOK.md, "Tables").
+                              LayoutOverflowX: =LayoutOverflow.Scroll
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =1
+                              Fill: =NeutralBg1
+                              BorderColor: =NeutralStroke1
+                              BorderThickness: =1
+                              RadiusTopLeft: =CardR
+                              RadiusTopRight: =CardR
+                              RadiusBottomLeft: =CardR
+                              RadiusBottomRight: =CardR
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutGap: =8
+                              PaddingLeft: =Pad
+                              PaddingRight: =Pad
+                              PaddingTop: =Pad
+                              PaddingBottom: =Pad
+                            Children:
+
+                              # ================= Sprint: the code component =================
+                              # wp_Waypoint.SprintGrid, the whole grid on one gridJson string. It
+                              # sizes itself to what the container gives it (power/pcf/README.md).
+                              - tlGridHost:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =1
+                                    Visible: =TlReading = "Sprint" && varUseGridControl
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutGap: =0
+                                  Children:
+                                    - tlSprintGrid:
+                                        Control: CodeComponent
+                                        ComponentName: wp_Waypoint.SprintGrid
+                                        Properties:
+                                          Width: =Parent.Width
+                                          Height: =Parent.Height
+                                          Visible: =TlReading = "Sprint" && varUseGridControl
+                                          gridJson: =SprintGridJson
+                                          theme: =varTheme
+                                          # The picked cell comes back as a JSON string,
+                                          # { "person": ..., "date": ... } (power/pcf/README.md).
+                                          # The timeline is a reading and books nothing: the cell
+                                          # is recorded, then read back through TlEditPerson and
+                                          # TlEditDate and found in TlSprintCells, so the peek card
+                                          # opens on the same record the fallback grid hands it.
+                                          # Bookings are made on Team.
+                                          OnChange: |
+                                            =Set(varEditCell, Self.selectedCellJson);
+                                             Set(varPeekCell,
+                                                 { Person: TlEditPerson,
+                                                   Date: TlEditDate,
+                                                   Kind: Coalesce(TlPeekCodeCell.kind, ""),
+                                                   ItemTitle: TlPeekCodeTitle });
+                                             Set(varPeekOpen, true)
+
+                              # ================= Sprint: the galleries behind it =================
+                              # The head row: the name column, then a column per working day.
+                              - tlSprintHead:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =0
+                                    Width: =Max(Parent.Width, TlSpTableMinW)
+                                    Height: =TypeLabelLine + 8
+                                    Visible: =TlReading = "Sprint" && !varUseGridControl
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutGap: =0
+                                  Children:
+                                    - tlSprintHeadNameBox:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Width: =Max(Parent.Width * TlSpShareName, TlSpMinName)
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutGap: =0
+                                        Children:
+                                          - tlSprintHeadName:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeLabelLine
+                                                Text: ="Person"
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                    - tlSprintHeadMetaBox:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Width: =Max(Parent.Width * TlSpShareMeta, TlSpMinMeta)
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutGap: =0
+                                        Children: []
+                                    - tlSprintHeadDays:
+                                        Control: Gallery@2.15.0
+                                        Variant: Horizontal
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 0)
+                                          ShowScrollbar: =false
+                                          TemplatePadding: =0
+                                          Width: =Max(Parent.Width * TlSpShareDay, TlSpMinDay) * TlSprintDayCount
+                                          Height: =TypeLabelLine + 8
+                                          TemplateSize: =Max(Parent.Width * TlSpShareDay, TlSpMinDay)
+                                          Items: =TlSprintDays
+                                          AccessibleLabel: ="The working days of the sprint"
+                                        Children:
+                                          - tlSprintHeadDay:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =8
+                                                Y: =0
+                                                Width: =Parent.TemplateWidth - 16
+                                                Height: =TypeLabelLine + 8
+                                                Text: =ThisItem.DayName & " " & ThisItem.Label
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Align: =Align.Left
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg2
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+
+                              - tlSprintEmpty:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Width: =Parent.Width
+                                    Height: =TypeBodyLine
+                                    Align: =Align.Left
+                                    Visible: =TlReading = "Sprint" && !varUseGridControl && CountRows(TlSnapPeople) = 0
+                                    Text: ="No people in this squad this sprint."
+                                    Size: =TypeBody
+                                    Font: =FontUI
+                                    Color: =NeutralFg2
+                                    Wrap: =false
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+
+                              # The grid itself: a group row, then its people, out of one flattened
+                              # table with a RowKind on it. The snap chip filters it to one squad.
+                              - tlSprintRows:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    ShowScrollbar: =true
+                                    TemplatePadding: =0
+                                    FillPortions: =1
+                                    Width: =Max(Parent.Width, TlSpTableMinW)
+                                    Height: =Parent.Height - (TypeLabelLine + 8)
+                                    Visible: =TlReading = "Sprint" && !varUseGridControl && CountRows(TlSnapPeople) > 0
+                                    TemplateSize: =TlRowH
+                                    # The snap chip cannot filter this table here: SprintGridRows
+                                    # carries a nested Cells column, and Filter, ForAll and
+                                    # ShowColumns all refuse it at the binder. The chip is applied
+                                    # inside SprintGridRows instead, on TlSnapPeople.
+                                    Items: =SprintGridRows
+                                    AccessibleLabel: |
+                                      ="Sprint grid: one row per person, one cell per working day, "
+                                       & "grouped by squad."
+                                  Children:
+                                    - tlSpRowBand:
+                                        Control: Rectangle@2.3.0
+                                        Properties:
+                                          X: =0
+                                          Y: =0
+                                          Width: =Parent.TemplateWidth
+                                          Height: =TlRowH
+                                          BorderColor: =RGBA(0, 0, 0, 0)
+                                          Fill: =If(ThisItem.RowKind = "group", NeutralBg2, NeutralBg1)
+                                    - tlSpRowName:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =0
+                                          Width: |
+                                            =If(ThisItem.RowKind = "group", Parent.TemplateWidth,
+                                                Max(Parent.TemplateWidth * TlSpShareName, TlSpMinName) - 8)
+                                          Height: =If(ThisItem.RowKind = "group", TypeBodyLine, TypeLabelLine)
+                                          # A squad row spans the grid, so its figures are written
+                                          # beside its name rather than squeezed into the metrics
+                                          # column, where they were cut mid-word.
+                                          Text: |
+                                            =If(ThisItem.RowKind = "group",
+                                                ThisItem.Name & " · " & ThisItem.Meta,
+                                                ThisItem.Name)
+                                          Size: =If(ThisItem.RowKind = "group", TypeBody, TypeCaption)
+                                          FontWeight: |
+                                            =If(ThisItem.RowKind = "group", FontWeight.Semibold,
+                                                FontWeight.Normal)
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    # The gutter before the first day is padding, not width: the
+                                    # table compiler owns this cell's X and Width and writes the
+                                    # column's whole pitch into them, so a width that took 8 off
+                                    # never reached the build and the figure abutted the first day.
+                                    - tlSpRowMeta:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =Max(Parent.TemplateWidth * TlSpShareName, TlSpMinName)
+                                          Y: =0
+                                          Width: =Max(Parent.TemplateWidth * TlSpShareMeta, TlSpMinMeta)
+                                          Height: =TypeLabelLine
+                                          Text: =ThisItem.Meta
+                                          Visible: =ThisItem.RowKind <> "group"
+                                          Size: =TypeCaption
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =Gap / 2
+                                    - tlSpCells:
+                                        Control: Gallery@2.15.0
+                                        Variant: Horizontal
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 0)
+                                          ShowScrollbar: =false
+                                          TemplatePadding: =0
+                                          X: |
+                                            =Max(Parent.TemplateWidth * TlSpShareName, TlSpMinName)
+                                             + Max(Parent.TemplateWidth * TlSpShareMeta, TlSpMinMeta)
+                                          Y: =0
+                                          Width: =Max(Parent.TemplateWidth * TlSpShareDay, TlSpMinDay) * TlSprintDayCount
+                                          Height: =TlRowH
+                                          TemplateSize: =Max(Parent.TemplateWidth * TlSpShareDay, TlSpMinDay)
+                                          Visible: =ThisItem.RowKind = "person"
+                                          Items: =ThisItem.Cells
+                                          AccessibleLabel: ="One cell per working day"
+                                        Children:
+                                          - tlSpCellFill:
+                                              Control: Rectangle@2.3.0
+                                              Properties:
+                                                X: =0
+                                                Y: =2
+                                                Width: =Parent.TemplateWidth - 4
+                                                Height: =TlRowH - 4
+                                                BorderColor: =RGBA(0, 0, 0, 0)
+                                                # The one tone map, read through the kind the cell
+                                                # draws as: a booked day the work item has put at
+                                                # risk or made late reads the legend's own At risk
+                                                # and Late rows rather than plain Work, and a day
+                                                # with nothing on it reads Open.
+                                                Fill: |
+                                                  =Switch(Coalesce(LookUp(TlKindTone,
+                                                              Kind = If(ThisItem.kind = "work"
+                                                                        && ThisItem.status = "Late", "late",
+                                                                        ThisItem.kind = "work"
+                                                                        && StartsWith(ThisItem.status, "At risk"), "atrisk",
+                                                                        ThisItem.kind)).Tone, "Subtle"),
+                                                      "Subtle",      TlKindFillSubtle,
+                                                      "Holiday",     TlKindFillHoliday,
+                                                      "Informative", TlKindFillInformative,
+                                                      "Important",   TlKindFillImportant,
+                                                      "Success",     TlKindFillSuccess,
+                                                      "Warning",     TlKindFillWarning,
+                                                      TlKindFillDanger)
+                                          # The status edge: three pixels down the left of the cell,
+                                          # with the same words printed beside the label.
+                                          - tlSpCellEdge:
+                                              Control: Rectangle@2.3.0
+                                              Properties:
+                                                X: =0
+                                                Y: =2
+                                                Width: =3
+                                                Height: =TlRowH - 4
+                                                BorderColor: =RGBA(0, 0, 0, 0)
+                                                Fill: |
+                                                  =If(ThisItem.status = "Late", StatusBad,
+                                                      StartsWith(ThisItem.status, "At risk"), StatusWarn,
+                                                      ThisItem.kind = "open" || ThisItem.kind = "bankhol",
+                                                          RGBA(0, 0, 0, 0),
+                                                      BrandBg)
+                                          - tlSpCellText:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =8
+                                                Y: =2
+                                                Width: =Parent.TemplateWidth - 16
+                                                Height: =TypeLabelLine
+                                                # An open day carries nothing: the tint is what says
+                                                # it is free, and the word Open on every empty cell
+                                                # read as a booking of its own.
+                                                Text: |
+                                                  =With({ t: If(ThisItem.kind = "open", "",
+                                                                ThisItem.label
+                                                                & If(ThisItem.status = "", "",
+                                                                     " · " & ThisItem.status)) },
+                                                      If(Len(t) * TlCellCharW <= Parent.TemplateWidth - 16, t,
+                                                         Left(t, Max(RoundDown((Parent.TemplateWidth - 16)
+                                                                               / TlCellCharW, 0) - 1, 1))
+                                                         & "…"))
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: |
+                                                  =Switch(Coalesce(LookUp(TlKindTone,
+                                                              Kind = If(ThisItem.kind = "work"
+                                                                        && ThisItem.status = "Late", "late",
+                                                                        ThisItem.kind = "work"
+                                                                        && StartsWith(ThisItem.status, "At risk"), "atrisk",
+                                                                        ThisItem.kind)).Tone, "Subtle"),
+                                                      "Subtle",      TlKindTextSubtle,
+                                                      "Holiday",     TlKindTextHoliday,
+                                                      "Informative", TlKindTextInformative,
+                                                      "Important",   TlKindTextImportant,
+                                                      "Success",     TlKindTextSuccess,
+                                                      "Warning",     TlKindTextWarning,
+                                                      TlKindTextDanger)
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          # The hit target, last so it draws over the cell. The
+                                          # row's person comes off the outer gallery's selection,
+                                          # which the click sets before this runs; the item title
+                                          # is the one the cell carries, not what it draws.
+                                          - tlSpCellHit:
+                                              Control: Classic/Button@2.2.0
+                                              Properties:
+                                                X: =2
+                                                Y: =2
+                                                Width: =Parent.TemplateWidth - 4
+                                                Height: =TlRowH - 4
+                                                Text: =""
+                                                Fill: =RGBA(0, 0, 0, 0)
+                                                # Hover and pressed are a wash over the cell. The
+                                                # focus ring is drawn inside it: the button is
+                                                # inset two pixels on each side, so a border that
+                                                # once grew past the template and lifted the whole
+                                                # row now sits within it.
+                                                HoverFill: |
+                                                  =If(IsDark, RGBA(255, 255, 255, 0.10),
+                                                      RGBA(0, 0, 0, 0.06))
+                                                PressedFill: |
+                                                  =If(IsDark, RGBA(255, 255, 255, 0.16),
+                                                      RGBA(0, 0, 0, 0.10))
+                                                BorderThickness: =0
+                                                FocusedBorderThickness: =2
+                                                TabIndex: =0
+                                                Tooltip: =ThisItem.tooltip
+                                                FocusedBorderColor: =FocusStroke
+                                                OnSelect: |
+                                                  =Set(varPeekCell,
+                                                       { Person: Text(tlSprintRows.Selected.Name),
+                                                         Date: Text(ThisItem.date),
+                                                         Kind: Text(ThisItem.kind),
+                                                         ItemTitle: Text(ThisItem.itemTitle) });
+                                                   Set(varPeekOpen, true)
+
+                              # ================= Quarter: the same people, thirteen weeks =========
+                              - tlQuarterHead:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =0
+                                    Width: =Max(Parent.Width - Pad * 2, 1230)
+                                    Height: =TypeLabelLine + 8
+                                    Visible: =TlReading = "Quarter"
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutGap: =0
+                                  Children:
+                                    - tlQuarterHeadNameBox:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Width: =Max((Parent.Width - 128) * 0.18, 180)
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutGap: =0
+                                        Children:
+                                          - tlQuarterHeadName:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeLabelLine
+                                                Text: =TlQuarterLabel
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                    - tlQuarterHeadMetaBox:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Width: =Max((Parent.Width - 128) * 0.08, 90)
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutGap: =0
+                                        Children: []
+                                    - tlQuarterHeadWeeks:
+                                        Control: Gallery@2.15.0
+                                        Variant: Horizontal
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 0)
+                                          ShowScrollbar: =false
+                                          TemplatePadding: =0
+                                          Width: =Max((Parent.Width - 128) * 0.0569, 64) * 13 + 96
+                                          Height: =TypeLabelLine + 8
+                                          TemplateSize: =Max((Parent.Width - 128) * 0.0569, 64)
+                                          Items: =TlQuarterWeeks
+                                          AccessibleLabel: ="The thirteen weeks of the quarter"
+                                        Children:
+                                          - tlQuarterHeadWeek:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =6
+                                                Y: =0
+                                                Width: =Parent.TemplateWidth - 12
+                                                Height: =TypeLabelLine + 8
+                                                # The weeks the picked sprint runs over, on the
+                                                # neutral surface every theme has a foreground for:
+                                                # a faded brand block leaves grey text on grey.
+                                                Fill: |
+                                                  =If(ThisItem.Picked, NeutralBg3, RGBA(0, 0, 0, 0))
+                                                Text: =ThisItem.Label
+                                                Size: =TypeCaption
+                                                FontWeight: |
+                                                  =If(ThisItem.Now, FontWeight.Semibold, FontWeight.Normal)
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =If(ThisItem.Now, NeutralFg1, NeutralFg2)
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+
+                              - tlQuarterEmpty:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Width: =Parent.Width
+                                    Height: =TypeBodyLine
+                                    Align: =Align.Left
+                                    Visible: =TlReading = "Quarter" && CountRows(TlSnapPeople) = 0
+                                    Text: ="No people in this squad this quarter."
+                                    Size: =TypeBody
+                                    Font: =FontUI
+                                    Color: =NeutralFg2
+                                    Wrap: =false
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+
+                              - tlQuarterRows:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    ShowScrollbar: =true
+                                    TemplatePadding: =0
+                                    FillPortions: =1
+                                    Width: =Max(Parent.Width - Pad * 2, 1230)
+                                    Visible: =TlReading = "Quarter" && CountRows(TlSnapPeople) > 0
+                                    TemplateSize: =TlRowH
+                                    # As the sprint grid above: the chip is applied inside
+                                    # QuarterGridRows, not here.
+                                    Items: =QuarterGridRows
+                                    AccessibleLabel: |
+                                      ="Quarter grid: one row per person, one cell per week, with the "
+                                       & "days booked and the days still free."
+                                  Children:
+                                    - tlQtRowBand:
+                                        Control: Rectangle@2.3.0
+                                        Properties:
+                                          X: =0
+                                          Y: =0
+                                          Width: =Parent.TemplateWidth
+                                          Height: =TlRowH
+                                          BorderColor: =RGBA(0, 0, 0, 0)
+                                          Fill: =If(ThisItem.RowKind = "group", NeutralBg2, NeutralBg1)
+                                    - tlQtRowName:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =0
+                                          Width: |
+                                            =If(ThisItem.RowKind = "group", Parent.TemplateWidth,
+                                                Max((Parent.TemplateWidth - 112) * 0.18, 180) - 8)
+                                          Height: =If(ThisItem.RowKind = "group", TypeBodyLine, TypeLabelLine)
+                                          # A squad row spans the grid, so its figures are written
+                                          # beside its name rather than squeezed into the metrics
+                                          # column, where they were cut mid-word.
+                                          Text: |
+                                            =If(ThisItem.RowKind = "group",
+                                                ThisItem.Name & " · " & ThisItem.Meta,
+                                                ThisItem.Name)
+                                          Size: =If(ThisItem.RowKind = "group", TypeBody, TypeCaption)
+                                          FontWeight: |
+                                            =If(ThisItem.RowKind = "group", FontWeight.Semibold,
+                                                FontWeight.Normal)
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - tlQtRowMeta:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =Max((Parent.TemplateWidth - 112) * 0.18, 180) + 8
+                                          Y: =0
+                                          Width: =Max((Parent.TemplateWidth - 112) * 0.08, 90)
+                                          Height: =TypeLabelLine
+                                          Text: =ThisItem.Meta
+                                          Visible: =ThisItem.RowKind <> "group"
+                                          Size: =TypeCaption
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - tlQtCells:
+                                        Control: Gallery@2.15.0
+                                        Variant: Horizontal
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 0)
+                                          ShowScrollbar: =false
+                                          TemplatePadding: =0
+                                          X: =Max((Parent.TemplateWidth - 112) * 0.18, 180) + Max((Parent.TemplateWidth - 112) * 0.08, 90) + 16
+                                          Y: =0
+                                          Width: =Max((Parent.TemplateWidth - 112) * 0.0569, 64) * 13 + 96
+                                          Height: =TlRowH
+                                          TemplateSize: =Max((Parent.TemplateWidth - 112) * 0.0569, 64)
+                                          Visible: =ThisItem.RowKind = "person"
+                                          Items: =ThisItem.Cells
+                                          AccessibleLabel: ="One cell per week"
+                                        Children:
+                                          - tlQtCellFill:
+                                              Control: Rectangle@2.3.0
+                                              Properties:
+                                                X: =0
+                                                Y: =2
+                                                Width: =Parent.TemplateWidth - 4
+                                                Height: =TlRowH - 4
+                                                BorderColor: =RGBA(0, 0, 0, 0)
+                                                Fill: |
+                                                  =Switch(LookUp(TlKindTone, Kind = ThisItem.kind).Tone,
+                                                      "Subtle",      TlKindFillSubtle,
+                                                      "Holiday",     TlKindFillHoliday,
+                                                      "Informative", TlKindFillInformative,
+                                                      "Important",   TlKindFillImportant,
+                                                      "Success",     TlKindFillSuccess,
+                                                      "Warning",     TlKindFillWarning,
+                                                      TlKindFillDanger)
+                                          - tlQtCellEdge:
+                                              Control: Rectangle@2.3.0
+                                              Properties:
+                                                X: =0
+                                                Y: =2
+                                                Width: =3
+                                                Height: =TlRowH - 4
+                                                BorderColor: =RGBA(0, 0, 0, 0)
+                                                Fill: |
+                                                  =Switch(ThisItem.kind,
+                                                      "open",  StatusBad,
+                                                      "leave", StatusWarn,
+                                                      BrandBg)
+                                          - tlQtCellPick:
+                                              Control: Rectangle@2.3.0
+                                              Properties:
+                                                X: =0
+                                                Y: =0
+                                                Width: =Parent.TemplateWidth
+                                                Height: =2
+                                                BorderColor: =RGBA(0, 0, 0, 0)
+                                                Visible: |
+                                                  =ThisItem.Mon <= TlSprintEnd
+                                                   && DateAdd(ThisItem.Mon, 6, TimeUnit.Days) >= TlSprintStart
+                                                Fill: =BrandBg
+                                          - tlQtCellText:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =8
+                                                Y: =2
+                                                Width: =Parent.TemplateWidth - 16
+                                                Height: =TypeLabelLine
+                                                Text: |
+                                                  =Text(ThisItem.Booked, "0") & "d · "
+                                                   & Text(ThisItem.Free, "0") & "d free"
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: |
+                                                  =Switch(LookUp(TlKindTone, Kind = ThisItem.kind).Tone,
+                                                      "Subtle",      TlKindTextSubtle,
+                                                      "Holiday",     TlKindTextHoliday,
+                                                      "Informative", TlKindTextInformative,
+                                                      "Important",   TlKindTextImportant,
+                                                      "Success",     TlKindTextSuccess,
+                                                      "Warning",     TlKindTextWarning,
+                                                      TlKindTextDanger)
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+
+                              # ================= Sprints: a squad a row, a sprint a column ========
+                              - tlSprintsHead:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =0
+                                    Width: =Max(Parent.Width - Pad * 2, 772)
+                                    Height: =TypeLabelLine + 8
+                                    Visible: =TlReading = "Sprints"
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutGap: =0
+                                  Children:
+                                    - tlSprintsHeadNameBox:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Width: =Max((Parent.Width - 80) * 0.18, 180)
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutGap: =0
+                                        Children:
+                                          - tlSprintsHeadName:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeLabelLine
+                                                Text: =SprintsLabel
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                    - tlSprintsHeadCols:
+                                        Control: Gallery@2.15.0
+                                        Variant: Horizontal
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 0)
+                                          ShowScrollbar: =false
+                                          TemplatePadding: =0
+                                          Width: =Max((Parent.Width - 80) * 0.82 / TlSpsColCount, 64) * TlSpsColCount
+                                          Height: =TypeLabelLine + 8
+                                          TemplateSize: =Max((Parent.Width - 80) * 0.82 / TlSpsColCount, 64)
+                                          Items: =TlSprintColumns
+                                          AccessibleLabel: ="The sprints of the quarter"
+                                        Children:
+                                          - tlSprintsHeadCol:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =6
+                                                Y: =0
+                                                Width: =Parent.TemplateWidth - 12
+                                                Height: =TypeLabelLine + 8
+                                                # The sprint the stepper is on, so the reading
+                                                # says which column the figures belong to, on the
+                                                # neutral surface both themes have a foreground for.
+                                                Fill: |
+                                                  =If(ThisItem.Now, NeutralBg3, RGBA(0, 0, 0, 0))
+                                                Text: =ThisItem.Head
+                                                Size: =TypeCaption
+                                                FontWeight: |
+                                                  =If(ThisItem.Now, FontWeight.Semibold, FontWeight.Normal)
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =If(ThisItem.Now, NeutralFg1, NeutralFg2)
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+
+                              - tlSprintsEmpty:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Width: =Parent.Width
+                                    Height: =TypeBodyLine
+                                    Align: =Align.Left
+                                    Visible: =TlReading = "Sprints" && CountRows(SprintsMatrixRows) = 0
+                                    Text: ="No squads to plan against this quarter."
+                                    Size: =TypeBody
+                                    Font: =FontUI
+                                    Color: =NeutralFg2
+                                    Wrap: =false
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+
+                              - tlSprintsRows:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    ShowScrollbar: =true
+                                    TemplatePadding: =0
+                                    # The rows take the height their own rows need, so the totals
+                                    # row below reads as the last line of the table rather than
+                                    # sitting at the foot of the card with a band of nothing above.
+                                    FillPortions: =0
+                                    Height: |
+                                      =Min((TlRowH + 12) * CountRows(SprintsMatrixRows),
+                                           Parent.Height - Pad * 2 - (TypeLabelLine + 8) - TlRowH - 16)
+                                    Width: =Max(Parent.Width - Pad * 2, 772)
+                                    Visible: =TlReading = "Sprints" && CountRows(SprintsMatrixRows) > 0
+                                    TemplateSize: =TlRowH + 12
+                                    Items: =SprintsMatrixRows
+                                    AccessibleLabel: |
+                                      ="Sprint plan: a squad a row and a sprint a column, with the MW "
+                                       & "committed against the MW available."
+                                  Children:
+                                    - tlSpsRowName:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =0
+                                          Width: =Max((Parent.TemplateWidth - 64) * 0.18, 180)
+                                          Height: =TypeBodyLine
+                                          Text: =ThisItem.Name
+                                          Size: =TypeBody
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - tlSpsCells:
+                                        Control: Gallery@2.15.0
+                                        Variant: Horizontal
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 0)
+                                          ShowScrollbar: =false
+                                          TemplatePadding: =0
+                                          X: =Max((Parent.TemplateWidth - 64) * 0.18, 180) + 8
+                                          Y: =0
+                                          Width: =Max((Parent.TemplateWidth - 64) * 0.82 / TlSpsColCount, 64) * TlSpsColCount
+                                          Height: =TlRowH + 12
+                                          TemplateSize: =Max((Parent.TemplateWidth - 64) * 0.82 / TlSpsColCount, 64)
+                                          Items: =ThisItem.Cells
+                                          AccessibleLabel: ="One cell per sprint"
+                                        Children:
+                                          - tlSpsCellPick:
+                                              Control: Rectangle@2.3.0
+                                              Properties:
+                                                X: =0
+                                                Y: =0
+                                                Width: =Parent.TemplateWidth
+                                                Height: =2
+                                                BorderColor: =RGBA(0, 0, 0, 0)
+                                                Visible: =ThisItem.Now
+                                                Fill: =BrandBg
+                                          - tlSpsCellText:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =6
+                                                Y: =2
+                                                Width: =Parent.TemplateWidth - 12
+                                                Height: =TypeBodyLine
+                                                Text: |
+                                                  =Text(ThisItem.Committed, "[$-en-US]#,##0.0") & " / "
+                                                   & Text(ThisItem.Available, "[$-en-US]#,##0.0") & " MW"
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - tlSpsCellBar:
+                                              Control: ModernProgressBar@1.0.0
+                                              Properties:
+                                                X: =6
+                                                Y: =2 + TypeBodyLine + 4
+                                                Width: =Parent.TemplateWidth - 12
+                                                Height: =8
+                                                Max: =100
+                                                Value: =Min(100, Round(ThisItem.Utilisation * 100, 0))
+                                                Shape: =ProgressShape.Rounded
+                                                Thickness: =ProgressThickness.Medium
+                                                ProgressColor: |
+                                                  =If(ThisItem.Utilisation > UtilisationBad, ProgressColor.Error,
+                                                      ThisItem.Utilisation > UtilisationWarn, ProgressColor.Warning,
+                                                      ProgressColor.Brand)
+                                                AccessibleLabel: |
+                                                  =ThisItem.Label & ": "
+                                                   & Text(Round(ThisItem.Utilisation * 100, 0),
+                                                          "[$-en-US]#,##0")
+                                                   & "% of the sprint used"
+
+                              # The totals row: every squad together, a column per sprint.
+                              - tlSprintsTotals:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =0
+                                    Width: =Max(Parent.Width - Pad * 2, 772)
+                                    Height: =TlRowH
+                                    Visible: =TlReading = "Sprints"
+                                    Fill: =NeutralBg2
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutGap: =0
+                                  Children:
+                                    - tlSprintsTotalNameBox:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Width: =Max((Parent.Width - 80) * 0.18, 180)
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutGap: =0
+                                        Children:
+                                          - tlSprintsTotalName:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeBodyLine
+                                                Text: ="All squads"
+                                                Size: =TypeBody
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                    - tlSprintsTotalCells:
+                                        Control: Gallery@2.15.0
+                                        Variant: Horizontal
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 0)
+                                          ShowScrollbar: =false
+                                          TemplatePadding: =0
+                                          Width: =Max((Parent.Width - 80) * 0.82 / TlSpsColCount, 64) * TlSpsColCount
+                                          Height: =TlRowH
+                                          TemplateSize: =Max((Parent.Width - 80) * 0.82 / TlSpsColCount, 64)
+                                          Items: =SprintsColumnTotals
+                                          AccessibleLabel: ="The totals, a column per sprint"
+                                        Children:
+                                          - tlSprintsTotalCell:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =6
+                                                Y: =0
+                                                Width: =Parent.TemplateWidth - 12
+                                                Height: =TypeLabelLine
+                                                Text: |
+                                                  =Text(ThisItem.Committed, "[$-en-US]#,##0.0") & " / "
+                                                   & Text(ThisItem.Available, "[$-en-US]#,##0.0") & " MW"
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+
+                              # ============= Availability: the chips, the strip, the table ========
+                              # The reading's internal key is still "Gaps": only the tab's label and
+                              # this reading's shape changed (20 Sep 2026).
+                              - tlAvail:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =1
+                                    Visible: =TlReading = "Gaps"
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutGap: =Gap
+                                  Children:
+
+                                    # ---- the skill chips: All, then every skill people hold ----
+                                    - tlAvailChipRow:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Height: =ControlHeight
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutGap: =8
+                                        Children:
+                                          - tlAvailAll:
+                                              Control: ModernButton@1.0.0
+                                              Properties:
+                                                Appearance: =ButtonAppearance.Subtle
+                                                BasePaletteColor: |
+                                                  =If(TlAvailSkill = "", ColorFade(BrandBg, 0.86), NeutralBg3)
+                                                Color: =If(TlAvailSkill = "", BrandBg, NeutralFg1)
+                                                Font: =FontUI
+                                                Size: =TypeBodyPx
+                                                RadiusTopLeft: =CtrlR
+                                                RadiusTopRight: =CtrlR
+                                                RadiusBottomLeft: =CtrlR
+                                                RadiusBottomRight: =CtrlR
+                                                Width: =80
+                                                Height: =ControlHeight
+                                                Text: ="All"
+                                                AccessibleLabel: ="Every skill"
+                                                OnSelect: =Set(varAvailSkill, "")
+                                          - tlAvailChips:
+                                              Control: Gallery@2.15.0
+                                              Variant: Horizontal
+                                              Properties:
+                                                BorderColor: =RGBA(0, 0, 0, 0)
+                                                ShowScrollbar: =false
+                                                TemplatePadding: =0
+                                                FillPortions: =1
+                                                Height: =ControlHeight
+                                                TemplateSize: =200
+                                                Items: =TlAvailSkillRows
+                                                AccessibleLabel: ="Filter the table by skill"
+                                              Children:
+                                                - tlAvailChip:
+                                                    Control: ModernButton@1.0.0
+                                                    Properties:
+                                                      X: =0
+                                                      Y: =0
+                                                      Width: =194
+                                                      Height: =ControlHeight
+                                                      Appearance: =ButtonAppearance.Subtle
+                                                      BasePaletteColor: |
+                                                        =If(TlAvailSkill = ThisItem.Skill,
+                                                            ColorFade(BrandBg, 0.86), NeutralBg3)
+                                                      Color: |
+                                                        =If(TlAvailSkill = ThisItem.Skill, BrandBg, NeutralFg1)
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      RadiusTopLeft: =CtrlR
+                                                      RadiusTopRight: =CtrlR
+                                                      RadiusBottomLeft: =CtrlR
+                                                      RadiusBottomRight: =CtrlR
+                                                      Text: =ThisItem.Skill
+                                                      AccessibleLabel: |
+                                                        =ThisItem.Skill & ", "
+                                                         & Text(ThisItem.People, "[$-en-US]#,##0")
+                                                         & " people hold it"
+                                                      OnSelect: =Set(varAvailSkill, ThisItem.Skill)
+
+                                    # ---- the strip: one line a skill, free days and people free --
+                                    - tlAvailStrip:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Height: |
+                                            =Pad * 2 + TypeLabelLine + 8
+                                             + TlAvailStripRows * TlRowH
+                                          Fill: =NeutralBg1
+                                          BorderColor: =NeutralStroke1
+                                          BorderThickness: =1
+                                          RadiusTopLeft: =CardR
+                                          RadiusTopRight: =CardR
+                                          RadiusBottomLeft: =CardR
+                                          RadiusBottomRight: =CardR
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutGap: =8
+                                          PaddingLeft: =Pad
+                                          PaddingRight: =Pad
+                                          PaddingTop: =Pad
+                                          PaddingBottom: =Pad
+                                        Children:
+                                          - tlAvailStripTitle:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeLabelLine
+                                                Text: ="Free days by skill this sprint"
+                                                Size: =TypeSubtitle
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - tlAvailStripRowsGallery:
+                                              Control: Gallery@2.15.0
+                                              Variant: Vertical
+                                              Properties:
+                                                BorderColor: =RGBA(0, 0, 0, 0)
+                                                # The card is cut to the rows it holds, so the
+                                                # gallery has nothing to scroll: no padding round
+                                                # a template, and no scrollbar over the last row.
+                                                ShowScrollbar: =false
+                                                FillPortions: =0
+                                                Height: =TlAvailStripRows * TlRowH
+                                                TemplatePadding: =0
+                                                TemplateSize: =TlRowH
+                                                Items: =TlAvailSkillRows
+                                                AccessibleLabel: |
+                                                  ="Free days by skill: the skill, the days free this "
+                                                   & "sprint and how many of its people have one."
+                                              Children:
+                                                - tlAvailStripSkill:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: =0
+                                                      Y: =0
+                                                      Width: |
+                                                        =Max(Parent.TemplateWidth * TlAvailShareName, TlAvailMinName)
+                                                         + Max(Parent.TemplateWidth * TlAvailShareSquad, TlAvailMinSquad) - 8
+                                                      Height: =TlRowH
+                                                      Text: =ThisItem.Skill
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      VerticalAlign: =VerticalAlign.Middle
+                                                      Color: =NeutralFg1
+                                                      Wrap: =true
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                      AutoHeight: =true
+                                                - tlAvailStripFree:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: |
+                                                        =Max(Parent.TemplateWidth * TlAvailShareName, TlAvailMinName)
+                                                         + Max(Parent.TemplateWidth * TlAvailShareSquad, TlAvailMinSquad)
+                                                      Y: =0
+                                                      Width: =Max(Parent.TemplateWidth * TlAvailShareSkill, TlAvailMinSkill) - 8
+                                                      Height: =TlRowH
+                                                      Text: |
+                                                        =Text(ThisItem.FreeDays, "[$-en-US]#,##0")
+                                                         & " days free"
+                                                      Size: =TypeCaption
+                                                      Font: =FontUI
+                                                      VerticalAlign: =VerticalAlign.Middle
+                                                      Color: =NeutralFg2
+                                                      Wrap: =true
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                      AutoHeight: =true
+                                                - tlAvailStripPeople:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: |
+                                                        =Max(Parent.TemplateWidth * TlAvailShareName, TlAvailMinName)
+                                                         + Max(Parent.TemplateWidth * TlAvailShareSquad, TlAvailMinSquad)
+                                                         + Max(Parent.TemplateWidth * TlAvailShareSkill, TlAvailMinSkill)
+                                                      Y: =0
+                                                      Width: |
+                                                        =Max(Parent.TemplateWidth * TlAvailShareFree, TlAvailMinFree)
+                                                         + Max(Parent.TemplateWidth * TlAvailShareWin, TlAvailMinWin) - 8
+                                                      Height: =TlRowH
+                                                      Text: |
+                                                        =Text(ThisItem.PeopleFree, "[$-en-US]#,##0")
+                                                         & " of "
+                                                         & Text(ThisItem.People, "[$-en-US]#,##0")
+                                                         & " people free"
+                                                      Size: =TypeCaption
+                                                      Font: =FontUI
+                                                      VerticalAlign: =VerticalAlign.Middle
+                                                      Color: =NeutralFg2
+                                                      Wrap: =true
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                      AutoHeight: =true
+
+                                    # ---- next free window: a person a row, the row books them ----
+                                    - tlAvailTable:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =1
+                                          Fill: =NeutralBg1
+                                          BorderColor: =NeutralStroke1
+                                          BorderThickness: =1
+                                          RadiusTopLeft: =CardR
+                                          RadiusTopRight: =CardR
+                                          RadiusBottomLeft: =CardR
+                                          RadiusBottomRight: =CardR
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          # The grid inside is never narrower than its own column minimums, so the card
+                                          # scrolls sideways rather than squeezing a cell (power/RUNBOOK.md, "Tables").
+                                          LayoutOverflowX: =LayoutOverflow.Scroll
+                                          LayoutGap: =8
+                                          PaddingLeft: =Pad
+                                          PaddingRight: =Pad
+                                          PaddingTop: =Pad
+                                          PaddingBottom: =Pad
+                                        Children:
+                                          - tlAvailTitle:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeHeadingLine
+                                                Text: ="Next free window"
+                                                Size: =TypeSubtitle
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - tlAvailSub:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =TypeLabelLine * 2
+                                                Text: |
+                                                  =If(TlAvailSkill = "", "Every skill", TlAvailSkill)
+                                                   & " · " & TlAvailFigures
+                                                   & " · the first week each person has "
+                                                   & Text(TlGapNeed, "[$-en-US]#,##0")
+                                                   & " days or more free. Select a row to book them."
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                                FontWeight: =FontWeight.Normal
+                                          - tlAvailHead:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: ManualLayout
+                                              Properties:
+                                                FillPortions: =0
+                                                Width: =Max(Parent.Width - Pad * 2, TlAvailColsW)
+                                                Height: =RowHeight
+                                              Children:
+                                                - tlAvailHeadName:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: =0
+                                                      Y: =(RowHeight - TypeLabelLine) / 2
+                                                      Width: =Max(Parent.Width * TlAvailShareName, TlAvailMinName) - 8
+                                                      Height: =TypeLabelLine
+                                                      Text: ="Person"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - tlAvailHeadSquad:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: =Max(Parent.Width * TlAvailShareName, TlAvailMinName)
+                                                      Y: =(RowHeight - TypeLabelLine) / 2
+                                                      Width: =Max(Parent.Width * TlAvailShareSquad, TlAvailMinSquad) - 8
+                                                      Height: =TypeLabelLine
+                                                      Text: ="Squad"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - tlAvailHeadSkill:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: |
+                                                        =Max(Parent.Width * TlAvailShareName, TlAvailMinName)
+                                                         + Max(Parent.Width * TlAvailShareSquad, TlAvailMinSquad)
+                                                      Y: =(RowHeight - TypeLabelLine) / 2
+                                                      Width: =Max(Parent.Width * TlAvailShareSkill, TlAvailMinSkill) - 8
+                                                      Height: =TypeLabelLine
+                                                      Text: ="Skills"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - tlAvailHeadFree:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: |
+                                                        =Max(Parent.Width * TlAvailShareName, TlAvailMinName)
+                                                         + Max(Parent.Width * TlAvailShareSquad, TlAvailMinSquad)
+                                                         + Max(Parent.Width * TlAvailShareSkill, TlAvailMinSkill)
+                                                      Y: =(RowHeight - TypeLabelLine) / 2
+                                                      Width: =Max(Parent.Width * TlAvailShareFree, TlAvailMinFree) - 8
+                                                      Height: =TypeLabelLine
+                                                      Text: ="Free days this sprint"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Align: =Align.Right
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - tlAvailHeadWin:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      X: |
+                                                        =Max(Parent.Width * TlAvailShareName, TlAvailMinName)
+                                                         + Max(Parent.Width * TlAvailShareSquad, TlAvailMinSquad)
+                                                         + Max(Parent.Width * TlAvailShareSkill, TlAvailMinSkill)
+                                                         + Max(Parent.Width * TlAvailShareFree, TlAvailMinFree)
+                                                      Y: =(RowHeight - TypeLabelLine) / 2
+                                                      Width: =Max(Parent.Width * TlAvailShareWin, TlAvailMinWin) - 8
+                                                      Height: =TypeLabelLine
+                                                      Text: ="Next free window"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                          - tlAvailEmpty:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Parent.Width
+                                                Height: =TypeBodyLine
+                                                Align: =Align.Left
+                                                Visible: =CountRows(TlAvailRows) = 0
+                                                Text: ="No one holds that skill. Choose another chip."
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+
+                                          - tlAvailRowsGallery:
+                                              Control: Gallery@2.15.0
+                                              Variant: Vertical
+                                              Properties:
+                                                BorderColor: =RGBA(0, 0, 0, 0)
+                                                ShowScrollbar: =true
+                                                TemplatePadding: =0
+                                                Width: =Max(Parent.Width - Pad * 2, TlAvailColsW)
+                                                FillPortions: =1
+                                                Visible: =CountRows(TlAvailRows) > 0
+                                                TemplateSize: =RowHeight
+                                                Items: =TlAvailRows
+                                                AccessibleLabel: |
+                                                  ="Next free window: a person a row, soonest window "
+                                                   & "first. Select a row to see the squad on Team."
+                                              Children:
+                                                # The row is the target, as the Team tables are
+                                                # (power/RUNBOOK.md, "Table columns").
+                                                - tlAvailRow:
+                                                    Control: GroupContainer@1.5.0
+                                                    Variant: ManualLayout
+                                                    Properties:
+                                                      X: =0
+                                                      Y: =0
+                                                      Width: =Max(Parent.TemplateWidth, TlAvailColsW)
+                                                      Height: =RowHeight
+                                                    Children:
+                                                      - tlAvailRowName:
+                                                          Control: Label@2.5.1
+                                                          Properties:
+                                                            X: =0
+                                                            Y: =0
+                                                            Width: =Max(Parent.Width * TlAvailShareName, TlAvailMinName) - 8
+                                                            Height: =RowHeight
+                                                            Text: =ThisItem.Name
+                                                            Size: =TypeBody
+                                                            FontWeight: =FontWeight.Semibold
+                                                            Font: =FontUI
+                                                            VerticalAlign: =VerticalAlign.Middle
+                                                            Color: =NeutralFg1
+                                                            Wrap: =true
+                                                            Overflow: =Overflow.Hidden
+                                                            PaddingTop: =0
+                                                            PaddingBottom: =0
+                                                            PaddingLeft: =0
+                                                            PaddingRight: =0
+                                                            AutoHeight: =true
+                                                      - tlAvailRowSquad:
+                                                          Control: Label@2.5.1
+                                                          Properties:
+                                                            X: =Max(Parent.Width * TlAvailShareName, TlAvailMinName)
+                                                            Y: =0
+                                                            Width: =Max(Parent.Width * TlAvailShareSquad, TlAvailMinSquad) - 8
+                                                            Height: =RowHeight
+                                                            Text: =ThisItem.Squad
+                                                            Size: =TypeBody
+                                                            Font: =FontUI
+                                                            VerticalAlign: =VerticalAlign.Middle
+                                                            Color: =NeutralFg2
+                                                            Wrap: =true
+                                                            Overflow: =Overflow.Hidden
+                                                            PaddingTop: =0
+                                                            PaddingBottom: =0
+                                                            PaddingLeft: =0
+                                                            PaddingRight: =0
+                                                            AutoHeight: =true
+                                                      - tlAvailRowSkills:
+                                                          Control: Label@2.5.1
+                                                          Properties:
+                                                            X: |
+                                                              =Max(Parent.Width * TlAvailShareName, TlAvailMinName)
+                                                               + Max(Parent.Width * TlAvailShareSquad, TlAvailMinSquad)
+                                                            Y: =0
+                                                            Width: =Max(Parent.Width * TlAvailShareSkill, TlAvailMinSkill) - 8
+                                                            Height: =RowHeight
+                                                            Text: =ThisItem.Skills
+                                                            Size: =TypeCaption
+                                                            Font: =FontUI
+                                                            VerticalAlign: =VerticalAlign.Middle
+                                                            Color: =NeutralFg2
+                                                            Wrap: =true
+                                                            Overflow: =Overflow.Hidden
+                                                            PaddingTop: =0
+                                                            PaddingBottom: =0
+                                                            PaddingLeft: =0
+                                                            PaddingRight: =0
+                                                            AutoHeight: =true
+                                                      - tlAvailRowFree:
+                                                          Control: Label@2.5.1
+                                                          Properties:
+                                                            X: |
+                                                              =Max(Parent.Width * TlAvailShareName, TlAvailMinName)
+                                                               + Max(Parent.Width * TlAvailShareSquad, TlAvailMinSquad)
+                                                               + Max(Parent.Width * TlAvailShareSkill, TlAvailMinSkill)
+                                                            Y: =0
+                                                            Width: =Max(Parent.Width * TlAvailShareFree, TlAvailMinFree) - 8
+                                                            Height: =RowHeight
+                                                            Text: =Text(ThisItem.FreeDays, "[$-en-US]#,##0")
+                                                            Size: =TypeBody
+                                                            Font: =FontUI
+                                                            Align: =Align.Right
+                                                            VerticalAlign: =VerticalAlign.Middle
+                                                            Color: |
+                                                              =If(ThisItem.FreeDays <= 0, NeutralFg3,
+                                                                  StatusGood)
+                                                            Wrap: =true
+                                                            Overflow: =Overflow.Hidden
+                                                            PaddingTop: =0
+                                                            PaddingBottom: =0
+                                                            PaddingLeft: =0
+                                                            PaddingRight: =0
+                                                            AutoHeight: =true
+                                                      - tlAvailRowWin:
+                                                          Control: Label@2.5.1
+                                                          Properties:
+                                                            X: |
+                                                              =Max(Parent.Width * TlAvailShareName, TlAvailMinName)
+                                                               + Max(Parent.Width * TlAvailShareSquad, TlAvailMinSquad)
+                                                               + Max(Parent.Width * TlAvailShareSkill, TlAvailMinSkill)
+                                                               + Max(Parent.Width * TlAvailShareFree, TlAvailMinFree)
+                                                            Y: =0
+                                                            Width: =Max(Parent.Width * TlAvailShareWin, TlAvailMinWin) - 8
+                                                            Height: =RowHeight
+                                                            Text: |
+                                                              =If(ThisItem.Found,
+                                                                  ThisItem.WeekOf & " · "
+                                                                  & Text(ThisItem.Run, "[$-en-US]#,##0")
+                                                                  & "w",
+                                                                  ThisItem.WeekOf)
+                                                            Size: =TypeBody
+                                                            Font: =FontUI
+                                                            VerticalAlign: =VerticalAlign.Middle
+                                                            Color: =If(ThisItem.Found, NeutralFg1, NeutralFg3)
+                                                            Wrap: =true
+                                                            Overflow: =Overflow.Hidden
+                                                            PaddingTop: =0
+                                                            PaddingBottom: =0
+                                                            PaddingLeft: =0
+                                                            PaddingRight: =0
+                                                            AutoHeight: =true
+                                                      # The hit target, last so it draws over the
+                                                      # cells. The timeline is read-only, so the
+                                                      # row opens the person's squad on Team.
+                                                      - tlAvailRowHit:
+                                                          Control: Classic/Button@2.2.0
+                                                          Properties:
+                                                            X: =2
+                                                            Y: =2
+                                                            Width: =Parent.Width - 4
+                                                            Height: =Parent.Height - 4
+                                                            Text: =""
+                                                            Fill: =RGBA(0, 0, 0, 0)
+                                                            HoverFill: =RGBA(0, 0, 0, 0)
+                                                            PressedFill: =RGBA(0, 0, 0, 0)
+                                                            BorderThickness: =0
+                                                            FocusedBorderThickness: =2
+                                                            TabIndex: =0
+                                                            DisplayMode: |
+                                                              =If(IsBlank(ThisItem.Squad),
+                                                                  DisplayMode.Disabled, DisplayMode.Edit)
+                                                            Tooltip: |
+                                                              ="See " & ThisItem.Squad & " on Team"
+                                                            FocusedBorderColor: =FocusStroke
+                                                            OnSelect: |
+                                                              =Set(varTeamSquad, ThisItem.Squad);
+                                                               Set(varTeamTab, "People");
+                                                               Navigate(scrTeam, ScreenTransition.None)
+
+      # ---- the peek card: the cell the planner picked, read only ----
+      # Screen level, after tlRoot, so it draws over the grid. There is no scrim: the grid stays
+      # readable behind it. tlPeekHit is the outside click, transparent and only there while the
+      # card is open, and the Close button does the same thing from inside.
+      - tlPeekHit:
+          Control: Classic/Button@2.2.0
+          Properties:
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =Parent.Height
+            Visible: =varPeekOpen
+            Text: =""
+            Fill: =RGBA(0, 0, 0, 0)
+            HoverFill: =RGBA(0, 0, 0, 0)
+            PressedFill: =RGBA(0, 0, 0, 0)
+            BorderThickness: =0
+            FocusedBorderThickness: =0
+            TabIndex: =-1
+            Tooltip: ="Close the cell card"
+            OnSelect: =Set(varPeekOpen, false)
+
+      - tlPeekCard:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            # Content-sized: TlPeekH counts the lines this kind of cell draws.
+            X: =Parent.Width - Max(Parent.Width * 0.28, 360) - Pad
+            Y: =TlPeekTop
+            Width: =Max(Parent.Width * 0.28, 360)
+            Height: =TlPeekH
+            Visible: =varPeekOpen
+            Fill: =NeutralBg1
+            BorderColor: =NeutralStroke1
+            BorderThickness: =1
+            RadiusTopLeft: =CardR
+            RadiusTopRight: =CardR
+            RadiusBottomLeft: =CardR
+            RadiusBottomRight: =CardR
+          Children:
+            # The kind's tone: a 4px edge, never the card's own fill.
+            - tlPeekEdge:
+                Control: Rectangle@2.3.0
+                Properties:
+                  X: =0
+                  Y: =0
+                  Width: =4
+                  Height: =Parent.Height
+                  BorderColor: =RGBA(0, 0, 0, 0)
+                  Fill: =TlPeekInk
+            - tlPeekTitle:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =Pad
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeHeadingLine
+                  Text: =TlPeekTitle
+                  Size: =TypeSubtitle
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  VerticalAlign: =VerticalAlign.Middle
+                  Color: =NeutralFg1
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            # The kind, in the legend's own tone.
+            - tlPeekKindPill:
+                Control: CanvasComponent
+                ComponentName: cmpPill
+                Properties:
+                  X: =Pad
+                  Y: =Pad + TypeHeadingLine
+                  Label: =TlPeekKindLabel
+                  Width: =Min(Max(Len(TlPeekKindLabel) * 7 + 20, 56), 200)
+                  Height: =TypeLabelLine
+                  Tone: |
+                    =Switch(TlPeekTone,
+                        "Subtle", "neutral",
+                        "Informative", "neutral",
+                        "Important", "brand",
+                        "Success", "good",
+                        "Warning", "warn",
+                        "bad")
+            - tlPeekWho:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =Pad + TypeHeadingLine + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: =TlPeekWho
+                  Size: =TypeCaption
+                  Font: =FontUI
+                  VerticalAlign: =VerticalAlign.Middle
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            # A work cell: four lines out of the item's own row.
+            - tlPeekState:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =Pad + TypeHeadingLine + TypeLabelLine * 2 + 8
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Visible: =TlPeekIsWork
+                  Text: =TlPeekStateLine
+                  Size: =TypeCaption
+                  Font: =FontUI
+                  VerticalAlign: =VerticalAlign.Middle
+                  Color: =NeutralFg1
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - tlPeekPriority:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =Pad + TypeHeadingLine + TypeLabelLine * 3 + 8
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Visible: =TlPeekIsWork
+                  Text: =TlPeekPriorityLine
+                  Size: =TypeCaption
+                  Font: =FontUI
+                  VerticalAlign: =VerticalAlign.Middle
+                  Color: =NeutralFg1
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - tlPeekSpan:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =Pad + TypeHeadingLine + TypeLabelLine * 4 + 8
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Visible: =TlPeekIsWork
+                  Text: =TlPeekSpanLine
+                  Size: =TypeCaption
+                  Font: =FontUI
+                  VerticalAlign: =VerticalAlign.Middle
+                  Color: =NeutralFg1
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - tlPeekBooked:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =Pad + TypeHeadingLine + TypeLabelLine * 5 + 8
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Visible: =TlPeekIsWork
+                  Text: =TlPeekBookedLine
+                  Size: =TypeCaption
+                  Font: =FontUI
+                  VerticalAlign: =VerticalAlign.Middle
+                  Color: =NeutralFg1
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            # An absence cell: the type and the dates the absence runs.
+            - tlPeekAbsType:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =Pad + TypeHeadingLine + TypeLabelLine * 2 + 8
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Visible: =TlPeekIsAbsence
+                  Text: =TlPeekAbsTypeLine
+                  Size: =TypeCaption
+                  Font: =FontUI
+                  VerticalAlign: =VerticalAlign.Middle
+                  Color: =NeutralFg1
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - tlPeekAbsDates:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =Pad + TypeHeadingLine + TypeLabelLine * 3 + 8
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Visible: =TlPeekIsAbsence
+                  Text: =TlPeekAbsDatesLine
+                  Size: =TypeCaption
+                  Font: =FontUI
+                  VerticalAlign: =VerticalAlign.Middle
+                  Color: =NeutralFg1
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            # Every other kind: one line saying what the day is.
+            - tlPeekPlain:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =Pad + TypeHeadingLine + TypeLabelLine * 2 + 8
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Visible: =!TlPeekIsWork && !TlPeekIsAbsence && !TlPeekIsEmpty
+                  Text: |
+                    =If(TlPeekKind = "bankhol", "A bank holiday in this person's region.",
+                        "Nothing booked on this day.")
+                  Size: =TypeCaption
+                  Font: =FontUI
+                  VerticalAlign: =VerticalAlign.Middle
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - tlPeekOpenItem:
+                Control: ModernButton@1.0.0
+                Properties:
+                  X: =Pad
+                  Y: =Parent.Height - ControlHeight - Pad
+                  Width: =(Parent.Width - Pad * 2 - Gap) / 2
+                  Height: =ControlHeight
+                  Visible: =TlPeekIsWork
+                  Appearance: =ButtonAppearance.Primary
+                  BasePaletteColor: =BrandBg
+                  Color: =BrandFg
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  RadiusTopLeft: =CtrlR
+                  RadiusTopRight: =CtrlR
+                  RadiusBottomLeft: =CtrlR
+                  RadiusBottomRight: =CtrlR
+                  Text: ="Open item"
+                  AccessibleLabel: ="Open " & TlPeekTitle
+                  OnSelect: |
+                    =Set(varItem, LookUp(colWork, Title = varPeekCell.ItemTitle));
+                     Navigate(scrWorkItem, ScreenTransition.None)
+            - tlPeekOpenPerson:
+                Control: ModernButton@1.0.0
+                Properties:
+                  X: =Pad
+                  Y: =Parent.Height - ControlHeight - Pad
+                  Width: =(Parent.Width - Pad * 2 - Gap) / 2
+                  Height: =ControlHeight
+                  Visible: =TlPeekIsAbsence || TlPeekIsEmpty
+                  Appearance: =ButtonAppearance.Primary
+                  BasePaletteColor: =BrandBg
+                  Color: =BrandFg
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  RadiusTopLeft: =CtrlR
+                  RadiusTopRight: =CtrlR
+                  RadiusBottomLeft: =CtrlR
+                  RadiusBottomRight: =CtrlR
+                  Text: ="Open person"
+                  AccessibleLabel: ="See " & TlPeekPerson & " on Team"
+                  OnSelect: |
+                    =Set(varTeamSquad, TlPeekSquad);
+                     Set(varTeamTab, "People");
+                     Navigate(scrTeam, ScreenTransition.None)
+            - tlPeekClose:
+                Control: ModernButton@1.0.0
+                Properties:
+                  X: =Parent.Width - Pad - (Parent.Width - Pad * 2 - Gap) / 2
+                  Y: =Parent.Height - ControlHeight - Pad
+                  Width: =(Parent.Width - Pad * 2 - Gap) / 2
+                  Height: =ControlHeight
+                  Appearance: =ButtonAppearance.Subtle
+                  BasePaletteColor: =NeutralBg1
+                  Color: =NeutralFg1
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  RadiusTopLeft: =CtrlR
+                  RadiusTopRight: =CtrlR
+                  RadiusBottomLeft: =CtrlR
+                  RadiusBottomRight: =CtrlR
+                  Text: ="Close"
+                  AccessibleLabel: ="Close the cell card"
+                  OnSelect: =Set(varPeekOpen, false)

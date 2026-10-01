@@ -1,0 +1,81 @@
+{
+  "_comment": [
+    "Brands the deck can be built in. Pick one with DECK_BRAND, e.g. DECK_BRAND=agentic.",
+    "ccs takes its colours live from ../../ccs-ui/tokens.css and only names the fonts here.",
+    "agentic carries the Agentic Operations lab identity from the Branding toolkit for four labs:",
+    "crimson is LAB 03, and the other lab colours are used as secondaries. Every colour is the",
+    "toolkit's own value; base/bright/hi/glow are its four-step ramp per hue."
+  ],
+  "ccs": {
+    "label": "CCS teal (ccs-ui tokens)",
+    "source": "tokens.css",
+    "fonts": {
+      "display": "'Fraunces', 'Gelasio', Georgia, 'Times New Roman', serif",
+      "body": "'Inter', 'Carlito', Calibri, 'Segoe UI', sans-serif",
+      "mono": "'JetBrains Mono', Consolas, monospace"
+    }
+  },
+  "agentic": {
+    "label": "Agentic Operations (crimson, LAB 03)",
+    "source": "Branding toolkit for four labs",
+    "dark": true,
+    "fonts": {
+      "display": "Manrope, 'Segoe UI Semibold', 'Segoe UI', Calibri, sans-serif",
+      "body": "'IBM Plex Sans', 'Segoe UI', Calibri, sans-serif",
+      "mono": "'IBM Plex Mono', Consolas, monospace"
+    },
+    "colors": {
+      "bg": "071426",
+      "surface": "0B1D30",
+      "panel": "142A42",
+      "panelAlt": "16305A",
+      "line": "1E3550",
+      "ink": "F7F8F9",
+      "muted": "8FA3B8",
+      "brand": "B5163B",
+      "brandMid": "CF2E52",
+      "brandSoft": "8FA3B8",
+      "accent": "E1405F",
+      "band": "B5163B",
+      "bandInk": "FFFFFF",
+      "bandSoft": "FF9DB0",
+      "cover": "071426",
+      "coverInk": "FFFFFF",
+      "coverSoft": "8FA3B8",
+      "figure": "EE6E86",
+      "emphasis": "EE6E86",
+      "cream": "FFFFFF",
+      "white": "FFFFFF",
+      "good": "2FB3B8",
+      "warn": "FFB65A",
+      "info": "4577C4",
+      "bandEdge": "FF9DB0"
+    },
+    "labs": [
+      {
+        "name": "24x7 Services",
+        "word": "teal",
+        "base": "0F7176",
+        "bright": "2FB3B8"
+      },
+      {
+        "name": "Colleague Services",
+        "word": "cobalt",
+        "base": "24467E",
+        "bright": "4577C4"
+      },
+      {
+        "name": "Agentic Operations",
+        "word": "crimson",
+        "base": "B5163B",
+        "bright": "E1405F"
+      },
+      {
+        "name": "Data & Insights",
+        "word": "amber",
+        "base": "B0590A",
+        "bright": "FFB65A"
+      }
+    ]
+  }
+}

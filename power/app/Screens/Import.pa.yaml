@@ -1,0 +1,666 @@
+# Waypoint canvas app: the Import screen, where a Workday absence report or a Jira issue export
+# becomes rows in the quarter.
+#
+# Valid against pa.schema.yaml (v3.0): a Screens map, each screen with a Properties formula map and a
+# Children sequence whose items are single-key maps of control name to control instance.
+#
+# Import is src/pages/Import.tsx: the five steps, Choose source, Choose file, Map columns, Match
+# people and Preview. In the browser build the file is read in the page; in canvas it cannot be,
+# because there is no CSV or XLSX reader in Power Fx, so at work the reading, the mapping and the
+# matching are a Power Automate flow and the app records what it did. This screen is the strip, the
+# explanation of that flow, and the table of runs already made.
+#
+# The shell is scrTeam's, unchanged: imRoot is a vertical GroupContainer the size of the screen,
+# holding the 48px header and a horizontal row of the rail and the body. X and Y appear only inside
+# the gallery template, which is not auto-layout.
+#
+# The strip writes varImportStep, and ImportStep is what every step button's own appearance reads,
+# so the screen opens on Choose source before a step is ever picked.
+#
+# What is a placeholder, and says so: Run import flow raises a Notify. The flow itself, and the
+# mapping and matching screens behind steps three and four, are later units.
+Screens:
+  scrImport:
+    Properties:
+      Fill: =NeutralCanvas
+
+    Children:
+
+      # ---- the root: one vertical auto-layout container the size of the screen ----
+      - imRoot:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            LayoutOverflowX: =LayoutOverflow.Hide
+            LayoutOverflowY: =LayoutOverflow.Hide
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =Parent.Height
+            Fill: =NeutralCanvas
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutGap: =0
+          Children:
+
+            # ---- shell: the app header ----
+            - imHeader:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  LayoutOverflowX: =LayoutOverflow.Hide
+                  LayoutOverflowY: =LayoutOverflow.Hide
+                  FillPortions: =0
+                  Height: =AppHeaderH
+                  Fill: =BrandBg
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                  LayoutGap: =Gap
+                  PaddingLeft: =Pad
+                  PaddingRight: =Pad
+                Children:
+                  - imHeaderName:
+                      Control: Label@2.5.1
+                      Properties:
+                        Width: =Parent.Width / 3
+                        Height: =AppHeaderH
+                        Text: ="Waypoint"
+                        Size: =TypeSubtitle
+                        FontWeight: =FontWeight.Semibold
+                        Font: =FontUI
+                        VerticalAlign: =VerticalAlign.Middle
+                        Color: =BrandFg
+                        Wrap: =true
+                        Overflow: =Overflow.Hidden
+                        PaddingTop: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        AutoHeight: =true
+                  # ---- shell: the scope selector, one cmpScope instance for every screen ----
+                  - imHeaderScope:
+                      Control: CanvasComponent
+                      ComponentName: cmpScope
+                      Properties:
+                        Width: =Max(Parent.Width * 0.14, 180)
+                        Height: =ControlHeight
+                        Visible: =IncludeScope
+                  # ---- shell: the header search, one cmpSearch instance for every screen ----
+                  - imHeaderSearch:
+                      Control: CanvasComponent
+                      ComponentName: cmpSearch
+                      Properties:
+                        Width: =Max(Parent.Width * 0.24, 280)
+                        Height: =ControlHeight
+                  - imHeaderQuarter:
+                      Control: Label@2.5.1
+                      Properties:
+                        Width: =Parent.Width / 3
+                        Height: =AppHeaderH
+                        Text: =CurrentQuarter.Label & " · capacity planner"
+                        Size: =TypeCaption
+                        Font: =FontUI
+                        Align: =Align.Right
+                        VerticalAlign: =VerticalAlign.Middle
+                        Color: =ColorFade(BrandFg, -0.2)
+                        Wrap: =true
+                        Overflow: =Overflow.Hidden
+                        PaddingTop: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        AutoHeight: =true
+
+            # ---- shell: the rail, and the body beside it ----
+            - imMain:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  LayoutOverflowX: =LayoutOverflow.Hide
+                  LayoutOverflowY: =LayoutOverflow.Hide
+                  FillPortions: =1
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutGap: =0
+                Children:
+
+                  # ---- shell: the rail, one cmpRail instance for every screen ----
+                  - imRail:
+                      Control: CanvasComponent
+                      ComponentName: cmpRail
+                      Properties:
+                        LayoutMinWidth: =If(RailCollapsed, RailWidthTight, NavW)
+                        Width: =If(RailCollapsed, RailWidthTight, NavW)
+                        Height: =Parent.Height
+                        Active: ="Import"
+
+                  # ---- shell: the body everything else sits inside ----
+                  - imBody:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        LayoutOverflowX: =LayoutOverflow.Hide
+                        LayoutOverflowY: =LayoutOverflow.Scroll
+                        FillPortions: =1
+                        Fill: =NeutralBg3
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutGap: =Gap
+                        PaddingLeft: =Pad
+                        PaddingRight: =Pad
+                        PaddingTop: =Pad
+                        PaddingBottom: =Pad
+                      Children:
+
+                        # ---- page head: the eyebrow and the one h1 ----
+                        - imPageHead:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =0
+                              Height: =PageHeadH
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutGap: =0
+                            Children:
+                              - imEyebrow:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =TypeKickerLine
+                                    Visible: =!IsCompact
+                                    Text: ="Workday and Jira"
+                                    Size: =TypeCaption
+                                    FontWeight: =FontWeight.Semibold
+                                    Font: =FontUI
+                                    Color: =NeutralFg2
+                                    Wrap: =false
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                              - imTitle:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =TypeDisplayLine
+                                    Text: ="Import"
+                                    Size: =TypeTitle
+                                    FontWeight: =FontWeight.Semibold
+                                    Font: =FontUI
+                                    Color: =NeutralFg1
+                                    Wrap: =true
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    AutoHeight: =true
+
+                        # ---- the five steps Import.tsx walks, as one tab list, the pattern six other
+                        # screens use. Its Selected value writes varImportStep directly, so the strip
+                        # opens on Choose source. ----
+                        - imSteps:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =0
+                              Height: =ControlHeight + 16
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutGap: =Gap
+                            Children:
+                              - imStepsTab:
+                                  Control: ModernTabList@1.0.1
+                                  Properties:
+                                    Width: =Parent.Width
+                                    Height: =ControlHeight + 8
+                                    Items: |
+                                      =Table({Value:"Choose source"}, {Value:"Choose file"}, {Value:"Map columns"},
+                                        {Value:"Match people"}, {Value:"Preview"})
+                                    Default: ={Value:"Choose source"}
+                                    Font: =FontUI
+                                    Size: =TypeBodyPx
+                                    Color: =NeutralFg1
+                                    BasePaletteColor: =BrandBg
+                                    AccessibleLabel: ="Import steps"
+                                    OnChange: =Set(varImportStep, imStepsTab.Selected.Value)
+                                    FontWeight: =FontWeight.Semibold
+
+                        - imFlow:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =0
+                              Height: |
+                                =TypeHeadingLine + TypeBodyLine + TypeBodyLine * 3 + TypeBodyLine * 2
+                                 + TypeBodyLine * 3 + ControlHeight + 8 * 5 + Pad * 2
+                              Fill: =NeutralBg1
+                              BorderColor: =NeutralStroke1
+                              BorderThickness: =1
+                              RadiusTopLeft: =CardR
+                              RadiusTopRight: =CardR
+                              RadiusBottomLeft: =CardR
+                              RadiusBottomRight: =CardR
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutGap: =8
+                              PaddingLeft: =Pad
+                              PaddingRight: =Pad
+                              PaddingTop: =Pad
+                              PaddingBottom: =Pad
+                            Children:
+                              - imFlowTitle:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =TypeHeadingLine
+                                    Text: ="How an import runs"
+                                    Size: =TypeSubtitle
+                                    FontWeight: =FontWeight.Semibold
+                                    Font: =FontUI
+                                    Color: =NeutralFg1
+                                    Wrap: =true
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    AutoHeight: =true
+                              - imStepNow:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =TypeBodyLine
+                                    Text: |
+                                      ="Step " & Text(ImportStepIndex, "[$-en-US]#,##0") & " of 5: " & ImportStep & "."
+                                    Size: =TypeBody
+                                    Font: =FontUI
+                                    Color: =NeutralFg1
+                                    Wrap: =false
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                              - imFlowNote:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =TypeBodyLine * 3
+                                    Text: |
+                                      ="Reading the file itself is a Power Automate flow at work, not a formula: canvas has no CSV "
+                                       & "or XLSX reader. The flow takes the same two exports this screen is built for, a Workday "
+                                       & "absence report or a Jira issue export, and hands the rows back to the app."
+                                    Size: =TypeCaption
+                                    Font: =FontUI
+                                    Color: =NeutralFg2
+                                    Wrap: =true
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    AutoHeight: =true
+                                    FontWeight: =FontWeight.Normal
+                              - imMapNote:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =TypeBodyLine * 2
+                                    Text: |
+                                      ="Step 3 is the mapping profile: the columns the export carries, matched to the model's own "
+                                       & "fields and remembered per source, so the next export of the same report maps itself."
+                                    Size: =TypeCaption
+                                    Font: =FontUI
+                                    Color: =NeutralFg2
+                                    Wrap: =true
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    AutoHeight: =true
+                                    FontWeight: =FontWeight.Normal
+                              - imPeopleNote:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =TypeBodyLine * 3
+                                    Text: |
+                                      ="Step 4 is the people matching: a row is matched on Core or File ID first, then on email, "
+                                       & "then on name. Nothing ambiguous is applied until someone has chosen, which is what "
+                                       & "Match people is for."
+                                    Size: =TypeCaption
+                                    Font: =FontUI
+                                    Color: =NeutralFg2
+                                    Wrap: =true
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    AutoHeight: =true
+                                    FontWeight: =FontWeight.Normal
+                              - imRunFlow:
+                                  Control: ModernButton@1.0.0
+                                  Properties:
+                                    Appearance: =ButtonAppearance.Primary
+                                    BasePaletteColor: =BrandBg
+                                    Color: =BrandFg
+                                    Font: =FontUI
+                                    Size: =TypeBodyPx
+                                    RadiusTopLeft: =CtrlR
+                                    RadiusTopRight: =CtrlR
+                                    RadiusBottomLeft: =CtrlR
+                                    RadiusBottomRight: =CtrlR
+                                    Width: =200
+                                    Height: =ControlHeight
+                                    Text: ="Run import flow"
+                                    AccessibleLabel: ="Run import flow"
+                                    OnSelect: |
+                                      =Notify("Run import flow: the Power Automate flow that reads the export is a later " &
+                                              "unit. Nothing has been imported.",
+                                              NotificationType.Information)
+
+                        - imRuns:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =1
+                              Fill: =NeutralBg1
+                              BorderColor: =NeutralStroke1
+                              BorderThickness: =1
+                              RadiusTopLeft: =CardR
+                              RadiusTopRight: =CardR
+                              RadiusBottomLeft: =CardR
+                              RadiusBottomRight: =CardR
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutGap: =8
+                              PaddingLeft: =Pad
+                              PaddingRight: =Pad
+                              PaddingTop: =Pad
+                              PaddingBottom: =Pad
+                            Children:
+                              - imRunsTitle:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =TypeHeadingLine
+                                    Text: ="Runs already made"
+                                    Size: =TypeSubtitle
+                                    FontWeight: =FontWeight.Semibold
+                                    Font: =FontUI
+                                    Color: =NeutralFg1
+                                    Wrap: =true
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    AutoHeight: =true
+                              - imHeadRuns:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    FillPortions: =0
+                                    Width: =Parent.Width
+                                    Height: =TypeLabelLine + 8
+                                  Children:
+                                    - imHdFirstRuns:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =4
+                                          Width: =Parent.Width - ImpRunColsW - 16
+                                          Height: =TypeLabelLine
+                                          Text: ="Run"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - imHdRunsWhen:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =Parent.Width - ImpRunColsW
+                                          Y: =4
+                                          Width: =ImpColWhen - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="When"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - imHdRunsSource:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =Parent.Width - ImpRunColsW + ImpColWhen
+                                          Y: =4
+                                          Width: =ImpColSource - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Source"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - imHdRunsRows:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =Parent.Width - ImpRunColsW + ImpColWhen + ImpColSource
+                                          Y: =4
+                                          Width: =ImpColRows - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Rows read"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - imHdRunsApplied:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Parent.Width - ImpRunColsW + ImpColWhen + ImpColSource + ImpColRows
+                                          Y: =4
+                                          Width: =ImpColApplied - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Rows applied"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - imHdRunsBy:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Parent.Width - ImpRunColsW + ImpColWhen + ImpColSource + ImpColRows
+                                             + ImpColApplied
+                                          Y: =4
+                                          Width: =ImpColBy - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Applied by"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                              - imRunsEmpty:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Width: =Parent.Width
+                                    Height: =TypeBodyLine
+                                    Align: =Align.Left
+                                    Visible: =IsEmpty(ImportRunRows)
+                                    Text: ="No import runs yet."
+                                    Size: =TypeBody
+                                    Font: =FontUI
+                                    Color: =NeutralFg2
+                                    Wrap: =false
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                              - imRunsList:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    TemplatePadding: =0
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    ShowScrollbar: =true
+                                    FillPortions: =1
+                                    Items: =ImportRunRows
+                                    TemplateSize: =RowHeight
+                                    AccessibleLabel: |
+                                      ="Import runs: when each ran, what it read and how much of it was applied."
+                                  Children:
+                                  - imCellRnName:
+                                      Control: Label@2.5.1
+                                      Properties:
+                                        X: =0
+                                        Y: =0
+                                        Width: =Parent.TemplateWidth - ImpRunColsW - 16
+                                        Height: =RowHeight
+                                        Text: =ThisItem.Name
+                                        Size: =TypeBody
+                                        FontWeight: =FontWeight.Semibold
+                                        Font: =FontUI
+                                        VerticalAlign: =VerticalAlign.Middle
+                                        Color: =NeutralFg1
+                                        Wrap: =false
+                                        Overflow: =Overflow.Hidden
+                                        PaddingTop: =0
+                                        PaddingBottom: =0
+                                        PaddingLeft: =0
+                                        PaddingRight: =0
+                                  - imCellRnWhen:
+                                      Control: Label@2.5.1
+                                      Properties:
+                                        X: =Parent.TemplateWidth - ImpRunColsW
+                                        Y: =0
+                                        Width: =ImpColWhen - 8
+                                        Height: =RowHeight
+                                        Text: =Text(ThisItem.'Run at', "[$-en-US]yyyy-mm-dd hh:mm")
+                                        Size: =TypeCaption
+                                        Font: =FontUI
+                                        VerticalAlign: =VerticalAlign.Middle
+                                        Color: =NeutralFg2
+                                        Wrap: =false
+                                        Overflow: =Overflow.Hidden
+                                        PaddingTop: =0
+                                        PaddingBottom: =0
+                                        PaddingLeft: =0
+                                        PaddingRight: =0
+                                  - imCellRnSource:
+                                      Control: Label@2.5.1
+                                      Properties:
+                                        X: =Parent.TemplateWidth - ImpRunColsW + ImpColWhen
+                                        Y: =0
+                                        Width: =ImpColSource - 8
+                                        Height: =RowHeight
+                                        Text: =Text(ThisItem.Source)
+                                        Size: =TypeBody
+                                        Font: =FontUI
+                                        VerticalAlign: =VerticalAlign.Middle
+                                        Color: =NeutralFg1
+                                        Wrap: =false
+                                        Overflow: =Overflow.Hidden
+                                        PaddingTop: =0
+                                        PaddingBottom: =0
+                                        PaddingLeft: =0
+                                        PaddingRight: =0
+                                  - imCellRnRows:
+                                      Control: Label@2.5.1
+                                      Properties:
+                                        X: =Parent.TemplateWidth - ImpRunColsW + ImpColWhen + ImpColSource
+                                        Y: =0
+                                        Width: =ImpColRows - 8
+                                        Height: =RowHeight
+                                        Text: =Text(ThisItem.'Rows read', "[$-en-US]#,##0")
+                                        Size: =TypeBody
+                                        Font: =FontUI
+                                        Align: =Align.Right
+                                        VerticalAlign: =VerticalAlign.Middle
+                                        Color: =NeutralFg1
+                                        Wrap: =false
+                                        Overflow: =Overflow.Hidden
+                                        PaddingTop: =0
+                                        PaddingBottom: =0
+                                        PaddingLeft: =0
+                                        PaddingRight: =0
+                                  - imCellRnApplied:
+                                      Control: Label@2.5.1
+                                      Properties:
+                                        X: =Parent.TemplateWidth - ImpRunColsW + ImpColWhen + ImpColSource + ImpColRows
+                                        Y: =0
+                                        Width: =ImpColApplied - 8
+                                        Height: =RowHeight
+                                        Text: =Text(ThisItem.'Rows applied', "[$-en-US]#,##0")
+                                        Size: =TypeBody
+                                        Font: =FontUI
+                                        Align: =Align.Right
+                                        VerticalAlign: =VerticalAlign.Middle
+                                        Color: =NeutralFg1
+                                        Wrap: =false
+                                        Overflow: =Overflow.Hidden
+                                        PaddingTop: =0
+                                        PaddingBottom: =0
+                                        PaddingLeft: =0
+                                        PaddingRight: =0
+                                  - imCellRnBy:
+                                      Control: Label@2.5.1
+                                      Properties:
+                                        X: =Parent.TemplateWidth - ImpRunColsW + ImpColWhen + ImpColSource + ImpColRows + ImpColApplied
+                                        Y: =0
+                                        Width: =ImpColBy - 8
+                                        Height: =RowHeight
+                                        Text: =Coalesce(ThisItem.'Run by'.'Full Name', "—")
+                                        Size: =TypeCaption
+                                        Font: =FontUI
+                                        VerticalAlign: =VerticalAlign.Middle
+                                        Color: =NeutralFg2
+                                        Wrap: =false
+                                        Overflow: =Overflow.Hidden
+                                        PaddingTop: =0
+                                        PaddingBottom: =0
+                                        PaddingLeft: =0
+                                        PaddingRight: =0

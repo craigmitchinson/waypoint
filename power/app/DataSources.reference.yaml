@@ -1,0 +1,47 @@
+# Waypoint canvas app: the Dataverse tables the app connects to. Documentation only.
+#
+# This file is NOT packed. Studio rejects a DataSources file in the SourceCode layout
+# ("PA1022: The top-level object kind 'DataSource' is not supported for the current action"), so
+# scripts/assemble-canvas.mjs no longer writes one and the extension here is .reference.yaml so
+# nothing picks it up.
+#
+# Connections are made once, in Studio, with Add data. The name on the left is what Studio calls
+# the table and therefore what Power Fx in App.pa.yaml and the screens uses: the table's display
+# collection name from ../waypoint.model.yaml. A name with a space is written in single quotes,
+# for example 'Work items'.
+#
+# After the tables are added, download and unpack the app again to refresh power/canvas/source,
+# so the skeleton carries the connections.
+
+Tables:
+  People: wp_person
+  Squads: wp_squad
+  'Work items': wp_workitem
+  Assignees: wp_assignee
+  Assignments: wp_assignment
+  Absences: wp_absence
+  'Benefit claims': wp_benefitclaim
+  'Benefit actuals': wp_benefitactual
+  Reservations: wp_reservation
+  Quarters: wp_quarter
+
+  # The display collection name is Settings, which the Power Apps host object already owns, so
+  # Power Fx reads it as [@Settings].
+  Settings: wp_setting
+
+  'Business grades': wp_graderate
+  'Grade blends': wp_gradeblend
+  'Grade blend lines': wp_gradeblendline
+  'Work states': wp_workstate
+  Outcomes: wp_outcome
+  Epics: wp_epic
+  'Bank holidays': wp_bankholiday
+  'Quarter snapshots': wp_quartersnapshot
+  Archive: wp_archiverow
+  'Activity log': wp_activitylog
+  'Import profiles': wp_importprofile
+  'Import runs': wp_importrun
+  'Size bands': wp_size
+  'List values': wp_listvalue
+  'Team grade costs': wp_teamgradecost
+  'Cost lines': wp_costline

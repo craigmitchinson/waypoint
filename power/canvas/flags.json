@@ -1,0 +1,5 @@
+{
+  "includeGridControl": true,
+  "includeFrontDoor": true,
+  "includeScope": true
+}

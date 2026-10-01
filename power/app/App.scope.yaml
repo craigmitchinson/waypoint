@@ -1,0 +1,211 @@
+# Waypoint canvas app: the team-scoped variant of the two blocks that read the tables.
+#
+# Scope is flag-gated. Every scoped read here narrows on the Team lookup the connected tables carry
+# (Team.Team), and wp_team itself is not connected in Studio yet, so the read errors at runtime and
+# the IfError handler clears the collection it was meant to fill. While includeScope in
+# power/canvas/flags.json is false, scripts/assemble-canvas.mjs carries neither block into the
+# build: App.OnStart keeps its plain reads, cmpScope's OnChange only sets varScopeTeam, and the
+# IncludeScope named formula stays false so no screen shows the selector. Flip it to true once
+# Craig has added Teams in Studio (power/RUNBOOK.md, section 4, "The scope flag").
+#
+# The two blocks below are one block in two places: a table added or a filter changed in one is
+# changed in the other in the same edit.
+
+App:
+  Properties:
+    # Substituted for the plain Concurrent(...) statement in App.pa.yaml's OnStart.
+    OnStart: |
+      Concurrent(
+          IfError(ClearCollect(colSettings, [@Settings]), Clear(colSettings)),
+          IfError(ClearCollect(colQuarters, Quarters);
+                  If(!IsBlank(varScopeTeam),
+                     RemoveIf(colQuarters, !IsBlank(Team.Team) && Team.Team <> varScopeTeam)),
+                  Clear(colQuarters)),
+          IfError(ClearCollect(colPeople,
+                      If(IsBlank(varScopeTeam), People,
+                         Filter(People, Team.Team = varScopeTeam))),
+                  Clear(colPeople)),
+          IfError(ClearCollect(colSquads,
+                      If(IsBlank(varScopeTeam), Squads,
+                         Filter(Squads, Team.Team = varScopeTeam))),
+                  Clear(colSquads)),
+          IfError(ClearCollect(colWork,
+                      If(IsBlank(varScopeTeam), 'Work items',
+                         Filter('Work items', Team.Team = varScopeTeam))),
+                  Clear(colWork)),
+          IfError(ClearCollect(colAssignees,
+                      If(IsBlank(varScopeTeam), Assignees,
+                         Filter(Assignees, Team.Team = varScopeTeam))),
+                  Clear(colAssignees)),
+          IfError(ClearCollect(colAssignments,
+                      If(IsBlank(varScopeTeam), Assignments,
+                         Filter(Assignments, Team.Team = varScopeTeam))),
+                  Clear(colAssignments)),
+          IfError(ClearCollect(colAbsences,
+                      If(IsBlank(varScopeTeam), Absences,
+                         Filter(Absences, Team.Team = varScopeTeam))),
+                  Clear(colAbsences)),
+          IfError(ClearCollect(colReservations,
+                      If(IsBlank(varScopeTeam), Reservations,
+                         Filter(Reservations, Team.Team = varScopeTeam))),
+                  Clear(colReservations)),
+          IfError(ClearCollect(colStates, 'Work states');
+                  If(!IsBlank(varScopeTeam),
+                     RemoveIf(colStates, !IsBlank(Team.Team) && Team.Team <> varScopeTeam)),
+                  Clear(colStates)),
+          IfError(ClearCollect(colEpics, Epics);
+                  If(!IsBlank(varScopeTeam),
+                     RemoveIf(colEpics, !IsBlank(Team.Team) && Team.Team <> varScopeTeam)),
+                  Clear(colEpics)),
+          IfError(ClearCollect(colSizes, 'Size bands'), Clear(colSizes)),
+          IfError(ClearCollect(colListValues, 'List values');
+                  If(!IsBlank(varScopeTeam),
+                     RemoveIf(colListValues, !IsBlank(Team.Team) && Team.Team <> varScopeTeam)),
+                  Clear(colListValues)),
+          IfError(ClearCollect(colBankHolidays, 'Bank holidays'), Clear(colBankHolidays)),
+          IfError(ClearCollect(colClaims,
+                      If(IsBlank(varScopeTeam), 'Benefit claims',
+                         Filter('Benefit claims', Team.Team = varScopeTeam))),
+                  Clear(colClaims)),
+          IfError(ClearCollect(colBlendLines, 'Grade blend lines'), Clear(colBlendLines)),
+          IfError(ClearCollect(colActuals,
+                      If(IsBlank(varScopeTeam), 'Benefit actuals',
+                         Filter('Benefit actuals', Team.Team = varScopeTeam))),
+                  Clear(colActuals)),
+          IfError(ClearCollect(colTeamGradeCosts,
+                      If(IsBlank(varScopeTeam), 'Team grade costs',
+                         Filter('Team grade costs', Team.Team = varScopeTeam))),
+                  Clear(colTeamGradeCosts)),
+          IfError(ClearCollect(colCostLines,
+                      If(IsBlank(varScopeTeam), 'Cost lines',
+                         Filter('Cost lines', Team.Team = varScopeTeam))),
+                  Clear(colCostLines)),
+          IfError(ClearCollect(colSnapshots,
+                      If(IsBlank(varScopeTeam), 'Quarter snapshots',
+                         Filter('Quarter snapshots', Team.Team = varScopeTeam))),
+                  Clear(colSnapshots)),
+          IfError(ClearCollect(colArchive,
+                      If(IsBlank(varScopeTeam), Archive,
+                         Filter(Archive, Team.Team = varScopeTeam))),
+                  Clear(colArchive)),
+          IfError(ClearCollect(colGrades, 'Business grades');
+                  If(!IsBlank(varScopeTeam),
+                     RemoveIf(colGrades, !IsBlank(Team.Team) && Team.Team <> varScopeTeam)),
+                  Clear(colGrades)),
+          IfError(ClearCollect(colBlends, 'Grade blends');
+                  If(!IsBlank(varScopeTeam),
+                     RemoveIf(colBlends, !IsBlank(Team.Team) && Team.Team <> varScopeTeam)),
+                  Clear(colBlends)),
+          IfError(ClearCollect(colOutcomes, Outcomes);
+                  If(!IsBlank(varScopeTeam),
+                     RemoveIf(colOutcomes, !IsBlank(Team.Team) && Team.Team <> varScopeTeam)),
+                  Clear(colOutcomes)),
+          IfError(ClearCollect(colActivity, 'Activity log'), Clear(colActivity)),
+          IfError(ClearCollect(colImportRuns,
+                      If(IsBlank(varScopeTeam), 'Import runs',
+                         Filter('Import runs', Team.Team = varScopeTeam))),
+                  Clear(colImportRuns))
+      );
+
+ComponentDefinitions:
+  cmpScope:
+    # Substituted for the whole OnChange body of cmpScope's scopeBox in Components.pa.yaml.
+    OnChange: |
+      =// The scope the whole app is on. The first option is the label for no scope at all,
+       // so it writes a blank rather than a team name.
+       Set(varScopeTeam, If(Self.Selected.Value = ScopeAllLabel, "", Self.Selected.Value));
+       // The reload. A named formula cannot re-run a ClearCollect and App.OnStart runs
+       // once, so the block below is App.OnStart's own Concurrent block copied verbatim,
+       // reading the varScopeTeam just set. The two are one block in two places: a table
+       // added or a filter changed in OnStart is changed here in the same edit.
+       Concurrent(
+           IfError(ClearCollect(colSettings, [@Settings]), Clear(colSettings)),
+           IfError(ClearCollect(colQuarters, Quarters);
+                   If(!IsBlank(varScopeTeam),
+                      RemoveIf(colQuarters, !IsBlank(Team.Team) && Team.Team <> varScopeTeam)),
+                   Clear(colQuarters)),
+           IfError(ClearCollect(colPeople,
+                       If(IsBlank(varScopeTeam), People,
+                          Filter(People, Team.Team = varScopeTeam))),
+                   Clear(colPeople)),
+           IfError(ClearCollect(colSquads,
+                       If(IsBlank(varScopeTeam), Squads,
+                          Filter(Squads, Team.Team = varScopeTeam))),
+                   Clear(colSquads)),
+           IfError(ClearCollect(colWork,
+                       If(IsBlank(varScopeTeam), 'Work items',
+                          Filter('Work items', Team.Team = varScopeTeam))),
+                   Clear(colWork)),
+           IfError(ClearCollect(colAssignees,
+                       If(IsBlank(varScopeTeam), Assignees,
+                          Filter(Assignees, Team.Team = varScopeTeam))),
+                   Clear(colAssignees)),
+           IfError(ClearCollect(colAssignments,
+                       If(IsBlank(varScopeTeam), Assignments,
+                          Filter(Assignments, Team.Team = varScopeTeam))),
+                   Clear(colAssignments)),
+           IfError(ClearCollect(colAbsences,
+                       If(IsBlank(varScopeTeam), Absences,
+                          Filter(Absences, Team.Team = varScopeTeam))),
+                   Clear(colAbsences)),
+           IfError(ClearCollect(colReservations,
+                       If(IsBlank(varScopeTeam), Reservations,
+                          Filter(Reservations, Team.Team = varScopeTeam))),
+                   Clear(colReservations)),
+           IfError(ClearCollect(colStates, 'Work states');
+                   If(!IsBlank(varScopeTeam),
+                      RemoveIf(colStates, !IsBlank(Team.Team) && Team.Team <> varScopeTeam)),
+                   Clear(colStates)),
+           IfError(ClearCollect(colEpics, Epics);
+                   If(!IsBlank(varScopeTeam),
+                      RemoveIf(colEpics, !IsBlank(Team.Team) && Team.Team <> varScopeTeam)),
+                   Clear(colEpics)),
+           IfError(ClearCollect(colSizes, 'Size bands'), Clear(colSizes)),
+           IfError(ClearCollect(colListValues, 'List values');
+                   If(!IsBlank(varScopeTeam),
+                      RemoveIf(colListValues, !IsBlank(Team.Team) && Team.Team <> varScopeTeam)),
+                   Clear(colListValues)),
+           IfError(ClearCollect(colBankHolidays, 'Bank holidays'), Clear(colBankHolidays)),
+           IfError(ClearCollect(colClaims,
+                       If(IsBlank(varScopeTeam), 'Benefit claims',
+                          Filter('Benefit claims', Team.Team = varScopeTeam))),
+                   Clear(colClaims)),
+           IfError(ClearCollect(colBlendLines, 'Grade blend lines'), Clear(colBlendLines)),
+           IfError(ClearCollect(colActuals,
+                       If(IsBlank(varScopeTeam), 'Benefit actuals',
+                          Filter('Benefit actuals', Team.Team = varScopeTeam))),
+                   Clear(colActuals)),
+           IfError(ClearCollect(colTeamGradeCosts,
+                       If(IsBlank(varScopeTeam), 'Team grade costs',
+                          Filter('Team grade costs', Team.Team = varScopeTeam))),
+                   Clear(colTeamGradeCosts)),
+           IfError(ClearCollect(colCostLines,
+                       If(IsBlank(varScopeTeam), 'Cost lines',
+                          Filter('Cost lines', Team.Team = varScopeTeam))),
+                   Clear(colCostLines)),
+           IfError(ClearCollect(colSnapshots,
+                       If(IsBlank(varScopeTeam), 'Quarter snapshots',
+                          Filter('Quarter snapshots', Team.Team = varScopeTeam))),
+                   Clear(colSnapshots)),
+           IfError(ClearCollect(colArchive,
+                       If(IsBlank(varScopeTeam), Archive,
+                          Filter(Archive, Team.Team = varScopeTeam))),
+                   Clear(colArchive)),
+           IfError(ClearCollect(colGrades, 'Business grades');
+                   If(!IsBlank(varScopeTeam),
+                      RemoveIf(colGrades, !IsBlank(Team.Team) && Team.Team <> varScopeTeam)),
+                   Clear(colGrades)),
+           IfError(ClearCollect(colBlends, 'Grade blends');
+                   If(!IsBlank(varScopeTeam),
+                      RemoveIf(colBlends, !IsBlank(Team.Team) && Team.Team <> varScopeTeam)),
+                   Clear(colBlends)),
+           IfError(ClearCollect(colOutcomes, Outcomes);
+                   If(!IsBlank(varScopeTeam),
+                      RemoveIf(colOutcomes, !IsBlank(Team.Team) && Team.Team <> varScopeTeam)),
+                   Clear(colOutcomes)),
+           IfError(ClearCollect(colActivity, 'Activity log'), Clear(colActivity)),
+           IfError(ClearCollect(colImportRuns,
+                       If(IsBlank(varScopeTeam), 'Import runs',
+                          Filter('Import runs', Team.Team = varScopeTeam))),
+                   Clear(colImportRuns))
+       )

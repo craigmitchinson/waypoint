@@ -1,0 +1,2606 @@
+# Waypoint canvas app: the Financials screen, what the team costs and what it returns.
+#
+# Valid against pa.schema.yaml (v3.0): a Screens map, each screen with a Properties formula map and a
+# Children sequence whose items are single-key maps of control name to control instance.
+#
+# Financials is src/pages/Financials.tsx: the band of the year's cost-against-value figures, a strip
+# of six more, then one pivot over four tables — cost of capacity by squad, by team grade, by
+# funding line, and cost per work item. It is Team's shape: the tab list writes varFinTab, one card
+# is visible at a time, and that card takes the whole height the body has left, so at 1920x1080 the
+# body leaves the card 648px and twelve rows are in view before anything scrolls. Every number is the
+# engine's, through the named formulas in
+# Formulas.pa.yaml prefixed Fin*, over PeopleTable, SquadTable, WorkStatusTable, colTeamGradeCosts and
+# colCostLines. Nothing here works a number out for itself.
+#
+# The shell is scrTeam's, unchanged: fnRoot is a vertical GroupContainer the size of the screen,
+# holding the 48px header and a horizontal row of the rail and the body. X and Y appear only inside
+# the gallery templates, which are not auto-layout.
+#
+# Money stays numeric inside every table column and is formatted at the cell: RUNBOOK.md, "Rules
+# learned", says why (a table with a column typed from Text() cannot be bound). The funding-line
+# table's "Not split" and grand-total rows are fixed rows under the gallery rather than gallery items,
+# for the same reason — a table can't mix a numeric column with a "—" placeholder on some rows.
+#
+# fnBody carries LayoutOverflowY per power/canvas/CONTROLS.md, "Layout containers" (documented,
+# not yet seen written by Studio — a Studio round trip is what confirms it).
+#
+# What is a placeholder, and says so: the export button raises a Notify. The CSV itself is a later
+# unit.
+
+Screens:
+  scrFinancials:
+    Properties:
+      Fill: =NeutralCanvas
+
+    Children:
+      # ---- the root: one vertical auto-layout container the size of the screen ----
+      - fnRoot:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            LayoutOverflowX: =LayoutOverflow.Hide
+            LayoutOverflowY: =LayoutOverflow.Hide
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =Parent.Height
+            Fill: =NeutralCanvas
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutGap: =0
+          Children:
+            # ---- shell: the app header ----
+            - fnHeader:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  LayoutOverflowX: =LayoutOverflow.Hide
+                  LayoutOverflowY: =LayoutOverflow.Hide
+                  FillPortions: =0
+                  Height: =AppHeaderH
+                  Fill: =BrandBg
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                  LayoutGap: =Gap
+                  PaddingLeft: =Pad
+                  PaddingRight: =Pad
+                Children:
+                  - fnHeaderName:
+                      Control: Label@2.5.1
+                      Properties:
+                        Width: =Parent.Width / 3
+                        Height: =AppHeaderH
+                        Text: ="Waypoint"
+                        Size: =TypeSubtitle
+                        FontWeight: =FontWeight.Semibold
+                        Font: =FontUI
+                        VerticalAlign: =VerticalAlign.Middle
+                        Color: =BrandFg
+                        Wrap: =true
+                        Overflow: =Overflow.Hidden
+                        PaddingTop: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        AutoHeight: =true
+                  # ---- shell: the scope selector, one cmpScope instance for every screen ----
+                  - fnHeaderScope:
+                      Control: CanvasComponent
+                      ComponentName: cmpScope
+                      Properties:
+                        Width: =Max(Parent.Width * 0.14, 180)
+                        Height: =ControlHeight
+                        Visible: =IncludeScope
+                  # ---- shell: the header search, one cmpSearch instance for every screen ----
+                  - fnHeaderSearch:
+                      Control: CanvasComponent
+                      ComponentName: cmpSearch
+                      Properties:
+                        Width: =Max(Parent.Width * 0.24, 280)
+                        Height: =ControlHeight
+                  - fnHeaderQuarter:
+                      Control: Label@2.5.1
+                      Properties:
+                        Width: =Parent.Width / 3
+                        Height: =AppHeaderH
+                        Text: =CurrentQuarter.Label & " · capacity planner"
+                        Size: =TypeCaption
+                        Font: =FontUI
+                        Align: =Align.Right
+                        VerticalAlign: =VerticalAlign.Middle
+                        Color: =ColorFade(BrandFg, -0.2)
+                        Wrap: =true
+                        Overflow: =Overflow.Hidden
+                        PaddingTop: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        AutoHeight: =true
+
+            # ---- shell: the rail, and the body beside it ----
+            - fnMain:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  LayoutOverflowX: =LayoutOverflow.Hide
+                  LayoutOverflowY: =LayoutOverflow.Hide
+                  FillPortions: =1
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutGap: =0
+                Children:
+                  # ---- shell: the rail, one cmpRail instance for every screen ----
+                  - fnRail:
+                      Control: CanvasComponent
+                      ComponentName: cmpRail
+                      Properties:
+                        LayoutMinWidth: =If(RailCollapsed, RailWidthTight, NavW)
+                        Width: =If(RailCollapsed, RailWidthTight, NavW)
+                        Height: =Parent.Height
+                        Active: ="Financials"
+
+                  # ---- shell: the body everything else sits inside, and scrolls on its own ----
+                  - fnBody:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        LayoutOverflowX: =LayoutOverflow.Hide
+                        FillPortions: =1
+                        Fill: =NeutralBg3
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutGap: =Gap
+                        LayoutOverflowY: =LayoutOverflow.Scroll
+                        PaddingLeft: =Pad
+                        PaddingRight: =Pad
+                        PaddingTop: =Pad
+                        PaddingBottom: =Pad
+                      Children:
+                        # ---- page head: the eyebrow and one h1 on the left, export right ----
+                        - fnPageHead:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =0
+                              Height: =PageHeadH
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutGap: =Gap
+                            Children:
+                              - fnHeadText:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =1
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutGap: =0
+                                  Children:
+                                    - fnEyebrow:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeKickerLine
+                                          Visible: =!IsCompact
+                                          Text: =CurrentQuarter.Label
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fnTitle:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeDisplayLine
+                                          Text: ="Financials"
+                                          Size: =TypeTitle
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                              # Hidden until the CSV export itself exists.
+                              - fnExport:
+                                  Control: ModernButton@1.0.0
+                                  Properties:
+                                    Appearance: =ButtonAppearance.Primary
+                                    BasePaletteColor: =BrandBg
+                                    Color: =BrandFg
+                                    Font: =FontUI
+                                    Size: =TypeBodyPx
+                                    RadiusTopLeft: =CtrlR
+                                    RadiusTopRight: =CtrlR
+                                    RadiusBottomLeft: =CtrlR
+                                    RadiusBottomRight: =CtrlR
+                                    Width: =Max(Parent.Width * 0.13, 220)
+                                    Height: =ControlHeight
+                                    # hidden until the CSV export exists
+                                    Visible: =false
+                                    Text: ="Export these tables as CSV"
+                                    AccessibleLabel: ="Export these tables as CSV"
+                                    OnSelect: |
+                                      =Notify("Export as CSV: arrives in a later unit.",
+                                              NotificationType.Information)
+
+                        # ---- the brand band: cost against value this year ----
+                        - fnBand:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =0
+                              Height: |
+                                =If(Parent.Width < (Pad * 2 + BandKickerW + 3 * (180 + Gap)), BandH * 2, BandH)
+                              LayoutWrap: =true
+                              Fill: =BrandBg
+                              RadiusTopLeft: =CardR
+                              RadiusTopRight: =CardR
+                              RadiusBottomLeft: =CardR
+                              RadiusBottomRight: =CardR
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutGap: =Gap
+                              PaddingLeft: =Pad
+                              PaddingRight: =Pad
+                              PaddingTop: =10
+                              PaddingBottom: =10
+                            Children:
+                              - fnBandKicker:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Width: =BandKickerW
+                                    Height: =TypeKickerLine * 2
+                                    Text: ="Cost against value this year"
+                                    Size: =TypeCaption
+                                    FontWeight: =FontWeight.Normal
+                                    Font: =FontUI
+                                    Color: =ColorFade(BrandFg, -0.2)
+                                    Wrap: =true
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    AutoHeight: =true
+                              - fnStatTco:
+                                  Control: CanvasComponent
+                                  ComponentName: cmpStat
+                                  Properties:
+                                    Width: =Max((Parent.Width - Pad * 2 - BandKickerW - Gap * 3) / 3, 180)
+                                    LayoutMinWidth: =180
+                                    Height: =BandH - 20
+                                    OnBrand: =true
+                                    Label: ="Cost of ownership"
+                                    Value: ="£" & Text(FinTCO, "[$-en-US]#,##0")
+                                    Sub: ="People in post plus the running cost lines"
+                              - fnStatValue:
+                                  Control: CanvasComponent
+                                  ComponentName: cmpStat
+                                  Properties:
+                                    Width: =Max((Parent.Width - Pad * 2 - BandKickerW - Gap * 3) / 3, 180)
+                                    LayoutMinWidth: =180
+                                    Height: =BandH - 20
+                                    OnBrand: =true
+                                    Label: ="Value returned"
+                                    Value: ="£" & Text(FinInYear, "[$-en-US]#,##0")
+                                    Sub: ="In-year value of the claims in plan"
+                              - fnStatReturn:
+                                  Control: CanvasComponent
+                                  ComponentName: cmpStat
+                                  Properties:
+                                    Width: =Max((Parent.Width - Pad * 2 - BandKickerW - Gap * 3) / 3, 180)
+                                    LayoutMinWidth: =180
+                                    Height: =BandH - 20
+                                    OnBrand: =true
+                                    Tone: ="accent"
+                                    Label: ="Return"
+                                    Value: =Text(FinReturnOnTco, "[$-en-US]#,##0.00") & "x"
+                                    Sub: ="In-year value over a year of cost"
+
+                        # ---- the figures: the six pairs the card carried, as one compact strip ----
+                        # A strip, not a card: the table below is what the height is for, so the six figures are
+                        # two rows of three key-and-value lines rather than a card of their own (power/RUNBOOK.md,
+                        # "Space allocation"). Every figure the card carried is still here, and the band above
+                        # names the block. Compact, each row wraps and fnBody is what scrolls.
+                        - fnFigures:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =0
+                              Height: |
+                                =If(IsCompact,
+                                    (TypeBodyLine * 3 + Gap * 2) * 2 + 4,
+                                    TypeBodyLine * 2 + 4)
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutGap: =4
+                            Children:
+                              - fnFiguresRowA:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =0
+                                    Height: =If(IsCompact, TypeBodyLine * 3 + Gap * 2, TypeBodyLine)
+                                    LayoutWrap: =IsCompact
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutGap: =Gap
+                                  Children:
+                                    - fnFigInYear:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: ManualLayout
+                                        Properties:
+                                          FillPortions: =0
+                                          Width: =If(IsCompact, Parent.Width, (Parent.Width - Gap * 2) / 3)
+                                          Height: =TypeBodyLine
+                                        Children:
+                                          - fnFigInYearLabel:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =0
+                                                Y: =0
+                                                Width: =Parent.Width * 0.62 - 8
+                                                Height: =TypeBodyLine
+                                                Text: ="Pipeline value in-year"
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                FontWeight: =FontWeight.Semibold
+                                          - fnFigInYearValue:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =Parent.Width * 0.62
+                                                Y: =0
+                                                Width: =Parent.Width * 0.38
+                                                Height: =TypeBodyLine
+                                                Text: ="£" & Text(FinInYear, "[$-en-US]#,##0")
+                                                Size: =TypeBody
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                    - fnFigRecorded:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: ManualLayout
+                                        Properties:
+                                          FillPortions: =0
+                                          Width: =If(IsCompact, Parent.Width, (Parent.Width - Gap * 2) / 3)
+                                          Height: =TypeBodyLine
+                                        Children:
+                                          - fnFigRecordedLabel:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =0
+                                                Y: =0
+                                                Width: =Parent.Width * 0.62 - 8
+                                                Height: =TypeBodyLine
+                                                Text: ="Recorded against the claims"
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                FontWeight: =FontWeight.Semibold
+                                          - fnFigRecordedValue:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =Parent.Width * 0.62
+                                                Y: =0
+                                                Width: =Parent.Width * 0.38
+                                                Height: =TypeBodyLine
+                                                Text: ="£" & Text(FinRecorded, "[$-en-US]#,##0")
+                                                Size: =TypeBody
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                    - fnFigTco:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: ManualLayout
+                                        Properties:
+                                          FillPortions: =0
+                                          Width: =If(IsCompact, Parent.Width, (Parent.Width - Gap * 2) / 3)
+                                          Height: =TypeBodyLine
+                                        Children:
+                                          - fnFigTcoLabel:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =0
+                                                Y: =0
+                                                Width: =Parent.Width * 0.62 - 8
+                                                Height: =TypeBodyLine
+                                                Text: ="Total cost of ownership per year"
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                FontWeight: =FontWeight.Semibold
+                                          - fnFigTcoValue:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =Parent.Width * 0.62
+                                                Y: =0
+                                                Width: =Parent.Width * 0.38
+                                                Height: =TypeBodyLine
+                                                Text: ="£" & Text(FinTCO, "[$-en-US]#,##0")
+                                                Size: =TypeBody
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                              - fnFiguresRowB:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =0
+                                    Height: =If(IsCompact, TypeBodyLine * 3 + Gap * 2, TypeBodyLine)
+                                    LayoutWrap: =IsCompact
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutGap: =Gap
+                                  Children:
+                                    - fnFigQuarter:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: ManualLayout
+                                        Properties:
+                                          FillPortions: =0
+                                          Width: =If(IsCompact, Parent.Width, (Parent.Width - Gap * 2) / 3)
+                                          Height: =TypeBodyLine
+                                        Children:
+                                          - fnFigQuarterLabel:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =0
+                                                Y: =0
+                                                Width: =Parent.Width * 0.62 - 8
+                                                Height: =TypeBodyLine
+                                                Text: ="Cost of capacity this quarter"
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                FontWeight: =FontWeight.Semibold
+                                          - fnFigQuarterValue:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =Parent.Width * 0.62
+                                                Y: =0
+                                                Width: =Parent.Width * 0.38
+                                                Height: =TypeBodyLine
+                                                Text: ="£" & Text(FinSquadQuarter, "[$-en-US]#,##0")
+                                                Size: =TypeBody
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                    - fnFigReturn:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: ManualLayout
+                                        Properties:
+                                          FillPortions: =0
+                                          Width: =If(IsCompact, Parent.Width, (Parent.Width - Gap * 2) / 3)
+                                          Height: =TypeBodyLine
+                                        Children:
+                                          - fnFigReturnLabel:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =0
+                                                Y: =0
+                                                Width: =Parent.Width * 0.62 - 8
+                                                Height: =TypeBodyLine
+                                                Text: ="Return on total cost of ownership"
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                FontWeight: =FontWeight.Semibold
+                                          - fnFigReturnValue:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =Parent.Width * 0.62
+                                                Y: =0
+                                                Width: =Parent.Width * 0.38
+                                                Height: =TypeBodyLine
+                                                Text: =Text(FinReturnOnTco, "[$-en-US]#,##0.00") & "x"
+                                                Size: =TypeBody
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                    - fnFigPayback:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: ManualLayout
+                                        Properties:
+                                          FillPortions: =0
+                                          Width: =If(IsCompact, Parent.Width, (Parent.Width - Gap * 2) / 3)
+                                          Height: =TypeBodyLine
+                                        Children:
+                                          - fnFigPaybackLabel:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =0
+                                                Y: =0
+                                                Width: =Parent.Width * 0.62 - 8
+                                                Height: =TypeBodyLine
+                                                Text: ="Payback on a year of cost (months)"
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                FontWeight: =FontWeight.Semibold
+                                          - fnFigPaybackValue:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =Parent.Width * 0.62
+                                                Y: =0
+                                                Width: =Parent.Width * 0.38
+                                                Height: =TypeBodyLine
+                                                Text: |
+                                                  =If(IsBlank(FinPaybackMonths), "—",
+                                                      Text(FinPaybackMonths, "[$-en-US]#,##0.0"))
+                                                Size: =TypeBody
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+
+                        # ---- the pivot: one table at a time, at the height the body has left ----
+                        # The tab list writes varFinTab, which App.OnStart opens on Squads, and each card's Visible
+                        # reads it, so one table is on the page at a time (scrTeam's pattern).
+                        - fnPivot:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =0
+                              Height: =ControlHeight + 16
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutGap: =Gap
+                            Children:
+                              - fnTabs:
+                                  Control: ModernTabList@1.0.1
+                                  Properties:
+                                    Width: =Max(Parent.Width * 0.28, 520)
+                                    Height: =ControlHeight + 8
+                                    Items: =Table({Value:"Squads"}, {Value:"Grades"}, {Value:"Funding"}, {Value:"Work"})
+                                    Default: ={Value:"Squads"}
+                                    Font: =FontUI
+                                    Size: =TypeBodyPx
+                                    Color: =NeutralFg1
+                                    BasePaletteColor: =BrandBg
+                                    AccessibleLabel: ="Financials views"
+                                    OnChange: =Set(varFinTab, fnTabs.Selected.Value)
+                                    FontWeight: =FontWeight.Semibold
+
+                        # ---- the four tables, one to a tab ----
+                        - fnSquadCard:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              # One table at a time: the card is the tab's, and it takes the whole height
+                              # the body has left at every width. Inside it the head and the foot are
+                              # static and only the rows between them scroll (power/RUNBOOK.md,
+                              # "Space allocation").
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =1
+                              Visible: =varFinTab = "Squads"
+                              Fill: =NeutralBg1
+                              BorderColor: =NeutralStroke1
+                              BorderThickness: =1
+                              RadiusTopLeft: =CardR
+                              RadiusTopRight: =CardR
+                              RadiusBottomLeft: =CardR
+                              RadiusBottomRight: =CardR
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              # The grid inside is never narrower than its own column minimums, so the card
+                              # scrolls sideways rather than squeezing a cell (power/RUNBOOK.md, "Tables").
+                              LayoutOverflowX: =LayoutOverflow.Scroll
+                              LayoutJustifyContent: =LayoutJustifyContent.Start
+                              LayoutGap: =8
+                              PaddingLeft: =Pad
+                              PaddingRight: =Pad
+                              PaddingTop: =Pad
+                              PaddingBottom: =Pad
+                            Children:
+                              - fnSquadTitle:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =TypeHeadingLine
+                                    Text: ="Cost of capacity by squad"
+                                    Size: =TypeSubtitle
+                                    FontWeight: =FontWeight.Semibold
+                                    Font: =FontUI
+                                    Color: =NeutralFg1
+                                    Wrap: =true
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    AutoHeight: =true
+
+                              # The head: static above the rows, so the column titles are never scrolled away.
+                              - fnSquadHead:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    FillPortions: =0
+                                    Width: =Max(Parent.Width, FinSquadColsW)
+                                    Height: =RowHeight
+                                  Children:
+                                    - fnSqHeadName:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FinSqShareName, FinSqMinName) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Squad"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fnSqHeadPeople:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =Max(Parent.Width * FinSqShareName, FinSqMinName)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FinSqSharePeople, FinSqMinPeople) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="People"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fnSqHeadAnnual:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * FinSqShareName, FinSqMinName)
+                                             + Max(Parent.Width * FinSqSharePeople, FinSqMinPeople)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FinSqShareAnnual, FinSqMinAnnual) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Annual cost"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fnSqHeadQuarter:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * FinSqShareName, FinSqMinName)
+                                             + Max(Parent.Width * FinSqSharePeople, FinSqMinPeople)
+                                             + Max(Parent.Width * FinSqShareAnnual, FinSqMinAnnual)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FinSqShareQuarter, FinSqMinQuarter) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Cost this quarter"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fnSqHeadNet:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * FinSqShareName, FinSqMinName)
+                                             + Max(Parent.Width * FinSqSharePeople, FinSqMinPeople)
+                                             + Max(Parent.Width * FinSqShareAnnual, FinSqMinAnnual)
+                                             + Max(Parent.Width * FinSqShareQuarter, FinSqMinQuarter)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FinSqShareNet, FinSqMinNet) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Net MW"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fnSqHeadPerMW:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * FinSqShareName, FinSqMinName)
+                                             + Max(Parent.Width * FinSqSharePeople, FinSqMinPeople)
+                                             + Max(Parent.Width * FinSqShareAnnual, FinSqMinAnnual)
+                                             + Max(Parent.Width * FinSqShareQuarter, FinSqMinQuarter)
+                                             + Max(Parent.Width * FinSqShareNet, FinSqMinNet)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FinSqSharePerMW, FinSqMinPerMW) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="£ per net MW"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fnSqHeadCommitted:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * FinSqShareName, FinSqMinName)
+                                             + Max(Parent.Width * FinSqSharePeople, FinSqMinPeople)
+                                             + Max(Parent.Width * FinSqShareAnnual, FinSqMinAnnual)
+                                             + Max(Parent.Width * FinSqShareQuarter, FinSqMinQuarter)
+                                             + Max(Parent.Width * FinSqShareNet, FinSqMinNet)
+                                             + Max(Parent.Width * FinSqSharePerMW, FinSqMinPerMW)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FinSqShareCommitted, FinSqMinCommitted) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Committed MW"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fnSqHeadDelivery:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * FinSqShareName, FinSqMinName)
+                                             + Max(Parent.Width * FinSqSharePeople, FinSqMinPeople)
+                                             + Max(Parent.Width * FinSqShareAnnual, FinSqMinAnnual)
+                                             + Max(Parent.Width * FinSqShareQuarter, FinSqMinQuarter)
+                                             + Max(Parent.Width * FinSqShareNet, FinSqMinNet)
+                                             + Max(Parent.Width * FinSqSharePerMW, FinSqMinPerMW)
+                                             + Max(Parent.Width * FinSqShareCommitted, FinSqMinCommitted)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FinSqShareDelivery, FinSqMinDelivery) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Delivery cost"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+
+                              # The rows, and only the rows: the one thing that scrolls, and only when they do not
+                              # fit the space the head and the foot leave it (power/RUNBOOK.md, "Space allocation").
+                              - fnSquadList:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Scroll
+                                    FillPortions: =1
+                                    Width: =Max(Parent.Width, FinSquadColsW)
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutJustifyContent: =LayoutJustifyContent.Start
+                                    LayoutGap: =8
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                  Children:
+                                    - fnSquadEmpty:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Width: =Parent.Width
+                                          Height: =TypeBodyLine
+                                          Align: =Align.Left
+                                          Visible: =CountRows(FinSquadRows) = 0
+                                          Text: ="No cost lines for this quarter."
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+
+                                    - fnSquad:
+                                        Control: Gallery@2.15.0
+                                        Variant: Vertical
+                                        Properties:
+                                          TemplatePadding: =0
+                                          FillPortions: =0
+                                          BorderColor: =RGBA(0, 0, 0, 0)
+                                          Width: =Max(Parent.Width, FinSquadColsW)
+                                          ShowScrollbar: =false
+                                          Visible: =CountRows(FinSquadRows) > 0
+                                          Height: =CountRows(FinSquadRows) * RowHeight
+                                          Items: =FinSquadRows
+                                          TemplateSize: =RowHeight
+                                          AccessibleLabel: |
+                                            ="Cost of capacity by squad: the people in it, what they cost, "
+                                             & "and what a member week costs."
+                                        Children:
+                                          - fnSqRowName:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =0
+                                                Y: =0
+                                                Width: =Max(Parent.TemplateWidth * FinSqShareName, FinSqMinName) - 8
+                                                Height: =RowHeight
+                                                Text: =ThisItem.Name
+                                                Size: =TypeBody
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - fnSqRowPeople:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =Max(Parent.TemplateWidth * FinSqShareName, FinSqMinName)
+                                                Y: =0
+                                                Width: =Max(Parent.TemplateWidth * FinSqSharePeople, FinSqMinPeople) - 8
+                                                Height: =RowHeight
+                                                Text: =Text(ThisItem.People, "[$-en-US]#,##0")
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - fnSqRowAnnual:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.TemplateWidth * FinSqShareName, FinSqMinName)
+                                                   + Max(Parent.TemplateWidth * FinSqSharePeople, FinSqMinPeople)
+                                                Y: =0
+                                                Width: =Max(Parent.TemplateWidth * FinSqShareAnnual, FinSqMinAnnual) - 8
+                                                Height: =RowHeight
+                                                Text: ="£" & Text(ThisItem.Annual, "[$-en-US]#,##0")
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - fnSqRowQuarter:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.TemplateWidth * FinSqShareName, FinSqMinName)
+                                                   + Max(Parent.TemplateWidth * FinSqSharePeople, FinSqMinPeople)
+                                                   + Max(Parent.TemplateWidth * FinSqShareAnnual, FinSqMinAnnual)
+                                                Y: =0
+                                                Width: =Max(Parent.TemplateWidth * FinSqShareQuarter, FinSqMinQuarter) - 8
+                                                Height: =RowHeight
+                                                Text: ="£" & Text(ThisItem.Quarter, "[$-en-US]#,##0")
+                                                Size: =TypeBody
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - fnSqRowNet:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.TemplateWidth * FinSqShareName, FinSqMinName)
+                                                   + Max(Parent.TemplateWidth * FinSqSharePeople, FinSqMinPeople)
+                                                   + Max(Parent.TemplateWidth * FinSqShareAnnual, FinSqMinAnnual)
+                                                   + Max(Parent.TemplateWidth * FinSqShareQuarter, FinSqMinQuarter)
+                                                Y: =0
+                                                Width: =Max(Parent.TemplateWidth * FinSqShareNet, FinSqMinNet) - 8
+                                                Height: =RowHeight
+                                                Text: =Text(ThisItem.Net, "[$-en-US]#,##0.0")
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - fnSqRowPerMW:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.TemplateWidth * FinSqShareName, FinSqMinName)
+                                                   + Max(Parent.TemplateWidth * FinSqSharePeople, FinSqMinPeople)
+                                                   + Max(Parent.TemplateWidth * FinSqShareAnnual, FinSqMinAnnual)
+                                                   + Max(Parent.TemplateWidth * FinSqShareQuarter, FinSqMinQuarter)
+                                                   + Max(Parent.TemplateWidth * FinSqShareNet, FinSqMinNet)
+                                                Y: =0
+                                                Width: =Max(Parent.TemplateWidth * FinSqSharePerMW, FinSqMinPerMW) - 8
+                                                Height: =RowHeight
+                                                Text: ="£" & Text(ThisItem.PerMW, "[$-en-US]#,##0")
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - fnSqRowCommitted:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.TemplateWidth * FinSqShareName, FinSqMinName)
+                                                   + Max(Parent.TemplateWidth * FinSqSharePeople, FinSqMinPeople)
+                                                   + Max(Parent.TemplateWidth * FinSqShareAnnual, FinSqMinAnnual)
+                                                   + Max(Parent.TemplateWidth * FinSqShareQuarter, FinSqMinQuarter)
+                                                   + Max(Parent.TemplateWidth * FinSqShareNet, FinSqMinNet)
+                                                   + Max(Parent.TemplateWidth * FinSqSharePerMW, FinSqMinPerMW)
+                                                Y: =0
+                                                Width: =Max(Parent.TemplateWidth * FinSqShareCommitted, FinSqMinCommitted) - 8
+                                                Height: =RowHeight
+                                                Text: =Text(ThisItem.Committed, "[$-en-US]#,##0.0")
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - fnSqRowDelivery:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.TemplateWidth * FinSqShareName, FinSqMinName)
+                                                   + Max(Parent.TemplateWidth * FinSqSharePeople, FinSqMinPeople)
+                                                   + Max(Parent.TemplateWidth * FinSqShareAnnual, FinSqMinAnnual)
+                                                   + Max(Parent.TemplateWidth * FinSqShareQuarter, FinSqMinQuarter)
+                                                   + Max(Parent.TemplateWidth * FinSqShareNet, FinSqMinNet)
+                                                   + Max(Parent.TemplateWidth * FinSqSharePerMW, FinSqMinPerMW)
+                                                   + Max(Parent.TemplateWidth * FinSqShareCommitted, FinSqMinCommitted)
+                                                Y: =0
+                                                Width: =Max(Parent.TemplateWidth * FinSqShareDelivery, FinSqMinDelivery) - 8
+                                                Height: =RowHeight
+                                                Text: ="£" & Text(ThisItem.DeliveryCost, "[$-en-US]#,##0")
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+
+                              # The totals: a static block beneath the list, in view whatever the list is showing.
+                              - fnSquadFoot:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =0
+                                    Height: =RowHeight
+                                    Width: =Max(Parent.Width, FinSquadColsW)
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                                  Children:
+                                    - fnSquadFootLabel:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =RowHeight
+                                          Text: ="All squads"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg2
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - fnSquadFootValue:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =RowHeight
+                                          Text: |
+                                            ="£" & Text(FinSquadQuarter, "[$-en-US]#,##0")
+                                             & " this quarter, " & Text(FinSquadNet, "[$-en-US]#,##0.0")
+                                             & " net MW"
+                                          Size: =TypeBody
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+
+                        - fnGradeCard:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              # One table at a time: the card is the tab's, and it takes the whole height
+                              # the body has left at every width. Inside it the head and the foot are
+                              # static and only the rows between them scroll (power/RUNBOOK.md,
+                              # "Space allocation").
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =1
+                              Visible: =varFinTab = "Grades"
+                              Fill: =NeutralBg1
+                              BorderColor: =NeutralStroke1
+                              BorderThickness: =1
+                              RadiusTopLeft: =CardR
+                              RadiusTopRight: =CardR
+                              RadiusBottomLeft: =CardR
+                              RadiusBottomRight: =CardR
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              # The grid inside is never narrower than its own column minimums, so the card
+                              # scrolls sideways rather than squeezing a cell (power/RUNBOOK.md, "Tables").
+                              LayoutOverflowX: =LayoutOverflow.Scroll
+                              LayoutJustifyContent: =LayoutJustifyContent.Start
+                              LayoutGap: =8
+                              PaddingLeft: =Pad
+                              PaddingRight: =Pad
+                              PaddingTop: =Pad
+                              PaddingBottom: =Pad
+                            Children:
+                              - fnGradeTitle:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =TypeHeadingLine
+                                    Text: ="Cost of capacity by grade"
+                                    Size: =TypeSubtitle
+                                    FontWeight: =FontWeight.Semibold
+                                    Font: =FontUI
+                                    Color: =NeutralFg1
+                                    Wrap: =true
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    AutoHeight: =true
+
+                              # The head: static above the rows, so the column titles are never scrolled away.
+                              - fnGradeHead:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    FillPortions: =0
+                                    Width: =Max(Parent.Width, FinGradeColsW)
+                                    Height: =RowHeight
+                                  Children:
+                                    - fnGrHeadName:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FinGrShareName, FinGrMinName) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Team grade"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fnGrHeadPeople:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =Max(Parent.Width * FinGrShareName, FinGrMinName)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FinGrSharePeople, FinGrMinPeople) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="People"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fnGrHeadRate:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * FinGrShareName, FinGrMinName)
+                                             + Max(Parent.Width * FinGrSharePeople, FinGrMinPeople)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FinGrShareRate, FinGrMinRate) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Blended annual rate"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fnGrHeadAnnual:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * FinGrShareName, FinGrMinName)
+                                             + Max(Parent.Width * FinGrSharePeople, FinGrMinPeople)
+                                             + Max(Parent.Width * FinGrShareRate, FinGrMinRate)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FinGrShareAnnual, FinGrMinAnnual) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Annual cost"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fnGrHeadQuarter:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * FinGrShareName, FinGrMinName)
+                                             + Max(Parent.Width * FinGrSharePeople, FinGrMinPeople)
+                                             + Max(Parent.Width * FinGrShareRate, FinGrMinRate)
+                                             + Max(Parent.Width * FinGrShareAnnual, FinGrMinAnnual)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FinGrShareQuarter, FinGrMinQuarter) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Cost this quarter"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+
+                              # The rows, and only the rows: the one thing that scrolls, and only when they do not
+                              # fit the space the head and the foot leave it (power/RUNBOOK.md, "Space allocation").
+                              - fnGradeList:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Scroll
+                                    FillPortions: =1
+                                    Width: =Max(Parent.Width, FinGradeColsW)
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutJustifyContent: =LayoutJustifyContent.Start
+                                    LayoutGap: =8
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                  Children:
+                                    - fnGradeEmpty:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Width: =Parent.Width
+                                          Height: =TypeBodyLine
+                                          Align: =Align.Left
+                                          Visible: =CountRows(FinGradeRows) = 0
+                                          Text: ="No cost lines for this quarter."
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+
+                                    - fnGrade:
+                                        Control: Gallery@2.15.0
+                                        Variant: Vertical
+                                        Properties:
+                                          TemplatePadding: =0
+                                          FillPortions: =0
+                                          BorderColor: =RGBA(0, 0, 0, 0)
+                                          Width: =Max(Parent.Width, FinGradeColsW)
+                                          ShowScrollbar: =false
+                                          Visible: =CountRows(FinGradeRows) > 0
+                                          Height: =CountRows(FinGradeRows) * RowHeight
+                                          Items: =FinGradeRows
+                                          TemplateSize: =RowHeight
+                                          AccessibleLabel: |
+                                            ="Cost of capacity by team grade: the people on each grade and "
+                                             & "what they cost."
+                                        Children:
+                                          - fnGrRowName:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =0
+                                                Y: =0
+                                                Width: =Max(Parent.TemplateWidth * FinGrShareName, FinGrMinName) - 8
+                                                Height: =RowHeight
+                                                Text: =ThisItem.Grade
+                                                Size: =TypeBody
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - fnGrRowPeople:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =Max(Parent.TemplateWidth * FinGrShareName, FinGrMinName)
+                                                Y: =0
+                                                Width: =Max(Parent.TemplateWidth * FinGrSharePeople, FinGrMinPeople) - 8
+                                                Height: =RowHeight
+                                                Text: =Text(ThisItem.People, "[$-en-US]#,##0")
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - fnGrRowRate:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.TemplateWidth * FinGrShareName, FinGrMinName)
+                                                   + Max(Parent.TemplateWidth * FinGrSharePeople, FinGrMinPeople)
+                                                Y: =0
+                                                Width: =Max(Parent.TemplateWidth * FinGrShareRate, FinGrMinRate) - 8
+                                                Height: =RowHeight
+                                                Text: |
+                                                  =If(ThisItem.Rate = 0, "—",
+                                                      "£" & Text(ThisItem.Rate, "[$-en-US]#,##0"))
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - fnGrRowAnnual:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.TemplateWidth * FinGrShareName, FinGrMinName)
+                                                   + Max(Parent.TemplateWidth * FinGrSharePeople, FinGrMinPeople)
+                                                   + Max(Parent.TemplateWidth * FinGrShareRate, FinGrMinRate)
+                                                Y: =0
+                                                Width: =Max(Parent.TemplateWidth * FinGrShareAnnual, FinGrMinAnnual) - 8
+                                                Height: =RowHeight
+                                                Text: ="£" & Text(ThisItem.Annual, "[$-en-US]#,##0")
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - fnGrRowQuarter:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.TemplateWidth * FinGrShareName, FinGrMinName)
+                                                   + Max(Parent.TemplateWidth * FinGrSharePeople, FinGrMinPeople)
+                                                   + Max(Parent.TemplateWidth * FinGrShareRate, FinGrMinRate)
+                                                   + Max(Parent.TemplateWidth * FinGrShareAnnual, FinGrMinAnnual)
+                                                Y: =0
+                                                Width: =Max(Parent.TemplateWidth * FinGrShareQuarter, FinGrMinQuarter) - 8
+                                                Height: =RowHeight
+                                                Text: ="£" & Text(ThisItem.Quarter, "[$-en-US]#,##0")
+                                                Size: =TypeBody
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+
+                              # The totals: a static block beneath the list, in view whatever the list is showing.
+                              - fnGradeFoot:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =0
+                                    Height: =RowHeight
+                                    Width: =Max(Parent.Width, FinGradeColsW)
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                                  Children:
+                                    - fnGradeFootLabel:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =RowHeight
+                                          Text: ="All grades"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg2
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - fnGradeFootValue:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =RowHeight
+                                          Text: |
+                                            ="£" & Text(FinPeopleAnnual, "[$-en-US]#,##0")
+                                             & " a year, £" & Text(FinPeopleAnnual / 4, "[$-en-US]#,##0")
+                                             & " this quarter"
+                                          Size: =TypeBody
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+
+                        - fnFundingCard:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              # One table at a time: the card is the tab's, and it takes the whole height
+                              # the body has left at every width. Inside it the head and the foot are
+                              # static and only the rows between them scroll (power/RUNBOOK.md,
+                              # "Space allocation").
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =1
+                              Visible: =varFinTab = "Funding"
+                              Fill: =NeutralBg1
+                              BorderColor: =NeutralStroke1
+                              BorderThickness: =1
+                              RadiusTopLeft: =CardR
+                              RadiusTopRight: =CardR
+                              RadiusBottomLeft: =CardR
+                              RadiusBottomRight: =CardR
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              # The grid inside is never narrower than its own column minimums, so the card
+                              # scrolls sideways rather than squeezing a cell (power/RUNBOOK.md, "Tables").
+                              LayoutOverflowX: =LayoutOverflow.Scroll
+                              LayoutJustifyContent: =LayoutJustifyContent.Start
+                              LayoutGap: =8
+                              PaddingLeft: =Pad
+                              PaddingRight: =Pad
+                              PaddingTop: =Pad
+                              PaddingBottom: =Pad
+                            Children:
+                              - fnFundingTitle:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =TypeHeadingLine
+                                    Text: ="Cost by funding line"
+                                    Size: =TypeSubtitle
+                                    FontWeight: =FontWeight.Semibold
+                                    Font: =FontUI
+                                    Color: =NeutralFg1
+                                    Wrap: =true
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    AutoHeight: =true
+
+                              # The head: static above the rows, so the column titles are never scrolled away.
+                              - fnFlHead:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    FillPortions: =0
+                                    Width: =Max(Parent.Width, FinFundingColsW)
+                                    Height: =RowHeight
+                                  Children:
+                                    - fnFlHeadName:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FinFlShareName, FinFlMinName) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Cost line"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fnFlHeadInvestment:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =Max(Parent.Width * FinFlShareName, FinFlMinName)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FinFlShareInvestment, FinFlMinInvestment) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Investment"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fnFlHeadOther:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * FinFlShareName, FinFlMinName)
+                                             + Max(Parent.Width * FinFlShareInvestment, FinFlMinInvestment)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FinFlShareOther, FinFlMinOther) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Non-investment"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fnFlHeadSplit:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * FinFlShareName, FinFlMinName)
+                                             + Max(Parent.Width * FinFlShareInvestment, FinFlMinInvestment)
+                                             + Max(Parent.Width * FinFlShareOther, FinFlMinOther)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FinFlShareSplit, FinFlMinSplit) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Not split"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fnFlHeadTotal:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * FinFlShareName, FinFlMinName)
+                                             + Max(Parent.Width * FinFlShareInvestment, FinFlMinInvestment)
+                                             + Max(Parent.Width * FinFlShareOther, FinFlMinOther)
+                                             + Max(Parent.Width * FinFlShareSplit, FinFlMinSplit)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FinFlShareTotal, FinFlMinTotal) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Total"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+
+                              # The rows, and only the rows: the one thing that scrolls, and only when they do not
+                              # fit the space the head and the foot leave it (power/RUNBOOK.md, "Space allocation").
+                              - fnFundingList:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Scroll
+                                    FillPortions: =1
+                                    Width: =Max(Parent.Width, FinFundingColsW)
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutJustifyContent: =LayoutJustifyContent.Start
+                                    LayoutGap: =8
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                  Children:
+                                    - fnFundingEmpty:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Width: =Parent.Width
+                                          Height: =TypeBodyLine
+                                          Align: =Align.Left
+                                          Visible: =CountRows(FinFundingRows) = 0
+                                          Text: ="No cost lines for this quarter."
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+
+                                    - fnFunding:
+                                        Control: Gallery@2.15.0
+                                        Variant: Vertical
+                                        Properties:
+                                          TemplatePadding: =0
+                                          FillPortions: =0
+                                          BorderColor: =RGBA(0, 0, 0, 0)
+                                          Width: =Max(Parent.Width, FinFundingColsW)
+                                          ShowScrollbar: =false
+                                          Visible: =CountRows(FinFundingRows) > 0
+                                          Height: =CountRows(FinFundingRows) * RowHeight
+                                          Items: =FinFundingRows
+                                          TemplateSize: =RowHeight
+                                          AccessibleLabel: |
+                                            ="Cost of ownership by funding line: licences, infrastructure "
+                                             & "and the people in post."
+                                        Children:
+                                          - fnFlRowName:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =0
+                                                Y: =0
+                                                Width: =Max(Parent.TemplateWidth * FinFlShareName, FinFlMinName) - 8
+                                                Height: =RowHeight
+                                                Text: =ThisItem.Line
+                                                Size: =TypeBody
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - fnFlRowInvestment:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =Max(Parent.TemplateWidth * FinFlShareName, FinFlMinName)
+                                                Y: =0
+                                                Width: =Max(Parent.TemplateWidth * FinFlShareInvestment, FinFlMinInvestment) - 8
+                                                Height: =RowHeight
+                                                Text: ="£" & Text(ThisItem.Investment, "[$-en-US]#,##0")
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - fnFlRowOther:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.TemplateWidth * FinFlShareName, FinFlMinName)
+                                                   + Max(Parent.TemplateWidth * FinFlShareInvestment, FinFlMinInvestment)
+                                                Y: =0
+                                                Width: =Max(Parent.TemplateWidth * FinFlShareOther, FinFlMinOther) - 8
+                                                Height: =RowHeight
+                                                Text: ="£" & Text(ThisItem.NonInvestment, "[$-en-US]#,##0")
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - fnFlRowSplit:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.TemplateWidth * FinFlShareName, FinFlMinName)
+                                                   + Max(Parent.TemplateWidth * FinFlShareInvestment, FinFlMinInvestment)
+                                                   + Max(Parent.TemplateWidth * FinFlShareOther, FinFlMinOther)
+                                                Y: =0
+                                                Width: =Max(Parent.TemplateWidth * FinFlShareSplit, FinFlMinSplit) - 8
+                                                Height: =RowHeight
+                                                Text: ="—"
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg2
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - fnFlRowTotal:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.TemplateWidth * FinFlShareName, FinFlMinName)
+                                                   + Max(Parent.TemplateWidth * FinFlShareInvestment, FinFlMinInvestment)
+                                                   + Max(Parent.TemplateWidth * FinFlShareOther, FinFlMinOther)
+                                                   + Max(Parent.TemplateWidth * FinFlShareSplit, FinFlMinSplit)
+                                                Y: =0
+                                                Width: =Max(Parent.TemplateWidth * FinFlShareTotal, FinFlMinTotal) - 8
+                                                Height: =RowHeight
+                                                Text: |
+                                                  ="£" & Text(ThisItem.Investment + ThisItem.NonInvestment,
+                                                              "[$-en-US]#,##0")
+                                                Size: =TypeBody
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+
+                                    # The people-in-post row: not split by funding, so it is a fixed row,
+                                    # not a gallery item — the model does not carry funding per person.
+                                    - fnFlPeopleRow:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Height: =RowHeight
+                                          Width: =Max(Parent.Width, FinFundingColsW)
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutGap: =0
+                                        Children:
+                                          - fnFlPeopleNameBox:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: AutoLayout
+                                              Properties:
+                                                LayoutOverflowX: =LayoutOverflow.Hide
+                                                LayoutOverflowY: =LayoutOverflow.Hide
+                                                FillPortions: =1
+                                                LayoutDirection: =LayoutDirection.Horizontal
+                                                LayoutAlignItems: =LayoutAlignItems.Center
+                                                LayoutGap: =0
+                                              Children:
+                                                - fnFlPeopleName:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      Height: =RowHeight
+                                                      Text: ="People in post"
+                                                      Size: =TypeBody
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      VerticalAlign: =VerticalAlign.Middle
+                                                      Color: =NeutralFg1
+                                                      Wrap: =true
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                      AutoHeight: =true
+                                          - fnFlPeopleInvestment:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Max(Parent.Width * FinFlShareInvestment, FinFlMinInvestment)
+                                                Height: =RowHeight
+                                                Text: ="—"
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg2
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - fnFlPeopleOther:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Max(Parent.Width * FinFlShareOther, FinFlMinOther)
+                                                Height: =RowHeight
+                                                Text: ="—"
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg2
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - fnFlPeopleSplit:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Max(Parent.Width * FinFlShareSplit, FinFlMinSplit)
+                                                Height: =RowHeight
+                                                Text: ="£" & Text(FinPeopleAnnual, "[$-en-US]#,##0")
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - fnFlPeopleTotal:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Max(Parent.Width * FinFlShareTotal, FinFlMinTotal)
+                                                Height: =RowHeight
+                                                Text: ="£" & Text(FinPeopleAnnual, "[$-en-US]#,##0")
+                                                Size: =TypeBody
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+
+                              # The totals: a static block beneath the list, in view whatever the list is showing.
+                              - fnFundingFoot:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =0
+                                    Height: =RowHeight
+                                    Width: =Max(Parent.Width, FinFundingColsW)
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutGap: =0
+                                  Children:
+                                    - fnFundingFootNameBox:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =1
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutGap: =0
+                                        Children:
+                                          - fnFundingFootName:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Height: =RowHeight
+                                                Text: ="Total cost of ownership per year"
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                    - fnFundingFootInvestment:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Width: =Max(Parent.Width * FinFlShareInvestment, FinFlMinInvestment)
+                                          Height: =RowHeight
+                                          Text: ="£" & Text(FinFundingInvestment, "[$-en-US]#,##0")
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - fnFundingFootOther:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Width: =Max(Parent.Width * FinFlShareOther, FinFlMinOther)
+                                          Height: =RowHeight
+                                          Text: ="£" & Text(FinFundingOther, "[$-en-US]#,##0")
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - fnFundingFootSplit:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Width: =Max(Parent.Width * FinFlShareSplit, FinFlMinSplit)
+                                          Height: =RowHeight
+                                          Text: ="£" & Text(FinPeopleAnnual, "[$-en-US]#,##0")
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - fnFundingFootTotal:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Width: =Max(Parent.Width * FinFlShareTotal, FinFlMinTotal)
+                                          Height: =RowHeight
+                                          Text: ="£" & Text(FinTCO, "[$-en-US]#,##0")
+                                          Size: =TypeBody
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+
+                              - fnFundingNote:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =TypeLabelLine * 2
+                                    Text: |
+                                      ="The workbook sets funding per person on People; the app model "
+                                       & "does not carry it, so the people line is shown whole rather "
+                                       & "than split."
+                                    Size: =TypeCaption
+                                    Font: =FontUI
+                                    Color: =NeutralFg2
+                                    Wrap: =true
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    FontWeight: =FontWeight.Normal
+
+                        - fnWorkCard:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              # One table at a time: the card is the tab's, and it takes the whole height
+                              # the body has left at every width. Inside it the head and the foot are
+                              # static and only the rows between them scroll (power/RUNBOOK.md,
+                              # "Space allocation").
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =1
+                              Visible: =varFinTab = "Work"
+                              Fill: =NeutralBg1
+                              BorderColor: =NeutralStroke1
+                              BorderThickness: =1
+                              RadiusTopLeft: =CardR
+                              RadiusTopRight: =CardR
+                              RadiusBottomLeft: =CardR
+                              RadiusBottomRight: =CardR
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              # The grid inside is never narrower than its own column minimums, so the card
+                              # scrolls sideways rather than squeezing a cell (power/RUNBOOK.md, "Tables").
+                              LayoutOverflowX: =LayoutOverflow.Scroll
+                              LayoutJustifyContent: =LayoutJustifyContent.Start
+                              LayoutGap: =8
+                              PaddingLeft: =Pad
+                              PaddingRight: =Pad
+                              PaddingTop: =Pad
+                              PaddingBottom: =Pad
+                            Children:
+                              - fnWorkTitle:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =TypeHeadingLine
+                                    Text: ="Cost per work item"
+                                    Size: =TypeSubtitle
+                                    FontWeight: =FontWeight.Semibold
+                                    Font: =FontUI
+                                    Color: =NeutralFg1
+                                    Wrap: =true
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    AutoHeight: =true
+
+                              # The head: static above the rows, so the column titles are never scrolled away.
+                              - fnWiHead:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    FillPortions: =0
+                                    Width: =Max(Parent.Width, FinWorkColsW)
+                                    Height: =RowHeight
+                                  Children:
+                                    - fnWiHeadName:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FinWiShareName, FinWiMinName) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Work item"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fnWiHeadSquad:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =Max(Parent.Width * FinWiShareName, FinWiMinName)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FinWiShareSquad, FinWiMinSquad) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Squad"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fnWiHeadMW:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * FinWiShareName, FinWiMinName)
+                                             + Max(Parent.Width * FinWiShareSquad, FinWiMinSquad)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FinWiShareMW, FinWiMinMW) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="MW"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fnWiHeadCost:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * FinWiShareName, FinWiMinName)
+                                             + Max(Parent.Width * FinWiShareSquad, FinWiMinSquad)
+                                             + Max(Parent.Width * FinWiShareMW, FinWiMinMW)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FinWiShareCost, FinWiMinCost) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Delivery cost"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fnWiHeadInYear:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * FinWiShareName, FinWiMinName)
+                                             + Max(Parent.Width * FinWiShareSquad, FinWiMinSquad)
+                                             + Max(Parent.Width * FinWiShareMW, FinWiMinMW)
+                                             + Max(Parent.Width * FinWiShareCost, FinWiMinCost)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FinWiShareInYear, FinWiMinInYear) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="£ in-year"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fnWiHeadReturn:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * FinWiShareName, FinWiMinName)
+                                             + Max(Parent.Width * FinWiShareSquad, FinWiMinSquad)
+                                             + Max(Parent.Width * FinWiShareMW, FinWiMinMW)
+                                             + Max(Parent.Width * FinWiShareCost, FinWiMinCost)
+                                             + Max(Parent.Width * FinWiShareInYear, FinWiMinInYear)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FinWiShareReturn, FinWiMinReturn) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Return"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+
+                              # The rows, and only the rows: the one thing that scrolls, and only when they do not
+                              # fit the space the head and the foot leave it (power/RUNBOOK.md, "Space allocation").
+                              - fnWorkList:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Scroll
+                                    FillPortions: =1
+                                    Width: =Max(Parent.Width, FinWorkColsW)
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutJustifyContent: =LayoutJustifyContent.Start
+                                    LayoutGap: =8
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                  Children:
+                                    - fnWorkEmpty:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Width: =Parent.Width
+                                          Height: =TypeBodyLine
+                                          Align: =Align.Left
+                                          Visible: =CountRows(FinWorkRows) = 0
+                                          Text: ="No cost lines for this quarter."
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+
+                                    - fnWork:
+                                        Control: Gallery@2.15.0
+                                        Variant: Vertical
+                                        Properties:
+                                          TemplatePadding: =0
+                                          FillPortions: =0
+                                          BorderColor: =RGBA(0, 0, 0, 0)
+                                          Width: =Max(Parent.Width, FinWorkColsW)
+                                          ShowScrollbar: =false
+                                          Visible: =CountRows(FinWorkRows) > 0
+                                          Height: =CountRows(FinWorkRows) * RowHeight
+                                          Items: =FinWorkRows
+                                          TemplateSize: =RowHeight
+                                          AccessibleLabel: |
+                                            ="Cost per work item: member weeks this quarter at the squad's "
+                                             & "cost per member week, against the in-year value of what it "
+                                             & "claims."
+                                        Children:
+                                          - fnWiRowName:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =0
+                                                Y: =0
+                                                Width: =Max(Parent.TemplateWidth * FinWiShareName, FinWiMinName) - 8
+                                                Height: =RowHeight
+                                                Text: =ThisItem.Title
+                                                Size: =TypeBody
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - fnWiRowSquad:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =Max(Parent.TemplateWidth * FinWiShareName, FinWiMinName)
+                                                Y: =0
+                                                Width: =Max(Parent.TemplateWidth * FinWiShareSquad, FinWiMinSquad) - 8
+                                                Height: =RowHeight
+                                                Text: =If(ThisItem.Squad = "", "—", ThisItem.Squad)
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg2
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - fnWiRowMW:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.TemplateWidth * FinWiShareName, FinWiMinName)
+                                                   + Max(Parent.TemplateWidth * FinWiShareSquad, FinWiMinSquad)
+                                                Y: =0
+                                                Width: =Max(Parent.TemplateWidth * FinWiShareMW, FinWiMinMW) - 8
+                                                Height: =RowHeight
+                                                Text: =Text(ThisItem.MW, "[$-en-US]#,##0.0")
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - fnWiRowCost:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.TemplateWidth * FinWiShareName, FinWiMinName)
+                                                   + Max(Parent.TemplateWidth * FinWiShareSquad, FinWiMinSquad)
+                                                   + Max(Parent.TemplateWidth * FinWiShareMW, FinWiMinMW)
+                                                Y: =0
+                                                Width: =Max(Parent.TemplateWidth * FinWiShareCost, FinWiMinCost) - 8
+                                                Height: =RowHeight
+                                                Text: ="£" & Text(ThisItem.Cost, "[$-en-US]#,##0")
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - fnWiRowInYear:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.TemplateWidth * FinWiShareName, FinWiMinName)
+                                                   + Max(Parent.TemplateWidth * FinWiShareSquad, FinWiMinSquad)
+                                                   + Max(Parent.TemplateWidth * FinWiShareMW, FinWiMinMW)
+                                                   + Max(Parent.TemplateWidth * FinWiShareCost, FinWiMinCost)
+                                                Y: =0
+                                                Width: =Max(Parent.TemplateWidth * FinWiShareInYear, FinWiMinInYear) - 8
+                                                Height: =RowHeight
+                                                Text: ="£" & Text(ThisItem.InYear, "[$-en-US]#,##0")
+                                                Size: =TypeBody
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                          - fnWiRowReturn:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.TemplateWidth * FinWiShareName, FinWiMinName)
+                                                   + Max(Parent.TemplateWidth * FinWiShareSquad, FinWiMinSquad)
+                                                   + Max(Parent.TemplateWidth * FinWiShareMW, FinWiMinMW)
+                                                   + Max(Parent.TemplateWidth * FinWiShareCost, FinWiMinCost)
+                                                   + Max(Parent.TemplateWidth * FinWiShareInYear, FinWiMinInYear)
+                                                Y: =0
+                                                Width: =Max(Parent.TemplateWidth * FinWiShareReturn, FinWiMinReturn) - 8
+                                                Height: =RowHeight
+                                                Text: |
+                                                  =If(IsBlank(ThisItem.Return), "—",
+                                                      Text(ThisItem.Return, "[$-en-US]#,##0.00") & "x")
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =If(IsBlank(ThisItem.Return), NeutralFg2, NeutralFg1)
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+
+                              # The totals: a static block beneath the list, in view whatever the list is showing.
+                              - fnWorkFoot:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =0
+                                    Height: =RowHeight
+                                    Width: =Max(Parent.Width, FinWorkColsW)
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                                  Children:
+                                    - fnWorkFootLabel:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =RowHeight
+                                          Text: ="Counted work"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg2
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - fnWorkFootValue:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =RowHeight
+                                          Text: |
+                                            =Text(FinWorkMW, "[$-en-US]#,##0.0") & " MW, £"
+                                             & Text(FinWorkCost, "[$-en-US]#,##0") & " delivery cost, £"
+                                             & Text(FinWorkValue, "[$-en-US]#,##0") & " in-year"
+                                          Size: =TypeBody
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+
+                              - fnWorkNote:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =TypeLabelLine * 2
+                                    Text: |
+                                      ="A squad with no cost of its own is costed at the blended rate "
+                                       & "across every squad."
+                                    Size: =TypeCaption
+                                    Font: =FontUI
+                                    Color: =NeutralFg2
+                                    Wrap: =true
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    FontWeight: =FontWeight.Normal

@@ -1,0 +1,563 @@
+{
+  "quarter": "Q4 2026",
+  "work_value": {
+    "title": "Statement matching rules v2",
+    "sheet": "Work",
+    "cell": "AF9",
+    "value": 88000.0,
+    "rule": "claimed FTE at the business-grade rate plus cost avoidance, both pro-rated by (13 - landing month) / 12"
+  },
+  "work_rate": {
+    "title": "Statement matching rules v2",
+    "sheet": "Work",
+    "cell": "AD9",
+    "value": 52000.0,
+    "rule": "the rate behind the claim: a business grade rate, or the weighted average of the grades in its blend"
+  },
+  "work_recorded": {
+    "title": "Statement matching rules v2",
+    "sheet": "Work",
+    "cell": "BI9",
+    "value": 8666.67,
+    "rule": "recorded FTE at the same rate plus recorded cost avoidance, pro-rated from the later of the claim's landing month and the month the actual was recorded in"
+  },
+  "person": {
+    "name": "Theo Marshall",
+    "sheet": "People",
+    "cell": "Y31",
+    "value": 8.96,
+    "rule": "NETWORKDAYS in quarter, less region bank holidays and absence days, times (1 - modifier), over five"
+  },
+  "part_timer": {
+    "name": "Lena Brooks",
+    "sheet": "People",
+    "cell": "Y24",
+    "value": 7.28,
+    "rule": "as the person rule, with working days, bank holidays and absence days all scaled by contracted days per week over five"
+  },
+  "work": {
+    "title": "Exception queue UI",
+    "sheet": "Work",
+    "cell": "H7",
+    "value": 4.0,
+    "rule": "total MW spread over the sprint range, share of sprint working days inside the quarter over ten"
+  },
+  "squad": {
+    "name": "Squad 1",
+    "sheet": "Squads",
+    "cell": "I6",
+    "value": 23.1667,
+    "rule": "sum of MW this quarter for counted work in the squad"
+  },
+  "committed_total": {
+    "sheet": "Squads",
+    "cell": "I17",
+    "value": 87.1181,
+    "rule": "MW this quarter for work whose impact is Consumed or Allocated, plus Reserved work flagged Committed"
+  },
+  "proposed_total": {
+    "sheet": "Squads",
+    "cell": "J17",
+    "value": 11.4,
+    "rule": "MW this quarter for work whose impact is Reserved and whose Commitment is Proposed"
+  },
+  "delivered": {
+    "sheet": "History",
+    "cell": "D5",
+    "value": 1.6286,
+    "rule": "MW this quarter for work that reached Released or later (capacity impact Historical)"
+  },
+  "in_plan": {
+    "sheet": "History",
+    "cell": "C5",
+    "value": 88.7467,
+    "rule": "MW this quarter for work that counts against capacity or has reached Released or later: the two flags together"
+  },
+  "reliability": {
+    "value": 0.018351,
+    "rule": "delivered MW over MW in the plan: the delivered share of everything committed this quarter"
+  },
+  "feature": {
+    "title": "3-way match and posting engine",
+    "sheet": "Work",
+    "cell": "BC6",
+    "value": 8,
+    "mw_cell": "H6",
+    "mw_value": 0.0,
+    "chunks": {
+      "3-way match: assessment": {
+        "sheet": "Work",
+        "cell": "H29",
+        "value": 1.0,
+        "total_mw": 1,
+        "kind": "Component"
+      },
+      "3-way match: delivery phase 1": {
+        "sheet": "Work",
+        "cell": "H30",
+        "value": 6.0,
+        "total_mw": 6,
+        "kind": "Component"
+      },
+      "3-way match: release": {
+        "sheet": "Work",
+        "cell": "H31",
+        "value": 1.0,
+        "total_mw": 1,
+        "kind": "Component"
+      }
+    },
+    "rule": "a feature with chunks takes the sum of its chunks' total MW and charges nothing of its own to the quarter"
+  },
+  "spike": {
+    "title": "Payments orchestration: discovery spike",
+    "sheet": "Work",
+    "cell": "H32",
+    "value": 1.7,
+    "state": "In discovery",
+    "rule": "a standalone spike reserves capacity like any other row: proposed, so it sits in proposed MW"
+  },
+  "estimates": {
+    "items": {
+      "Problem management: slow queries": {
+        "sheet": "Work",
+        "row": 19,
+        "original_cell": "CT19",
+        "original": 2.0,
+        "latest_cell": "CU19",
+        "latest": 2,
+        "actual_cell": "CV19",
+        "actual": 1.5,
+        "variance_cell": "CW19",
+        "variance": -0.5,
+        "variance_pct": -0.25
+      },
+      "Real-time status page": {
+        "sheet": "Work",
+        "row": 15,
+        "original_cell": "CT15",
+        "original": 2.0,
+        "latest_cell": "CU15",
+        "latest": 2,
+        "actual_cell": "CV15",
+        "actual": 3.0,
+        "variance_cell": "CW15",
+        "variance": 1.0,
+        "variance_pct": 0.5
+      }
+    },
+    "feature": {
+      "title": "3-way match and posting engine",
+      "sheet": "Work",
+      "original_cell": "CT6",
+      "original": 8.0,
+      "chunk_originals": {
+        "3-way match: assessment": 1.0,
+        "3-way match: delivery phase 1": 6.0,
+        "3-way match: release": 1.0
+      }
+    },
+    "accuracy": {
+      "sheet": "History",
+      "cell": "F25",
+      "value": 1.125
+    },
+    "rule": "original is the total MW at the moment the item was first committed and never moves again and its cell is locked; latest is the total MW today; actual is typed at delivery; accuracy is sum actual over sum original for the items delivered this quarter that carry both, each item once: childless rows that have not been archived"
+  },
+  "compare": {
+    "quarter_a": "Q3 2026",
+    "quarter_b": "Q4 2026",
+    "rows": {
+      "net_capacity": {
+        "row": 6,
+        "a": 240.0,
+        "b": 221.02,
+        "change": -18.98,
+        "read": "worse"
+      },
+      "gbp_in_year": {
+        "row": 13,
+        "a": 205000,
+        "b": 162875.0,
+        "change": -42125.0,
+        "read": "worse"
+      },
+      "delivered_mw": {
+        "row": 8,
+        "a": 126.0,
+        "b": 1.6286,
+        "change": -124.3714,
+        "read": "worse"
+      }
+    },
+    "no_snapshot": {
+      "quarter": "Q1 2027",
+      "text": "no snapshot for Q1 2027"
+    },
+    "rule": "quarter A is read from its typed History row, quarter B from the live sheets; the change is B less A and the read is better, worse or same"
+  },
+  "calibration": {
+    "size": "M",
+    "sheet": "Calibration",
+    "row": 7,
+    "items": 4,
+    "avg_original": 2.0,
+    "avg_actual": 2.375,
+    "ratio": 1.1875,
+    "current": 2,
+    "suggested": 2.5,
+    "rule": "every closed item of the size that carries both an original and an actual, counted once in the quarter it was delivered: an archived row that held no chunks and was delivered, the rows of one delivered item sharing a single count, or a live delivered childless row with no Archived in stamp; averaged, and the suggestion is the Settings MW times the ratio, rounded to the nearest half week and never below 0.5"
+  },
+  "free_days": {
+    "name": "Maya Singh",
+    "sheet": "TLcalc",
+    "row_col": 3,
+    "fd_col": 335,
+    "busy": {
+      "col": 382,
+      "week": "2026-11-23",
+      "assigned": 3,
+      "value": 2.0
+    },
+    "clear": {
+      "col": 383,
+      "week": "2026-11-30",
+      "assigned": 0,
+      "value": 5.0
+    },
+    "window": {
+      "week": 10,
+      "date": "2026-11-30",
+      "run": 4,
+      "total": 22
+    },
+    "rule": "contracted days in the week, less bank holidays and leave, less the days an assignment already covers: the smaller of the days summed and the span from the earliest start to the latest end in the week, capped at five; the next free window is the first week of the quarter with three free days or more"
+  },
+  "capacity": {
+    "items": [
+      {
+        "title": "Exception queue UI",
+        "sheet": "Work",
+        "row": 7,
+        "helper_row": 7,
+        "check_cell": "DB7",
+        "says_cell": "DC7",
+        "slip_cell": "DD7",
+        "end_sprint": 24,
+        "sprint_from": 22,
+        "sprint_to": 24,
+        "total": 4.0,
+        "outside": false,
+        "first_week": 44,
+        "last_week": 49,
+        "required": 4.0,
+        "assignees": [
+          {
+            "name": "Faisal Rahman",
+            "available_cell": "K",
+            "short_cell": "N",
+            "finish_cell": "U",
+            "available": 2.8,
+            "shortfall": 1.2,
+            "finish_week": ""
+          }
+        ],
+        "finish_week": "",
+        "says": "not within the year",
+        "slip": ""
+      },
+      {
+        "title": "Bank feed monitoring and alerts",
+        "sheet": "Work",
+        "row": 28,
+        "helper_row": 28,
+        "check_cell": "DB28",
+        "says_cell": "DC28",
+        "slip_cell": "DD28",
+        "end_sprint": 25,
+        "sprint_from": 24,
+        "sprint_to": 25,
+        "total": 2.0,
+        "outside": false,
+        "first_week": 48,
+        "last_week": 51,
+        "required": 1.0,
+        "assignees": [
+          {
+            "name": "Sophie Laurent",
+            "available_cell": "K",
+            "short_cell": "N",
+            "finish_cell": "U",
+            "available": 2.1,
+            "shortfall": 0.0,
+            "finish_week": 50
+          },
+          {
+            "name": "Ravi Patel",
+            "available_cell": "L",
+            "short_cell": "O",
+            "finish_cell": "V",
+            "available": 2.4,
+            "shortfall": 0.0,
+            "finish_week": 49
+          }
+        ],
+        "finish_week": 50,
+        "says": "S25 (11 Dec)",
+        "slip": 0
+      },
+      {
+        "title": "Statement matching rules v2",
+        "sheet": "Work",
+        "row": 9,
+        "helper_row": 9,
+        "check_cell": "DB9",
+        "says_cell": "DC9",
+        "slip_cell": "DD9",
+        "end_sprint": 22,
+        "sprint_from": 20,
+        "sprint_to": 22,
+        "total": 1.08,
+        "outside": false,
+        "first_week": 40,
+        "last_week": 45,
+        "required": 1.08,
+        "assignees": [
+          {
+            "name": "Ravi Patel",
+            "available_cell": "K",
+            "short_cell": "N",
+            "finish_cell": "U",
+            "available": 0.6,
+            "shortfall": 0.48,
+            "finish_week": 46
+          }
+        ],
+        "finish_week": 46,
+        "says": "S23 (13 Nov)",
+        "slip": 1
+      }
+    ],
+    "double_booked": "Statement matching rules v2",
+    "rule": "each assignee owes an even share of the item's MW this quarter; against it goes the MW they really have free across the item's effective weeks inside the quarter, the days their other bookings already take charged in full (a week booked twice over is not free to both items), capped at the capacity they have that week; the shortfall is what is left over, and each assignee's finish week is the first week their running free capacity from the item's first week covers their share, the item finishing on the latest of them"
+  },
+  "leave_bar": {
+    "name": "Sarah Mitchell",
+    "week": "2026-10-19",
+    "col": 48,
+    "on_leave": 1,
+    "rule": "a week with a bar and leave together reads the bar then the glyph, so the People on leave row counts it"
+  },
+  "counts_classes": {
+    "Consumed": {
+      "title": "Invoice capture and OCR: handwritten route to exception queue",
+      "sheet": "Work",
+      "cell": "BU5",
+      "state": "In development",
+      "commitment": "Committed",
+      "value": "Yes"
+    },
+    "Reserved, committed": {
+      "title": "3-way match and posting engine",
+      "sheet": "Work",
+      "cell": "BU6",
+      "state": "Ready",
+      "commitment": "Committed",
+      "value": "Yes"
+    },
+    "Reserved, proposed": {
+      "title": "Multi-bank feed normaliser: long tail formats",
+      "sheet": "Work",
+      "cell": "BU8",
+      "state": "Ready",
+      "commitment": "Proposed",
+      "value": "No"
+    },
+    "None": {
+      "title": "Payments SDK v3 migration",
+      "sheet": "Work",
+      "cell": "BU22",
+      "state": "Identified",
+      "commitment": "Proposed",
+      "value": "No"
+    }
+  },
+  "reservations": {
+    "rows": [
+      {
+        "sheet": "Reservations",
+        "row": 5,
+        "squad": "Squad 4",
+        "quarter": "Q4 2026",
+        "category": "Discovery",
+        "mw": 4,
+        "drawn": 0.0,
+        "remaining": 4.0
+      },
+      {
+        "sheet": "Reservations",
+        "row": 6,
+        "squad": "Service",
+        "quarter": "Q4 2026",
+        "category": "BAU",
+        "mw": 56,
+        "drawn": 35.22,
+        "remaining": 20.78
+      },
+      {
+        "sheet": "Reservations",
+        "row": 7,
+        "squad": "Service",
+        "quarter": "Q4 2026",
+        "category": "Service",
+        "mw": 8,
+        "drawn": 0.0,
+        "remaining": 8.0
+      },
+      {
+        "sheet": "Reservations",
+        "row": 8,
+        "squad": "Squad 1",
+        "quarter": "Q1 2027",
+        "category": "Shaping and refinement",
+        "mw": 5,
+        "drawn": 0.0,
+        "remaining": 5.0
+      },
+      {
+        "sheet": "Reservations",
+        "row": 9,
+        "squad": "Team",
+        "quarter": "Q4 2026",
+        "category": "Planning",
+        "mw": 6,
+        "drawn": 0.0,
+        "remaining": 6.0
+      }
+    ],
+    "reserved_total": 38.78,
+    "squad": {
+      "name": "Squad 4",
+      "sheet": "Squads",
+      "cell": "K9",
+      "reserved_cell": "S9",
+      "net": 41.46,
+      "committed": 4.4,
+      "reserved": 5.125509,
+      "remaining": 31.934491
+    },
+    "rule": "a reservation is drawn down by counted work of its category in the quarter it names, Discovery and Spikes sharing one pool of spike MW and an assignment drawing down the person's net member weeks, a Team reservation being drawn down by matching work whether or not it carries a squad, and what is left comes off the squad's remaining MW unless a Team row already covers that category, in which case the squad row holds nothing"
+  },
+  "checksums": {
+    "tl_available": 912.744,
+    "tl_assigned": 483.168,
+    "rule": "available is the contracted days of the week less bank holidays and leave, times (1 - modifier), over five; assigned is the same week scaled by the days an assignment covers, never more than the days available; both summed over every person and every week of the timeline"
+  },
+  "squads": {
+    "rows": [
+      {
+        "name": "Service",
+        "row": 5,
+        "net": 50.7,
+        "committed": 37.5714,
+        "utilisation": 0.741054
+      },
+      {
+        "name": "Squad 1",
+        "row": 6,
+        "net": 32.1,
+        "committed": 23.1667,
+        "utilisation": 0.721703
+      },
+      {
+        "name": "Squad 2",
+        "row": 7,
+        "net": 16.3,
+        "committed": 6.78,
+        "utilisation": 0.415951
+      },
+      {
+        "name": "Squad 3",
+        "row": 8,
+        "net": 41.8,
+        "committed": 15.2,
+        "utilisation": 0.363636
+      },
+      {
+        "name": "Squad 4",
+        "row": 9,
+        "net": 41.46,
+        "committed": 4.4,
+        "utilisation": 0.106126
+      },
+      {
+        "name": "Team level",
+        "row": 10,
+        "net": 38.66,
+        "committed": 0.0,
+        "utilisation": 0.0
+      }
+    ],
+    "rule": "net capacity is the net MW of the people in the squad; committed is the MW this quarter of the counted work in it; utilisation is committed over net"
+  },
+  "ended_items": {
+    "count": 17,
+    "titles": [
+      "3-way match and posting engine",
+      "3-way match: assessment",
+      "3-way match: delivery phase 1",
+      "3-way match: release",
+      "Bank feed monitoring and alerts",
+      "CI pipeline overhaul",
+      "Exception queue UI",
+      "Hypercare: Orion go-live",
+      "ID provider integration",
+      "Identity and document checks",
+      "Incident and request volume (BAU)",
+      "Invoice approval workflow rebuild",
+      "Invoice capture and OCR: handwritten route to exception queue",
+      "LRM: Q4 change freeze support",
+      "Notifications platform: milestone alerts",
+      "Onboarding analytics dashboard",
+      "Statement matching rules v2"
+    ],
+    "rule": "work in the plan that has not reached Released or later and whose last sprint falls on or before the quarter's last sprint: the list the quarter close offers to mark Done"
+  },
+  "delivery": {
+    "cur_sprint": 19,
+    "items": {
+      "Real-time status page": {
+        "sheet": "Work",
+        "cell": "CS15",
+        "value": "Done on time"
+      },
+      "Data warehouse access for analytics": {
+        "sheet": "Work",
+        "cell": "CS23",
+        "value": "Late"
+      },
+      "CI pipeline overhaul": {
+        "sheet": "Work",
+        "cell": "CS17",
+        "value": "At risk"
+      }
+    },
+    "on_time_pct": 0.5,
+    "delivered": 2,
+    "on_time": 1,
+    "cycle_time": 2.5,
+    "cycle_rows": 2,
+    "carry_over_count": 16,
+    "carry_over_mw": 71.9181,
+    "counts": {
+      "Done on time": 1,
+      "Done, sprint unknown": 0,
+      "Done late": 1,
+      "On track": 15,
+      "At risk": 1,
+      "At risk (capacity)": 7,
+      "Late": 1
+    },
+    "rule": "delivered in or before the end sprint is on time, after it is late, delivered with no sprint recorded is Done, sprint unknown; not delivered with the end sprint passed is late, within a sprint of it (or in development in it) is at risk, otherwise on track"
+  }
+}

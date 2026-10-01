@@ -1,0 +1,43 @@
+node_modules
+dist
+tsconfig.tsbuildinfo
+
+# Power Platform canvas app build artefacts
+power/canvas/downloads/
+power/canvas/build/
+power/canvas/source/
+power/canvas/source.prev/
+power/canvas/*.msapp
+power/canvas/.import.lock
+
+# Power Platform solution export/deliverable
+power/solution/export/
+power/solution/deliverable/*.zip
+
+# Sample data export
+power/data/Waypoint-data.zip
+
+# fxcheck build output
+tools/fxcheck/bin/
+tools/fxcheck/obj/
+
+# PowerApps-Tooling is a separate shallow clone; re-clone with:
+#   git clone --depth 1 https://github.com/microsoft/PowerApps-Tooling power/vendor/PowerApps-Tooling
+power/vendor/PowerApps-Tooling/
+
+# PCF control build artefacts
+power/pcf/**/node_modules/
+power/pcf/**/out/
+power/pcf/**/obj/
+power/pcf/**/bin/
+
+# Generated playback deck (scripts/build-deck.mjs)
+power/**/*.pptx
+
+# Logs and OS files
+*.log
+.DS_Store
+Thumbs.db
+
+# Release bundle is tracked
+!release/*.zip

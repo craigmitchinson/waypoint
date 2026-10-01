@@ -1,0 +1,93 @@
+# Waypoint canvas app: the named formulas scrFrontDoor reads, and nothing else does.
+#
+# The front door is flag-gated. The Requests, Labs and Teams tables are not connected in Studio
+# yet, so scripts/assemble-canvas.mjs carries neither Screens.flagged/FrontDoor.pa.yaml nor this
+# file into the build while includeFrontDoor in power/canvas/flags.json is false; when it is true it
+# merges this block into the App entity's Formulas beside Formulas.pa.yaml, and flips
+# IncludeFrontDoor to true so the rail lists the section (power/RUNBOOK.md, section 4, "The front door flag").
+#
+# The screen is the screening queue and nothing else (power/design-work-flow.md, section 5), so
+# everything here is the queue, the panel's defaults or the panel's geometry. A named formula
+# cannot read a control, so the gates and the Patch chains live on the screen.
+
+App:
+  Properties:
+    Formulas: |
+      =
+      // ---------------------------------------------------------------------
+      // Screening: the queue the product owner works, and the panel over one request.
+      // New and Screened, oldest first, because the queue is worked in the order it arrived
+      // (power/design-front-door.md, section 3, "Lifecycle"). varFrontDoorScreen is the row the
+      // panel was opened on, blank when it is shut; a named formula cannot read a control, so
+      // only the defaults, the option list and the geometry are here.
+      // ---------------------------------------------------------------------
+      FrontDoorScreenQueue =
+          SortByColumns(Filter(Requests,
+                               'Request status' = 'Request status (Requests)'.New
+                                || 'Request status' = 'Request status (Requests)'.Screened),
+                        "createdon", SortOrder.Ascending);
+      FrontDoorScreenCount = CountRows(FrontDoorScreenQueue);
+
+      // The note at the top of the screen counts what nobody has looked at yet, which is the
+      // number the product owner owes a decision on this morning.
+      FrontDoorNewCount =
+          CountRows(Filter(Requests, 'Request status' = 'Request status (Requests)'.New));
+
+      FrontDoorScreenPanelTitle =
+          If(IsBlank(varFrontDoorScreen), "Screening",
+             "Screening: " & varFrontDoorScreen.Title);
+
+      // The one default the panel needs: a request in the queue is New or Screened, so it has
+      // notes to show back but never a decline category or reason.
+      FrontDoorScreenNotes = Coalesce(varFrontDoorScreen.'Screening notes', "");
+
+      FrontDoorDeclineCategoryOptions =
+          Table({ Value: "Not automation" }, { Value: "No benefit case" },
+                { Value: "Duplicate" }, { Value: "Already planned" },
+                { Value: "Out of scope" }, { Value: "Deferred" });
+
+      // What a promotion carries into the work item. A spike is asked the problem as its
+      // question, so the other two answers are its notes; a feature takes all three
+      // (power/design-work-flow.md, section 5). Urgency reads across to MoSCoW, and
+      // "No fixed date" has no priority to give, so it gives none.
+      FrontDoorPromotedProblem = Coalesce(varFrontDoorScreen.'The problem', "");
+      FrontDoorPromotedRest =
+          Coalesce(varFrontDoorScreen.'What good looks like', "") & Char(10)
+           & Coalesce(varFrontDoorScreen.'Process today', "");
+      FrontDoorPromotedNotes =
+          FrontDoorPromotedProblem & Char(10) & FrontDoorPromotedRest;
+      FrontDoorScreenPriority =
+          Switch(Text(varFrontDoorScreen.Urgency),
+                 "Immediate", "Must",
+                 "This quarter", "Should",
+                 "Next quarter", "Could",
+                 "");
+
+      // The requester's estimate of the size is free text, so it becomes a claim only when it
+      // is a number; the words the requester wrote go on the claim's note either way.
+      FrontDoorClaimSize = Coalesce(varFrontDoorScreen.'Benefit size', "");
+      FrontDoorClaimValue =
+          If(IsNumeric(FrontDoorClaimSize), Value(FrontDoorClaimSize), Blank());
+
+      // The panel's geometry. An answer is its question line over two body lines of answer, and
+      // the next answer starts a Gap below, so the groups are only ever their head plus their
+      // answer count. The foot is the notes, the two decline answers, the error line and two rows
+      // of buttons, all measured up from the bottom of the panel.
+      FrontDoorAnswerH     = TypeLabelLine + TypeBodyLine * 2;
+      FrontDoorAnswerStep  = FrontDoorAnswerH + Gap;
+      FrontDoorScreenFootH = FormFieldStep * 3 + TypeLabelLine * 2 + ControlHeight * 2 + Gap + Pad;
+
+      // The screening queue: ten rows at most, one row of space when there are none to show.
+      FrontDoorScreenListH = RowHeight * Max(Min(FrontDoorScreenCount, 10), 1);
+      FrontDoorScreenCardH = TypeBodyLine + RowHeight + FrontDoorScreenListH + Pad * 2;
+
+      // Its seven column shares. power/canvas/tables.json is the authority: the front-door-queue
+      // entry there is what scripts/compile-tables.mjs writes into the build, and these are the
+      // same numbers under the names power/app reads (power/RUNBOOK.md, "Table columns").
+      FrontDoorScrShareRaised    = 0.10;   FrontDoorScrMinRaised    = 100;
+      FrontDoorScrShareRequester = 0.16;   FrontDoorScrMinRequester = 130;
+      FrontDoorScrShareArea      = 0.12;   FrontDoorScrMinArea      = 100;
+      FrontDoorScrShareProduct   = 0.13;   FrontDoorScrMinProduct   = 110;
+      FrontDoorScrShareTitle     = 0.26;   FrontDoorScrMinTitle     = 220;
+      FrontDoorScrShareUrgency   = 0.11;   FrontDoorScrMinUrgency   = 90;
+      FrontDoorScrShareStatus    = 0.12;   FrontDoorScrMinStatus    = 100;

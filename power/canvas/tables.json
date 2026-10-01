@@ -1,0 +1,1892 @@
+{
+  "//": [
+    "Every table in the app, declared once. scripts/compile-tables.mjs writes the X and Width of",
+    "each named cell into power/canvas/build/Src after scripts/assemble-canvas.mjs has put the",
+    "screens there, and preflight check 20 fails if what is in build/Src is not what the compiler",
+    "would write. Column widths are never hand-written in power/app (power/RUNBOOK.md, 'Table",
+    "columns').",
+    "",
+    "A table: id, screen, the head container, the gallery, the row container inside it (or the",
+    "gallery itself when the cells sit straight in the template), an optional foot container, the",
+    "host card's padding as a formula, the gutter between cells, and the columns.",
+    "A column: key, type, the role its cells read as, which every column declares and which is one",
+    "of name, text, number, money, percent, date, badge, meta and tone, nothing else; the role is",
+    "what the compiler writes the Size, FontWeight, Color and Align from, with Wrap false and no",
+    "AutoHeight (power/RUNBOOK.md, 'Typography'). A tone column keeps its Color and Fill: they are",
+    "the screen's, and the compiler writes only the Size, the Align and the layout on its cells.",
+    "Then an optional share and min (the type's",
+    "defaults otherwise), the control",
+    "named for each role (header, cell, foot; a list of controls when they stack), an optional",
+    "indent for a cell that starts short of its column, an optional gap of its own, and repeat for",
+    "a column that takes the same pitch more than once. A repeated column whose slot count is not",
+    "fixed names the formula for it in count: repeat is then the most slots the settings allow and",
+    "the column's whole share is spread over count of them."
+  ],
+  "tables": [
+    {
+      "id": "team-people",
+      "screen": "scrTeam.pa.yaml",
+      "head": "tmPeopleHead",
+      "gallery": "tmPeople",
+      "row": "tmPeopleRow",
+      "padding": "Pad * 2",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "name",
+          "type": "stack",
+          "role": "name",
+          "share": 0.22,
+          "min": 220,
+          "indent": "TeamNameX",
+          "align": "left",
+          "header": "tmHeadName",
+          "cell": [
+            "tmRowName",
+            "tmRowRole"
+          ]
+        },
+        {
+          "key": "lead",
+          "type": "badge",
+          "role": "badge",
+          "share": 0.06,
+          "min": 70,
+          "align": "center",
+          "header": "tmHeadLead",
+          "cell": "tmRowLead"
+        },
+        {
+          "key": "squad",
+          "type": "text",
+          "role": "text",
+          "share": 0.1,
+          "min": 110,
+          "align": "left",
+          "header": "tmHeadSquad",
+          "cell": "tmRowSquad"
+        },
+        {
+          "key": "grade",
+          "type": "text",
+          "role": "text",
+          "share": 0.05,
+          "min": 70,
+          "align": "left",
+          "header": "tmHeadGrade",
+          "cell": "tmRowGrade"
+        },
+        {
+          "key": "skills",
+          "type": "text",
+          "role": "text",
+          "share": 0.15,
+          "min": 220,
+          "align": "left",
+          "header": "tmHeadSkills",
+          "cell": "tmRowSkills"
+        },
+        {
+          "key": "dpw",
+          "type": "number",
+          "role": "number",
+          "share": 0.07,
+          "min": 80,
+          "align": "right",
+          "header": "tmHeadDpw",
+          "cell": "tmRowDpw"
+        },
+        {
+          "key": "region",
+          "type": "text",
+          "role": "text",
+          "share": 0.08,
+          "min": 90,
+          "align": "left",
+          "header": "tmHeadRegion",
+          "cell": "tmRowRegion"
+        },
+        {
+          "key": "modifier",
+          "type": "number",
+          "role": "percent",
+          "share": 0.07,
+          "min": 80,
+          "align": "right",
+          "header": "tmHeadModifier",
+          "cell": "tmRowModifier"
+        },
+        {
+          "key": "net",
+          "type": "number",
+          "role": "number",
+          "share": 0.07,
+          "min": 76,
+          "align": "right",
+          "header": "tmHeadNet",
+          "cell": "tmRowNet"
+        },
+        {
+          "key": "booked",
+          "type": "number",
+          "role": "number",
+          "share": 0.07,
+          "min": 76,
+          "align": "right",
+          "header": "tmHeadBooked",
+          "cell": "tmRowBooked"
+        },
+        {
+          "key": "free",
+          "type": "number",
+          "role": "number",
+          "share": 0.06,
+          "min": 76,
+          "align": "right",
+          "header": "tmHeadFree",
+          "cell": "tmRowFree"
+        }
+      ]
+    },
+    {
+      "id": "work-register",
+      "screen": "scrWork.pa.yaml",
+      "head": "wkHeadRow",
+      "row": "wkRegister",
+      "padding": "Pad * 2",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "priority",
+          "type": "pill",
+          "role": "badge",
+          "share": 0.042,
+          "min": 64,
+          "align": "left",
+          "header": "wkHeadPriority",
+          "cell": "wkRowPriority"
+        },
+        {
+          "key": "title",
+          "type": "stack",
+          "role": "name",
+          "share": 0.293,
+          "min": 300,
+          "align": "left",
+          "header": "wkHeadTitle",
+          "cell": [
+            "wkRowTitle",
+            "wkRowEpic"
+          ]
+        },
+        {
+          "key": "type",
+          "type": "badge",
+          "role": "badge",
+          "share": 0.062,
+          "min": 90,
+          "align": "left",
+          "header": "wkHeadType",
+          "cell": "wkRowType"
+        },
+        {
+          "key": "squad",
+          "type": "text",
+          "role": "text",
+          "share": 0.078,
+          "min": 110,
+          "align": "left",
+          "header": "wkHeadSquad",
+          "cell": "wkRowSquad"
+        },
+        {
+          "key": "assessor",
+          "type": "text",
+          "role": "text",
+          "share": 0.091,
+          "min": 130,
+          "align": "left",
+          "header": "wkHeadAssessor",
+          "cell": "wkRowAssessor"
+        },
+        {
+          "key": "delivery",
+          "type": "text",
+          "role": "text",
+          "share": 0.107,
+          "min": 150,
+          "align": "left",
+          "header": "wkHeadDelivery",
+          "cell": "wkRowDelivery"
+        },
+        {
+          "key": "state",
+          "type": "text",
+          "role": "text",
+          "share": 0.078,
+          "min": 110,
+          "align": "left",
+          "header": "wkHeadState",
+          "cell": "wkRowState"
+        },
+        {
+          "key": "commitment",
+          "type": "text",
+          "role": "text",
+          "share": 0.075,
+          "min": 110,
+          "align": "left",
+          "header": "wkHeadCommitment",
+          "cell": "wkRowCommitment"
+        },
+        {
+          "key": "mw",
+          "type": "number",
+          "role": "number",
+          "share": 0.058,
+          "min": 76,
+          "align": "right",
+          "header": "wkHeadMW",
+          "cell": "wkRowMW"
+        },
+        {
+          "key": "sprints",
+          "type": "text",
+          "role": "text",
+          "share": 0.058,
+          "min": 90,
+          "align": "left",
+          "header": "wkHeadSprints",
+          "cell": "wkRowSprints"
+        },
+        {
+          "key": "jira",
+          "type": "text",
+          "role": "text",
+          "share": 0.058,
+          "min": 84,
+          "align": "left",
+          "header": "wkHeadJira",
+          "cell": "wkRowJira"
+        }
+      ]
+    },
+    {
+      "id": "benefits-awaiting",
+      "screen": "scrBenefits.pa.yaml",
+      "head": "bnAwaitHead",
+      "row": "bnAwaitList",
+      "padding": "Pad * 2",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "title",
+          "type": "text",
+          "role": "name",
+          "share": 0.4,
+          "min": 240,
+          "align": "left",
+          "header": "bnAwHeadTitle",
+          "cell": "bnAwRowTitle"
+        },
+        {
+          "key": "owner",
+          "type": "text",
+          "role": "text",
+          "share": 0.22,
+          "min": 160,
+          "align": "left",
+          "header": "bnAwHeadOwner",
+          "cell": "bnAwRowOwner"
+        },
+        {
+          "key": "released",
+          "type": "date",
+          "role": "date",
+          "share": 0.18,
+          "min": 120,
+          "align": "right",
+          "header": "bnAwHeadReleased",
+          "cell": "bnAwRowReleased"
+        },
+        {
+          "key": "missing",
+          "type": "number",
+          "role": "number",
+          "share": 0.2,
+          "min": 120,
+          "align": "right",
+          "header": "bnAwHeadMissing",
+          "cell": "bnAwRowMissing"
+        }
+      ]
+    },
+    {
+      "id": "benefits-calendar",
+      "screen": "scrBenefits.pa.yaml",
+      "head": "bnCalHead",
+      "row": "bnCalendar",
+      "foot": "bnCalFoot",
+      "padding": "Pad * 2",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "title",
+          "type": "stack",
+          "role": "name",
+          "share": 0.24,
+          "min": 240,
+          "align": "left",
+          "header": "bnCalHeadName",
+          "cell": [
+            "bnCalRowTitle",
+            "bnCalRowCaption"
+          ],
+          "foot": "bnCalFootLabel"
+        },
+        {
+          "key": "months",
+          "type": "month",
+          "role": "tone",
+          "share": 0.045,
+          "min": 52,
+          "repeat": 12,
+          "gap": 0,
+          "align": "center",
+          "header": "bnCalHeadMonths",
+          "cell": "bnCalMonths",
+          "foot": [
+            "bnCalFootM1",
+            "bnCalFootM2",
+            "bnCalFootM3",
+            "bnCalFootM4",
+            "bnCalFootM5",
+            "bnCalFootM6",
+            "bnCalFootM7",
+            "bnCalFootM8",
+            "bnCalFootM9",
+            "bnCalFootM10",
+            "bnCalFootM11",
+            "bnCalFootM12"
+          ]
+        },
+        {
+          "key": "fte",
+          "type": "number",
+          "role": "number",
+          "share": 0.06,
+          "min": 64,
+          "align": "right",
+          "header": "bnCalHeadFte",
+          "cell": "bnCalRowFte",
+          "foot": "bnCalFootYearEnd"
+        },
+        {
+          "key": "gbp",
+          "type": "number",
+          "role": "money",
+          "share": 0.08,
+          "min": 84,
+          "align": "right",
+          "header": "bnCalHeadGbp",
+          "cell": "bnCalRowGbp"
+        },
+        {
+          "key": "state",
+          "type": "badge",
+          "role": "badge",
+          "share": 0.08,
+          "min": 96,
+          "align": "left",
+          "header": "bnCalHeadState",
+          "cell": "bnCalRowState"
+        }
+      ]
+    },
+    {
+      "id": "financials-squad",
+      "screen": "scrFinancials.pa.yaml",
+      "head": "fnSquadHead",
+      "row": "fnSquad",
+      "padding": "Pad * 2",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "name",
+          "type": "text",
+          "role": "name",
+          "share": 0.3,
+          "min": 220,
+          "align": "left",
+          "header": "fnSqHeadName",
+          "cell": "fnSqRowName"
+        },
+        {
+          "key": "people",
+          "type": "number",
+          "role": "number",
+          "share": 0.08,
+          "min": 90,
+          "align": "right",
+          "header": "fnSqHeadPeople",
+          "cell": "fnSqRowPeople"
+        },
+        {
+          "key": "annual",
+          "type": "number",
+          "role": "money",
+          "share": 0.11,
+          "min": 100,
+          "align": "right",
+          "header": "fnSqHeadAnnual",
+          "cell": "fnSqRowAnnual"
+        },
+        {
+          "key": "quarter",
+          "type": "number",
+          "role": "money",
+          "share": 0.11,
+          "min": 100,
+          "align": "right",
+          "header": "fnSqHeadQuarter",
+          "cell": "fnSqRowQuarter"
+        },
+        {
+          "key": "net",
+          "type": "number",
+          "role": "number",
+          "share": 0.1,
+          "min": 90,
+          "align": "right",
+          "header": "fnSqHeadNet",
+          "cell": "fnSqRowNet"
+        },
+        {
+          "key": "permw",
+          "type": "number",
+          "role": "money",
+          "share": 0.1,
+          "min": 100,
+          "align": "right",
+          "header": "fnSqHeadPerMW",
+          "cell": "fnSqRowPerMW"
+        },
+        {
+          "key": "committed",
+          "type": "number",
+          "role": "number",
+          "share": 0.1,
+          "min": 90,
+          "align": "right",
+          "header": "fnSqHeadCommitted",
+          "cell": "fnSqRowCommitted"
+        },
+        {
+          "key": "delivery",
+          "type": "number",
+          "role": "money",
+          "share": 0.1,
+          "min": 100,
+          "align": "right",
+          "header": "fnSqHeadDelivery",
+          "cell": "fnSqRowDelivery"
+        }
+      ]
+    },
+    {
+      "id": "financials-grade",
+      "screen": "scrFinancials.pa.yaml",
+      "head": "fnGradeHead",
+      "row": "fnGrade",
+      "padding": "Pad * 2",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "name",
+          "type": "text",
+          "role": "name",
+          "share": 0.3,
+          "min": 220,
+          "align": "left",
+          "header": "fnGrHeadName",
+          "cell": "fnGrRowName"
+        },
+        {
+          "key": "people",
+          "type": "number",
+          "role": "number",
+          "share": 0.14,
+          "min": 90,
+          "align": "right",
+          "header": "fnGrHeadPeople",
+          "cell": "fnGrRowPeople"
+        },
+        {
+          "key": "rate",
+          "type": "number",
+          "role": "money",
+          "share": 0.2,
+          "min": 110,
+          "align": "right",
+          "header": "fnGrHeadRate",
+          "cell": "fnGrRowRate"
+        },
+        {
+          "key": "annual",
+          "type": "number",
+          "role": "money",
+          "share": 0.2,
+          "min": 100,
+          "align": "right",
+          "header": "fnGrHeadAnnual",
+          "cell": "fnGrRowAnnual"
+        },
+        {
+          "key": "quarter",
+          "type": "number",
+          "role": "money",
+          "share": 0.16,
+          "min": 100,
+          "align": "right",
+          "header": "fnGrHeadQuarter",
+          "cell": "fnGrRowQuarter"
+        }
+      ]
+    },
+    {
+      "id": "financials-funding",
+      "screen": "scrFinancials.pa.yaml",
+      "head": "fnFlHead",
+      "row": "fnFunding",
+      "padding": "Pad * 2",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "name",
+          "type": "text",
+          "role": "name",
+          "share": 0.3,
+          "min": 220,
+          "align": "left",
+          "header": "fnFlHeadName",
+          "cell": "fnFlRowName"
+        },
+        {
+          "key": "investment",
+          "type": "number",
+          "role": "money",
+          "share": 0.18,
+          "min": 100,
+          "align": "right",
+          "header": "fnFlHeadInvestment",
+          "cell": "fnFlRowInvestment"
+        },
+        {
+          "key": "other",
+          "type": "number",
+          "role": "money",
+          "share": 0.2,
+          "min": 100,
+          "align": "right",
+          "header": "fnFlHeadOther",
+          "cell": "fnFlRowOther"
+        },
+        {
+          "key": "split",
+          "type": "number",
+          "role": "number",
+          "share": 0.16,
+          "min": 90,
+          "align": "right",
+          "header": "fnFlHeadSplit",
+          "cell": "fnFlRowSplit"
+        },
+        {
+          "key": "total",
+          "type": "number",
+          "role": "money",
+          "share": 0.16,
+          "min": 100,
+          "align": "right",
+          "header": "fnFlHeadTotal",
+          "cell": "fnFlRowTotal"
+        }
+      ]
+    },
+    {
+      "id": "financials-work",
+      "screen": "scrFinancials.pa.yaml",
+      "head": "fnWiHead",
+      "row": "fnWork",
+      "padding": "Pad * 2",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "name",
+          "type": "text",
+          "role": "name",
+          "share": 0.3,
+          "min": 220,
+          "align": "left",
+          "header": "fnWiHeadName",
+          "cell": "fnWiRowName"
+        },
+        {
+          "key": "squad",
+          "type": "text",
+          "role": "text",
+          "share": 0.14,
+          "min": 110,
+          "align": "left",
+          "header": "fnWiHeadSquad",
+          "cell": "fnWiRowSquad"
+        },
+        {
+          "key": "mw",
+          "type": "number",
+          "role": "number",
+          "share": 0.12,
+          "min": 90,
+          "align": "right",
+          "header": "fnWiHeadMW",
+          "cell": "fnWiRowMW"
+        },
+        {
+          "key": "cost",
+          "type": "number",
+          "role": "money",
+          "share": 0.14,
+          "min": 100,
+          "align": "right",
+          "header": "fnWiHeadCost",
+          "cell": "fnWiRowCost"
+        },
+        {
+          "key": "inyear",
+          "type": "number",
+          "role": "money",
+          "share": 0.16,
+          "min": 100,
+          "align": "right",
+          "header": "fnWiHeadInYear",
+          "cell": "fnWiRowInYear"
+        },
+        {
+          "key": "return",
+          "type": "number",
+          "role": "number",
+          "share": 0.14,
+          "min": 90,
+          "align": "right",
+          "header": "fnWiHeadReturn",
+          "cell": "fnWiRowReturn"
+        }
+      ]
+    },
+    {
+      "id": "timeline-availability",
+      "screen": "scrTimeline.pa.yaml",
+      "head": "tlAvailHead",
+      "gallery": "tlAvailRowsGallery",
+      "row": "tlAvailRow",
+      "padding": "Pad * 2",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "name",
+          "type": "stack",
+          "role": "name",
+          "share": 0.24,
+          "min": 220,
+          "align": "left",
+          "header": "tlAvailHeadName",
+          "cell": "tlAvailRowName"
+        },
+        {
+          "key": "squad",
+          "type": "text",
+          "role": "text",
+          "share": 0.14,
+          "min": 130,
+          "align": "left",
+          "header": "tlAvailHeadSquad",
+          "cell": "tlAvailRowSquad"
+        },
+        {
+          "key": "skills",
+          "type": "text",
+          "role": "text",
+          "share": 0.3,
+          "min": 240,
+          "align": "left",
+          "header": "tlAvailHeadSkill",
+          "cell": "tlAvailRowSkills"
+        },
+        {
+          "key": "free",
+          "type": "number",
+          "role": "number",
+          "share": 0.14,
+          "min": 120,
+          "align": "right",
+          "header": "tlAvailHeadFree",
+          "cell": "tlAvailRowFree"
+        },
+        {
+          "key": "window",
+          "type": "text",
+          "role": "text",
+          "share": 0.18,
+          "min": 170,
+          "align": "left",
+          "header": "tlAvailHeadWin",
+          "cell": "tlAvailRowWin"
+        }
+      ]
+    },
+    {
+      "id": "timeline-sprint-grid",
+      "screen": "scrTimeline.pa.yaml",
+      "head": "tlSprintHead",
+      "row": "tlSprintRows",
+      "padding": "Pad * 2",
+      "gap": 0,
+      "columns": [
+        {
+          "key": "name",
+          "type": "stack",
+          "role": "name",
+          "share": 0.18,
+          "min": 180,
+          "align": "left",
+          "header": "tlSprintHeadNameBox"
+        },
+        {
+          "key": "meta",
+          "type": "text",
+          "role": "meta",
+          "share": 0.08,
+          "min": 90,
+          "align": "right",
+          "header": "tlSprintHeadMetaBox",
+          "cell": "tlSpRowMeta"
+        },
+        {
+          "key": "days",
+          "type": "month",
+          "role": "tone",
+          "share": 0.074,
+          "min": 64,
+          "repeat": 10,
+          "count": "TlSprintDayCount",
+          "align": "center",
+          "header": "tlSprintHeadDays",
+          "cell": "tlSpCells"
+        }
+      ]
+    },
+    {
+      "id": "timeline-quarter-grid",
+      "screen": "scrTimeline.pa.yaml",
+      "head": "tlQuarterHead",
+      "row": "tlQuarterRows",
+      "padding": "Pad * 2",
+      "gap": 0,
+      "columns": [
+        {
+          "key": "name",
+          "type": "stack",
+          "role": "name",
+          "share": 0.18,
+          "min": 180,
+          "align": "left",
+          "header": "tlQuarterHeadNameBox"
+        },
+        {
+          "key": "meta",
+          "type": "text",
+          "role": "meta",
+          "share": 0.08,
+          "min": 90,
+          "align": "right",
+          "header": "tlQuarterHeadMetaBox",
+          "cell": "tlQtRowMeta"
+        },
+        {
+          "key": "weeks",
+          "type": "month",
+          "role": "tone",
+          "share": 0.056923,
+          "min": 64,
+          "repeat": 13,
+          "align": "center",
+          "header": "tlQuarterHeadWeeks",
+          "cell": "tlQtCells"
+        }
+      ]
+    },
+    {
+      "id": "timeline-sprints-grid",
+      "screen": "scrTimeline.pa.yaml",
+      "head": "tlSprintsHead",
+      "row": "tlSprintsRows",
+      "foot": "tlSprintsTotals",
+      "padding": "Pad * 2",
+      "gap": 0,
+      "columns": [
+        {
+          "key": "name",
+          "type": "text",
+          "role": "name",
+          "share": 0.18,
+          "min": 180,
+          "align": "left",
+          "header": "tlSprintsHeadNameBox",
+          "cell": "tlSpsRowName",
+          "foot": "tlSprintsTotalNameBox"
+        },
+        {
+          "key": "sprints",
+          "type": "month",
+          "role": "tone",
+          "share": 0.1025,
+          "min": 64,
+          "repeat": 8,
+          "count": "TlSpsColCount",
+          "align": "center",
+          "header": "tlSprintsHeadCols",
+          "cell": "tlSpsCells",
+          "foot": "tlSprintsTotalCells"
+        }
+      ]
+    },
+    {
+      "id": "quarter-close-done",
+      "screen": "scrQuarterClose.pa.yaml",
+      "row": "qcDoneList",
+      "padding": "Pad * 2",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "state",
+          "type": "badge",
+          "role": "badge",
+          "share": 0.22,
+          "min": 116,
+          "align": "center",
+          "cell": "qcDoneRowState"
+        },
+        {
+          "key": "title",
+          "type": "text",
+          "role": "text",
+          "share": 0.78,
+          "min": 240,
+          "align": "left",
+          "cell": "qcDoneRowTitle"
+        }
+      ]
+    },
+    {
+      "id": "quarter-close-archive-list",
+      "screen": "scrQuarterClose.pa.yaml",
+      "row": "qcArchiveList",
+      "padding": "Pad * 2",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "state",
+          "type": "badge",
+          "role": "badge",
+          "share": 0.22,
+          "min": 116,
+          "align": "center",
+          "cell": "qcArchiveRowState"
+        },
+        {
+          "key": "title",
+          "type": "text",
+          "role": "text",
+          "share": 0.78,
+          "min": 240,
+          "align": "left",
+          "cell": "qcArchiveRowTitle"
+        }
+      ]
+    },
+    {
+      "id": "quarter-close-history",
+      "screen": "scrQuarterClose.pa.yaml",
+      "head": "qcHistoryHead",
+      "row": "qcHistory",
+      "padding": "Pad * 2",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "quarter",
+          "type": "stack",
+          "role": "name",
+          "share": 0.2,
+          "min": 160,
+          "align": "left",
+          "header": "qcHiHeadQuarter",
+          "cell": [
+            "qcHiRowQuarter",
+            "qcHiRowNote"
+          ]
+        },
+        {
+          "key": "net",
+          "type": "number",
+          "role": "number",
+          "share": 0.1,
+          "min": 88,
+          "align": "right",
+          "header": "qcHiHeadNet",
+          "cell": "qcHiRowNet"
+        },
+        {
+          "key": "inplan",
+          "type": "number",
+          "role": "number",
+          "share": 0.1,
+          "min": 88,
+          "align": "right",
+          "header": "qcHiHeadInPlan",
+          "cell": "qcHiRowInPlan"
+        },
+        {
+          "key": "delivered",
+          "type": "number",
+          "role": "number",
+          "share": 0.11,
+          "min": 96,
+          "align": "right",
+          "header": "qcHiHeadDeliv",
+          "cell": "qcHiRowDeliv"
+        },
+        {
+          "key": "fte",
+          "type": "number",
+          "role": "number",
+          "share": 0.1,
+          "min": 88,
+          "align": "right",
+          "header": "qcHiHeadFte",
+          "cell": "qcHiRowFte"
+        },
+        {
+          "key": "gbp",
+          "type": "number",
+          "role": "money",
+          "share": 0.13,
+          "min": 112,
+          "align": "right",
+          "header": "qcHiHeadGbp",
+          "cell": "qcHiRowGbp"
+        },
+        {
+          "key": "load",
+          "type": "number",
+          "role": "percent",
+          "share": 0.1,
+          "min": 88,
+          "align": "right",
+          "header": "qcHiHeadLoad",
+          "cell": "qcHiRowLoad"
+        },
+        {
+          "key": "predicted",
+          "type": "number",
+          "role": "percent",
+          "share": 0.16,
+          "min": 104,
+          "align": "right",
+          "header": "qcHiHeadPred",
+          "cell": "qcHiRowPred"
+        }
+      ]
+    },
+    {
+      "id": "quarter-close-outlook",
+      "screen": "scrQuarterClose.pa.yaml",
+      "head": "qcOutlookHead",
+      "row": "qcOutlook",
+      "padding": "Pad * 2",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "squad",
+          "type": "text",
+          "role": "name",
+          "share": 0.28,
+          "min": 200,
+          "align": "left",
+          "header": "qcOuHeadSquad",
+          "cell": "qcOuRowSquad"
+        },
+        {
+          "key": "quarter",
+          "type": "text",
+          "role": "text",
+          "share": 0.14,
+          "min": 112,
+          "align": "left",
+          "header": "qcOuHeadQuarter",
+          "cell": "qcOuRowQuarter"
+        },
+        {
+          "key": "net",
+          "type": "number",
+          "role": "number",
+          "share": 0.14,
+          "min": 96,
+          "align": "right",
+          "header": "qcOuHeadNet",
+          "cell": "qcOuRowNet"
+        },
+        {
+          "key": "reserved",
+          "type": "number",
+          "role": "number",
+          "share": 0.14,
+          "min": 96,
+          "align": "right",
+          "header": "qcOuHeadReserved",
+          "cell": "qcOuRowReserved"
+        },
+        {
+          "key": "inplan",
+          "type": "number",
+          "role": "number",
+          "share": 0.14,
+          "min": 96,
+          "align": "right",
+          "header": "qcOuHeadInPlan",
+          "cell": "qcOuRowInPlan"
+        },
+        {
+          "key": "remaining",
+          "type": "number",
+          "role": "number",
+          "share": 0.16,
+          "min": 104,
+          "align": "right",
+          "header": "qcOuHeadRemaining",
+          "cell": "qcOuRowRemaining"
+        }
+      ]
+    },
+    {
+      "id": "quarter-close-archive",
+      "screen": "scrQuarterClose.pa.yaml",
+      "head": "qcArchiveHead",
+      "row": "qcArchive",
+      "padding": "Pad * 2",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "title",
+          "type": "text",
+          "role": "name",
+          "share": 0.2,
+          "min": 200,
+          "align": "left",
+          "header": "qcArHeadTitle",
+          "cell": "qcArRowTitle"
+        },
+        {
+          "key": "quarter",
+          "type": "text",
+          "role": "text",
+          "share": 0.08,
+          "min": 88,
+          "align": "left",
+          "header": "qcArHeadQuarter",
+          "cell": "qcArRowQuarter"
+        },
+        {
+          "key": "id",
+          "type": "text",
+          "role": "text",
+          "share": 0.08,
+          "min": 96,
+          "align": "left",
+          "header": "qcArHeadId",
+          "cell": "qcArRowId"
+        },
+        {
+          "key": "epic",
+          "type": "text",
+          "role": "text",
+          "share": 0.12,
+          "min": 140,
+          "align": "left",
+          "header": "qcArHeadEpic",
+          "cell": "qcArRowEpic"
+        },
+        {
+          "key": "squad",
+          "type": "text",
+          "role": "text",
+          "share": 0.1,
+          "min": 112,
+          "align": "left",
+          "header": "qcArHeadSquad",
+          "cell": "qcArRowSquad"
+        },
+        {
+          "key": "state",
+          "type": "text",
+          "role": "text",
+          "share": 0.1,
+          "min": 112,
+          "align": "left",
+          "header": "qcArHeadState",
+          "cell": "qcArRowState"
+        },
+        {
+          "key": "status",
+          "type": "badge",
+          "role": "badge",
+          "share": 0.1,
+          "min": 120,
+          "align": "left",
+          "header": "qcArHeadStatus",
+          "cell": "qcArRowStatus"
+        },
+        {
+          "key": "size",
+          "type": "text",
+          "role": "text",
+          "share": 0.06,
+          "min": 72,
+          "align": "left",
+          "header": "qcArHeadSize",
+          "cell": "qcArRowSize"
+        },
+        {
+          "key": "original",
+          "type": "number",
+          "role": "number",
+          "share": 0.06,
+          "min": 96,
+          "align": "right",
+          "header": "qcArHeadOriginal",
+          "cell": "qcArRowOriginal"
+        },
+        {
+          "key": "latest",
+          "type": "number",
+          "role": "number",
+          "share": 0.05,
+          "min": 88,
+          "align": "right",
+          "header": "qcArHeadLatest",
+          "cell": "qcArRowLatest"
+        },
+        {
+          "key": "actual",
+          "type": "number",
+          "role": "number",
+          "share": 0.05,
+          "min": 88,
+          "align": "right",
+          "header": "qcArHeadActual",
+          "cell": "qcArRowActual"
+        }
+      ]
+    },
+    {
+      "id": "team-squads",
+      "screen": "scrTeam.pa.yaml",
+      "head": "tmSquadHead",
+      "gallery": "tmSquads",
+      "row": "tmSquadRow",
+      "padding": "Pad * 2",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "name",
+          "type": "text",
+          "role": "name",
+          "share": 0.2,
+          "min": 200,
+          "align": "left",
+          "header": "tmSqHeadName",
+          "cell": "tmSqRowName"
+        },
+        {
+          "key": "lead",
+          "type": "text",
+          "role": "text",
+          "share": 0.16,
+          "min": 160,
+          "align": "left",
+          "header": "tmSqHeadLead",
+          "cell": "tmSqRowLead"
+        },
+        {
+          "key": "remit",
+          "type": "text",
+          "role": "text",
+          "share": 0.3,
+          "min": 260,
+          "align": "left",
+          "header": "tmSqHeadRemit",
+          "cell": "tmSqRowRemit"
+        },
+        {
+          "key": "people",
+          "type": "number",
+          "role": "number",
+          "share": 0.07,
+          "min": 80,
+          "align": "right",
+          "header": "tmSqHeadPeople",
+          "cell": "tmSqRowPeople"
+        },
+        {
+          "key": "net",
+          "type": "number",
+          "role": "number",
+          "share": 0.09,
+          "min": 90,
+          "align": "right",
+          "header": "tmSqHeadNet",
+          "cell": "tmSqRowNet"
+        },
+        {
+          "key": "committed",
+          "type": "number",
+          "role": "number",
+          "share": 0.09,
+          "min": 100,
+          "align": "right",
+          "header": "tmSqHeadCommitted",
+          "cell": "tmSqRowCommitted"
+        },
+        {
+          "key": "util",
+          "type": "number",
+          "role": "percent",
+          "share": 0.09,
+          "min": 110,
+          "align": "right",
+          "header": "tmSqHeadUtil",
+          "cell": "tmSqRowUtil"
+        }
+      ]
+    },
+    {
+      "id": "team-absences",
+      "screen": "scrTeam.pa.yaml",
+      "head": "tmAbsenceHead",
+      "gallery": "tmAbsences",
+      "row": "tmAbsenceRow",
+      "padding": "Pad * 2",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "person",
+          "type": "text",
+          "role": "name",
+          "share": 0.22,
+          "min": 220,
+          "align": "left",
+          "header": "tmAbHeadPerson",
+          "cell": "tmAbRowPerson"
+        },
+        {
+          "key": "type",
+          "type": "badge",
+          "role": "badge",
+          "share": 0.14,
+          "min": 140,
+          "align": "center",
+          "header": "tmAbHeadType",
+          "cell": "tmAbRowType"
+        },
+        {
+          "key": "from",
+          "type": "date",
+          "role": "date",
+          "share": 0.12,
+          "min": 120,
+          "align": "left",
+          "header": "tmAbHeadFrom",
+          "cell": "tmAbRowFrom"
+        },
+        {
+          "key": "to",
+          "type": "date",
+          "role": "date",
+          "share": 0.12,
+          "min": 120,
+          "align": "left",
+          "header": "tmAbHeadTo",
+          "cell": "tmAbRowTo"
+        },
+        {
+          "key": "note",
+          "type": "text",
+          "role": "text",
+          "share": 0.4,
+          "min": 260,
+          "align": "left",
+          "header": "tmAbHeadNote",
+          "cell": "tmAbRowNote"
+        }
+      ]
+    },
+    {
+      "id": "command-commit-calls",
+      "screen": "scrCommand.pa.yaml",
+      "head": "cmdCommitHead",
+      "row": "cmdCommitList",
+      "padding": "Pad * 2",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "priority",
+          "type": "pill",
+          "role": "badge",
+          "share": 0.09,
+          "min": 60,
+          "align": "center",
+          "header": "ccHeadPriority",
+          "cell": "ccPriority"
+        },
+        {
+          "key": "title",
+          "type": "text",
+          "role": "name",
+          "share": 0.33,
+          "min": 150,
+          "align": "left",
+          "header": "ccHeadTitle",
+          "cell": "ccTitle"
+        },
+        {
+          "key": "squad",
+          "type": "text",
+          "role": "text",
+          "share": 0.13,
+          "min": 70,
+          "align": "left",
+          "header": "ccHeadSquad",
+          "cell": "ccSquad"
+        },
+        {
+          "key": "mw",
+          "type": "number",
+          "role": "number",
+          "share": 0.07,
+          "min": 56,
+          "align": "right",
+          "header": "ccHeadMW",
+          "cell": "ccMW"
+        },
+        {
+          "key": "verdict",
+          "type": "text",
+          "role": "text",
+          "share": 0.19,
+          "min": 100,
+          "align": "left",
+          "header": "ccHeadVerdict",
+          "cell": "ccVerdict"
+        },
+        {
+          "key": "commit",
+          "type": "pill",
+          "role": "badge",
+          "share": 0.095,
+          "min": 84,
+          "align": "center",
+          "cell": "ccCommit"
+        },
+        {
+          "key": "defer",
+          "type": "pill",
+          "role": "badge",
+          "share": 0.095,
+          "min": 84,
+          "align": "center",
+          "cell": "ccDefer"
+        }
+      ]
+    },
+    {
+      "id": "command-attention",
+      "screen": "scrCommand.pa.yaml",
+      "row": "cmdAttentionList",
+      "padding": "Pad * 2",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "group",
+          "type": "badge",
+          "role": "badge",
+          "share": 0.16,
+          "min": 100,
+          "align": "center",
+          "cell": "atPill"
+        },
+        {
+          "key": "message",
+          "type": "text",
+          "role": "text",
+          "share": 0.5,
+          "min": 200,
+          "align": "left",
+          "cell": "atMessage"
+        },
+        {
+          "key": "measure",
+          "type": "text",
+          "role": "meta",
+          "share": 0.18,
+          "min": 110,
+          "align": "right",
+          "cell": "atMeasure"
+        },
+        {
+          "key": "open",
+          "type": "pill",
+          "role": "badge",
+          "share": 0.16,
+          "min": 84,
+          "align": "center",
+          "cell": "atOpen"
+        }
+      ]
+    },
+    {
+      "id": "command-front-door",
+      "screen": "scrCommand.pa.yaml",
+      "row": "cmdFrontDoorList",
+      "padding": "Pad * 2",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "title",
+          "type": "text",
+          "role": "name",
+          "share": 0.32,
+          "min": 150,
+          "align": "left",
+          "cell": "cfdTitle"
+        },
+        {
+          "key": "requester",
+          "type": "text",
+          "role": "text",
+          "share": 0.18,
+          "min": 110,
+          "align": "left",
+          "cell": "cfdRequester"
+        },
+        {
+          "key": "received",
+          "type": "date",
+          "role": "date",
+          "share": 0.14,
+          "min": 96,
+          "align": "right",
+          "cell": "cfdReceived"
+        },
+        {
+          "key": "value",
+          "type": "text",
+          "role": "number",
+          "share": 0.12,
+          "min": 70,
+          "align": "right",
+          "cell": "cfdValue"
+        },
+        {
+          "key": "promote",
+          "type": "pill",
+          "role": "badge",
+          "share": 0.12,
+          "min": 84,
+          "align": "center",
+          "cell": "cfdPromote"
+        },
+        {
+          "key": "reject",
+          "type": "pill",
+          "role": "badge",
+          "share": 0.12,
+          "min": 84,
+          "align": "center",
+          "cell": "cfdReject"
+        }
+      ]
+    },
+    {
+      "id": "command-spikes",
+      "screen": "scrCommand.pa.yaml",
+      "row": "cmdSpikeList",
+      "padding": "Pad * 2",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "title",
+          "type": "text",
+          "role": "name",
+          "share": 0.58,
+          "min": 220,
+          "align": "left",
+          "cell": "spTitle"
+        },
+        {
+          "key": "timebox",
+          "type": "text",
+          "role": "meta",
+          "share": 0.24,
+          "min": 130,
+          "align": "right",
+          "cell": "spTimebox"
+        },
+        {
+          "key": "conclude",
+          "type": "pill",
+          "role": "badge",
+          "share": 0.18,
+          "min": 90,
+          "align": "center",
+          "cell": "spConclude"
+        }
+      ]
+    },
+    {
+      "id": "settings-states",
+      "screen": "scrSettings.pa.yaml",
+      "head": "stHeadStates",
+      "row": "stStatesList",
+      "padding": "0",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "state",
+          "type": "text",
+          "role": "name",
+          "share": 0.3,
+          "min": 200,
+          "align": "left",
+          "header": "stHdFirstStates",
+          "cell": "stCellStName"
+        },
+        {
+          "key": "jira",
+          "type": "text",
+          "role": "meta",
+          "share": 0.34,
+          "min": 220,
+          "align": "left",
+          "header": "stHdStatesJira",
+          "cell": "stCellStJira"
+        },
+        {
+          "key": "impact",
+          "type": "text",
+          "role": "text",
+          "share": 0.24,
+          "min": 150,
+          "align": "left",
+          "header": "stHdStatesImpact",
+          "cell": "stCellStImpact"
+        },
+        {
+          "key": "order",
+          "type": "number",
+          "role": "number",
+          "share": 0.12,
+          "min": 80,
+          "align": "right",
+          "header": "stHdStatesOrder",
+          "cell": "stCellStOrder"
+        }
+      ]
+    },
+    {
+      "id": "settings-lists",
+      "screen": "scrSettings.pa.yaml",
+      "head": "stHeadLists",
+      "row": "stListsList",
+      "padding": "0",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "list",
+          "type": "text",
+          "role": "meta",
+          "share": 0.2,
+          "min": 150,
+          "align": "left",
+          "header": "stHdListsList",
+          "cell": "stCellLvList"
+        },
+        {
+          "key": "value",
+          "type": "text",
+          "role": "name",
+          "share": 0.6,
+          "min": 240,
+          "align": "left",
+          "header": "stHdFirstLists",
+          "cell": "stCellLvValue"
+        },
+        {
+          "key": "order",
+          "type": "number",
+          "role": "number",
+          "share": 0.2,
+          "min": 80,
+          "align": "right",
+          "header": "stHdListsOrder",
+          "cell": "stCellLvOrder"
+        }
+      ]
+    },
+    {
+      "id": "settings-grades",
+      "screen": "scrSettings.pa.yaml",
+      "head": "stHeadGrades",
+      "row": "stGradesList",
+      "padding": "0",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "grade",
+          "type": "text",
+          "role": "name",
+          "share": 0.55,
+          "min": 220,
+          "align": "left",
+          "header": "stHdFirstGrades",
+          "cell": "stCellGrName"
+        },
+        {
+          "key": "rate",
+          "type": "number",
+          "role": "money",
+          "share": 0.45,
+          "min": 160,
+          "align": "right",
+          "header": "stHdGradesRate",
+          "cell": "stCellGrRate"
+        }
+      ]
+    },
+    {
+      "id": "settings-blends",
+      "screen": "scrSettings.pa.yaml",
+      "head": "stHeadBlends",
+      "row": "stBlendsList",
+      "padding": "0",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "blend",
+          "type": "text",
+          "role": "name",
+          "share": 0.3,
+          "min": 200,
+          "align": "left",
+          "header": "stHdFirstBlends",
+          "cell": "stCellBlName"
+        },
+        {
+          "key": "mix",
+          "type": "text",
+          "role": "meta",
+          "share": 0.5,
+          "min": 260,
+          "align": "left",
+          "header": "stHdBlendsMix",
+          "cell": "stCellBlMix"
+        },
+        {
+          "key": "heads",
+          "type": "number",
+          "role": "number",
+          "share": 0.2,
+          "min": 90,
+          "align": "right",
+          "header": "stHdBlendsHeads",
+          "cell": "stCellBlHeads"
+        }
+      ]
+    },
+    {
+      "id": "settings-outcomes",
+      "screen": "scrSettings.pa.yaml",
+      "head": "stHeadOutcomes",
+      "row": "stOutcomesList",
+      "padding": "0",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "outcome",
+          "type": "text",
+          "role": "name",
+          "share": 0.6,
+          "min": 240,
+          "align": "left",
+          "header": "stHdFirstOutcomes",
+          "cell": "stCellOuName"
+        },
+        {
+          "key": "key",
+          "type": "text",
+          "role": "meta",
+          "share": 0.4,
+          "min": 160,
+          "align": "left",
+          "header": "stHdOutcomesKey",
+          "cell": "stCellOuKey"
+        }
+      ]
+    },
+    {
+      "id": "settings-activity",
+      "screen": "scrSettings.pa.yaml",
+      "head": "stHeadActivity",
+      "row": "stActivityList",
+      "padding": "0",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "what",
+          "type": "stack",
+          "role": "name",
+          "share": 0.4,
+          "min": 280,
+          "align": "left",
+          "header": "stHdFirstActivity",
+          "cell": [
+            "stCellAcLabel",
+            "stCellAcSummary"
+          ]
+        },
+        {
+          "key": "action",
+          "type": "text",
+          "role": "text",
+          "share": 0.18,
+          "min": 110,
+          "align": "left",
+          "header": "stHdActivityAction",
+          "cell": "stCellAcAction"
+        },
+        {
+          "key": "table",
+          "type": "text",
+          "role": "meta",
+          "share": 0.22,
+          "min": 130,
+          "align": "left",
+          "header": "stHdActivityTable",
+          "cell": "stCellAcTable"
+        },
+        {
+          "key": "when",
+          "type": "text",
+          "role": "meta",
+          "share": 0.2,
+          "min": 150,
+          "align": "right",
+          "header": "stHdActivityWhen",
+          "cell": "stCellAcWhen"
+        }
+      ]
+    },
+    {
+      "id": "front-door-queue",
+      "screen": "scrFrontDoor.pa.yaml",
+      "head": "fdScreenHead",
+      "row": "fdScreenList",
+      "padding": "Pad * 2",
+      "gap": 8,
+      "columns": [
+        {
+          "key": "raised",
+          "type": "date",
+          "role": "date",
+          "share": 0.1,
+          "min": 100,
+          "align": "left",
+          "header": "fdScreenHeadRaised",
+          "cell": "fdScreenRowRaised"
+        },
+        {
+          "key": "requester",
+          "type": "text",
+          "role": "text",
+          "share": 0.16,
+          "min": 130,
+          "align": "left",
+          "header": "fdScreenHeadRequester",
+          "cell": "fdScreenRowRequester"
+        },
+        {
+          "key": "area",
+          "type": "text",
+          "role": "text",
+          "share": 0.12,
+          "min": 100,
+          "align": "left",
+          "header": "fdScreenHeadArea",
+          "cell": "fdScreenRowArea"
+        },
+        {
+          "key": "product",
+          "type": "text",
+          "role": "text",
+          "share": 0.13,
+          "min": 110,
+          "align": "left",
+          "header": "fdScreenHeadProduct",
+          "cell": "fdScreenRowProduct"
+        },
+        {
+          "key": "title",
+          "type": "text",
+          "role": "name",
+          "share": 0.26,
+          "min": 220,
+          "align": "left",
+          "header": "fdScreenHeadTitle",
+          "cell": "fdScreenRowTitle"
+        },
+        {
+          "key": "urgency",
+          "type": "text",
+          "role": "text",
+          "share": 0.11,
+          "min": 90,
+          "align": "left",
+          "header": "fdScreenHeadUrgency",
+          "cell": "fdScreenRowUrgency"
+        },
+        {
+          "key": "status",
+          "type": "badge",
+          "role": "badge",
+          "share": 0.12,
+          "min": 100,
+          "align": "center",
+          "header": "fdScreenHeadStatus",
+          "cell": "fdScreenRowStatus"
+        }
+      ]
+    }
+  ],
+  "pending": [
+    "scrBenefits.pa.yaml: the rollup and the types table, whose numeric columns are fixed pixels",
+    "with the name column taking the remainder: the compiler takes shares only"
+  ]
+}

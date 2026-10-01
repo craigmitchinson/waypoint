@@ -1,0 +1,18 @@
+{
+  "_comment": "Craig's organisation's bank holiday policy, layered onto the seed's bankHolidays rows by build-data.mjs. The seed itself is never edited: the parity tests read it as the workbook's own list. Wales has no rows here; the app derives Wales from England at read time.",
+  "table": "wp_bankholiday",
+  "derive": [
+    {
+      "region": "Scotland",
+      "from": "England",
+      "remove": ["St Andrew's Day"],
+      "add": {
+        "name": "2nd January",
+        "month": 1,
+        "day": 2,
+        "substituteSuffix": " (substitute)"
+      }
+    }
+  ],
+  "dedupe": ["name", "date", "region"]
+}

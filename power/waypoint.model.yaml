@@ -1,0 +1,1088 @@
+# Waypoint on Dataverse: the neutral data model.
+#
+# This file is the single source of truth for the tables. data-model.md explains it, build-guide.md
+# builds it. Every column names the field in src/model/types.ts it comes from, so the mock and the
+# Dataverse solution can be read side by side.
+#
+# Conventions
+#   - Publisher prefix wp, all logical names lower case, no spaces.
+#   - "computedIn: app" means the value is never stored; a Power Fx named formula or user-defined
+#     function works it out at read time. "computedIn: dataverse" means a calculated or rollup column.
+#     "computedIn: flow" means a Power Automate flow or low-code plugin writes it.
+#   - The mock keys records by name (person name, work item title, squad name). Dataverse keys by GUID
+#     and keeps the name as an alternate key, so the app can still look a record up by the text the
+#     workbook uses.
+
+model:
+  name: Waypoint
+  version: "2.0"
+  publisherPrefix: wp
+  publisherName: CCS Intelligent Process Automation
+  solution: WaypointCapacityPlanner
+  language: en-GB
+  ownership: >-
+    Every business table is user or team owned except the reference tables (WorkState, GradeRate,
+    GradeBlend, Size, ListValue, BankHoliday, Setting), which are organisation owned.
+
+# ---------------------------------------------------------------------------
+# Global choice sets. The labels are the literal strings the engine compares against
+# (src/store/validate.ts and src/seed/seed.json); the numeric values are ours.
+#
+# Deviation in the built solution: scripts/build-solution.mjs writes these as local option sets on
+# each choice column, not as global choice sets, because the target environment rejects the global
+# <optionsets> block. Labels and values are unchanged; a set used by two columns is written twice.
+# power/solution/README.md records this and the other import deviations (alternate keys are made by
+# hand in the maker portal, and every lookup relationship carries a description).
+# ---------------------------------------------------------------------------
+choices:
+  wp_workkind:
+    displayName: Work kind
+    source: WorkKind in types.ts; KINDS in validate.ts
+    values:
+      100000000: Feature
+      100000001: Spike
+      100000002: Component
+
+  wp_workphase:
+    displayName: Work phase
+    source: WorkPhase in types.ts; phaseOf() in validate.ts
+    values:
+      100000000: Shaping
+      100000001: Assessment
+      100000002: Delivery
+      100000003: Release
+      100000004: Validated
+      100000005: Stopped
+    note: >-
+      The mock allows "" for an item with no phase. In Dataverse the column is simply empty, and
+      phaseOf() still derives the phase from the state for the seven states it names.
+
+  wp_worksource:
+    displayName: Work source
+    source: wp_source in power/design-work-flow-rev2.md, section 5
+    values:
+      100000000: Front door
+      100000001: Direct
+      100000002: Jira
+
+  wp_capacityimpact:
+    displayName: Capacity impact
+    source: CapacityImpact in types.ts; STATE_ROWS in seed.json
+    values:
+      100000000: None
+      100000001: Reserved
+      100000002: Allocated
+      100000003: Consumed
+      100000004: Historical
+      100000005: Hold
+      100000006: Removed
+    note: >-
+      The seed ships no state with the Allocated impact, but counts() tests for it, so the value stays.
+
+  wp_commitment:
+    displayName: Commitment
+    source: Commitment in types.ts; WorkItem.proposed
+    values:
+      100000000: Proposed
+      100000001: Committed
+
+  wp_spikeoutcome:
+    displayName: Spike outcome
+    source: SpikeOutcome in types.ts; SPIKE_OUTCOMES in validate.ts
+    values:
+      100000000: Feasible
+      100000001: Not feasible
+      100000002: More discovery
+
+  wp_employment:
+    displayName: Employment
+    source: EMPLOYMENTS in validate.ts
+    values:
+      100000000: Permanent
+      100000001: NPW
+      100000002: Open vacancy
+
+  wp_teamgrade:
+    displayName: Team grade
+    source: TEAM_GRADES in validate.ts
+    values:
+      100000000: C
+      100000001: D
+      100000002: E
+      100000003: F
+
+  wp_benefittype:
+    displayName: Benefit type
+    source: BENEFIT_TYPES in validate.ts
+    values:
+      100000000: FTE released
+      100000001: Cost avoidance
+      100000002: Cycle-time cut
+      100000003: Error reduction
+      100000004: Throughput
+      100000005: Compliance / risk
+      100000006: CX / EX uplift
+
+  wp_claimcolumn:
+    displayName: Workbook Benefits column
+    source: CLAIM_COLUMN in validate.ts
+    values:
+      100000000: T
+      100000001: U
+      100000002: V
+      100000003: W
+      100000004: X
+      100000005: Y
+    note: FTE released has no column; it is the claimedFTE field on Work.
+
+  wp_month:
+    displayName: Month
+    source: MONTHS in src/engine/dates.ts
+    values:
+      100000001: Jan
+      100000002: Feb
+      100000003: Mar
+      100000004: Apr
+      100000005: May
+      100000006: Jun
+      100000007: Jul
+      100000008: Aug
+      100000009: Sep
+      100000010: Oct
+      100000011: Nov
+      100000012: Dec
+    note: The value is the month number plus 100000000, so claimMonth() is value minus 100000000.
+
+  wp_deliverystatus:
+    displayName: Delivery status
+    source: DeliveryStatus in src/engine/delivery.ts
+    values:
+      100000001: On track
+      100000002: Done on time
+      100000003: Done, sprint unknown
+      100000004: Done late
+      100000005: At risk
+      100000006: At risk (capacity)
+      100000007: Late
+    note: >-
+      The last digit is STATUS_RANK, so the parent roll-up is Max() over the children. Never stored:
+      the app works the status out on read.
+
+  wp_listname:
+    displayName: Settings list
+    source: LISTS in validate.ts
+    values:
+      100000000: Skill
+      100000001: Region
+      100000002: Absence type
+      100000003: Reservation category
+      100000004: Role
+    note: >-
+      Role is not one of the mock's four editable lists. It is the roster's job titles, each with the
+      team grade it maps to in wp_grade, seeded from the people.
+
+  wp_archivekind:
+    displayName: Archive row kind
+    source: ArchiveRow.kind in types.ts
+    values:
+      100000000: Work
+      100000001: Reservation
+
+  wp_fundingline:
+    displayName: Funding line
+    source: FUNDING_LINES in validate.ts
+    values:
+      100000000: Investment
+      100000001: Non-investment
+
+  wp_costtable:
+    displayName: Cost table
+    source: COST_LINE_TABLES in validate.ts
+    values:
+      100000000: Licences and subscriptions
+      100000001: Infrastructure and other
+
+  wp_importsource:
+    displayName: Import source
+    source: ImportSource in src/import/mapping.ts
+    values:
+      100000000: Workday
+      100000001: Jira
+
+  wp_activityaction:
+    displayName: Activity action
+    source: New. The mock labels each commit in Dataset.log; Dataverse classifies it as well.
+    values:
+      100000000: Create
+      100000001: Update
+      100000002: Delete
+      100000003: Import
+      100000004: Quarter close
+      100000005: Stage action
+
+  wp_productline:
+    displayName: Product line
+    source: New. The front door form asks which tool the requester has in mind.
+    values:
+      100000000: Blue Prism
+      100000001: Power Automate
+      100000002: Power Apps
+      100000003: Copilot Studio
+      100000004: Other
+    note: Other opens the free-text wp_productlineother, which is the only place a fifth tool is named.
+
+  wp_frequency:
+    displayName: Frequency
+    source: New. Question 11 of the question bank.
+    values:
+      100000000: Daily
+      100000001: Weekly
+      100000002: Monthly
+      100000003: Quarterly
+      100000004: Annually
+      100000005: Ad hoc
+
+  wp_datasensitivity:
+    displayName: Data sensitivity
+    source: New. Question 15 of the question bank.
+    values:
+      100000000: None personal
+      100000001: Personal
+      100000002: Special category
+      100000003: Financial
+
+  wp_urgency:
+    displayName: Urgency
+    source: New. Question 21 of the question bank.
+    values:
+      100000000: No fixed date
+      100000001: Next quarter
+      100000002: This quarter
+      100000003: Immediate
+
+  wp_requeststatus:
+    displayName: Request status
+    source: New. The front door lifecycle in design-front-door.md.
+    values:
+      100000000: New
+      100000001: Screened
+      100000002: Promoted
+      100000003: Declined
+    note: >-
+      The product owner owns every move after New. Promoted means wp_promotedtoid points at a work
+      item; Declined means both wp_declinecategory and wp_declinereason are filled in.
+
+# ---------------------------------------------------------------------------
+# Tables
+# ---------------------------------------------------------------------------
+tables:
+
+  - logicalName: wp_platform
+    displayName: Platform
+    displayCollectionName: Platforms
+    source: New. The hierarchy in power/design-front-door.md, section 2.
+    primaryColumn: wp_name
+    description: >-
+      The top of the hierarchy. A platform holds labs, a lab holds teams, a team holds squads. One
+      row today, Intelligent Process Automation.
+    columns:
+      - { schemaName: wp_name, displayName: Platform, type: text, maxLength: 100, required: true, source: New, description: The name the scope selector shows at platform scope. }
+      - { schemaName: wp_code, displayName: Code, type: text, maxLength: 20, required: false, source: New, description: A short code for reporting, such as IPA. }
+      - { schemaName: wp_description, displayName: Description, type: memo, maxLength: 1000, required: false, source: New }
+      - { schemaName: wp_ownerid, displayName: Platform owner, type: lookup, target: wp_person, required: false, source: New, description: The person accountable for the platform. Not the Dataverse record owner. }
+      - { schemaName: wp_sequence, displayName: Order, type: whole, required: false, source: New, description: Display order in the scope selector. }
+      - { schemaName: wp_active, displayName: Active, type: boolean, required: true, source: New, description: An inactive platform is hidden from the scope selector and kept for history. }
+    alternateKeys:
+      - { name: wp_platform_name, columns: [wp_name] }
+    relationships:
+      - { type: lookup, from: wp_platform.wp_ownerid, to: wp_person, cascade: { delete: RemoveLink }, note: A platform without a named owner is allowed. }
+
+  - logicalName: wp_lab
+    displayName: Lab
+    displayCollectionName: Labs
+    source: New. The hierarchy in power/design-front-door.md, section 2.
+    primaryColumn: wp_name
+    description: A lab inside a platform. It holds teams, and the roll-ups at lab scope sum them.
+    columns:
+      - { schemaName: wp_name, displayName: Lab, type: text, maxLength: 100, required: true, source: New }
+      - { schemaName: wp_platformid, displayName: Platform, type: lookup, target: wp_platform, required: true, source: New, description: The platform the lab sits in. Every lab has one. }
+      - { schemaName: wp_leadid, displayName: Lead, type: lookup, target: wp_person, required: false, source: New, description: The person who leads the lab. }
+      - { schemaName: wp_description, displayName: Description, type: memo, maxLength: 1000, required: false, source: New }
+      - { schemaName: wp_sequence, displayName: Order, type: whole, required: false, source: New }
+      - { schemaName: wp_active, displayName: Active, type: boolean, required: true, source: New }
+    alternateKeys:
+      - { name: wp_lab_name, columns: [wp_name] }
+    relationships:
+      - { type: lookup, from: wp_lab.wp_platformid, to: wp_platform, cascade: { assign: Cascade, delete: Restrict, reparent: Cascade }, note: A platform cannot be deleted out from under its labs. }
+      - { type: lookup, from: wp_lab.wp_leadid, to: wp_person, cascade: { delete: RemoveLink } }
+
+  - logicalName: wp_team
+    displayName: Team
+    displayCollectionName: Teams
+    source: New. The hierarchy in power/design-front-door.md, section 2.
+    primaryColumn: wp_name
+    description: >-
+      The unit the planner plans. A team holds squads, and every row the plan is made of carries the
+      team it belongs to. Waypoint as shipped is one team.
+    columns:
+      - { schemaName: wp_name, displayName: Team, type: text, maxLength: 100, required: true, source: New }
+      - { schemaName: wp_labid, displayName: Lab, type: lookup, target: wp_lab, required: true, source: New, description: The lab the team sits in. Every team has one. }
+      - { schemaName: wp_leadid, displayName: Lead, type: lookup, target: wp_person, required: false, source: New, description: The person who leads the team. }
+      - { schemaName: wp_description, displayName: Description, type: memo, maxLength: 1000, required: false, source: New }
+      - { schemaName: wp_productlines, displayName: Product lines, type: memo, maxLength: 400, required: false, source: New, description: Semicolon separated, the tools this team builds with. Matches the wp_productline labels. }
+      - { schemaName: wp_sequence, displayName: Order, type: whole, required: false, source: New }
+      - { schemaName: wp_active, displayName: Active, type: boolean, required: true, source: New }
+    alternateKeys:
+      - { name: wp_team_name, columns: [wp_name] }
+    relationships:
+      - { type: lookup, from: wp_team.wp_labid, to: wp_lab, cascade: { assign: Cascade, delete: Restrict, reparent: Cascade }, note: A lab cannot be deleted out from under its teams. }
+      - { type: lookup, from: wp_team.wp_leadid, to: wp_person, cascade: { delete: RemoveLink } }
+
+  - logicalName: wp_person
+    displayName: Person
+    displayCollectionName: People
+    source: Person in types.ts
+    primaryColumn: wp_name
+    description: A member of the team, and everything capacity needs to know about them.
+    columns:
+      - { schemaName: wp_name, displayName: Full name, type: text, maxLength: 100, required: true, source: Person.name, description: The name every other table refers to the person by in the mock. }
+      - { schemaName: wp_role, displayName: Role, type: text, maxLength: 100, required: false, source: Person.role, description: Job title as the roster writes it. }
+      - { schemaName: wp_grade, displayName: Team grade, type: choice, choiceSet: wp_teamgrade, required: false, source: Person.grade, description: C to F. Drives the team cost, not the benefit rate. }
+      - { schemaName: wp_squadid, displayName: Squad, type: lookup, target: wp_squad, required: false, source: Person.squad, description: Blank means unsquadded; net capacity only counts people on a squad. }
+      - { schemaName: wp_regionid, displayName: Region, type: lookup, target: wp_listvalue, required: true, source: Person.region, description: Decides which bank holidays come off the person. Filtered to list = Region. }
+      - { schemaName: wp_employment, displayName: Employment, type: choice, choiceSet: wp_employment, required: true, source: Person.employment, description: An Open vacancy brings zero net MW. }
+      - { schemaName: wp_lead, displayName: Lead, type: boolean, required: true, source: Person.lead, description: A lead takes the lead modifier rather than the default. }
+      - { schemaName: wp_skills, displayName: Skills, type: memo, maxLength: 400, required: false, source: Person.skills, description: "Semicolon separated, first entry is the primary skill. Alternative: an N:N to ListValue where skills need reporting on." }
+      - { schemaName: wp_coreid, displayName: Core ID, type: text, maxLength: 40, required: false, source: Person.coreId, description: Workday Core ID. First thing an import matches on. }
+      - { schemaName: wp_fileid, displayName: File ID, type: text, maxLength: 40, required: false, source: Person.fileId, description: Workday File ID, matched alongside the Core ID. }
+      - { schemaName: wp_email, displayName: Email, type: text, format: email, maxLength: 200, required: false, source: Person.email, description: Second thing an import matches on. }
+      - { schemaName: wp_jiraaccountid, displayName: Jira account ID, type: text, maxLength: 60, required: false, source: Person.jiraAccountId, description: Matched with the IDs, not separately. }
+      - { schemaName: wp_daysperweek, displayName: Days per week, type: decimal, precision: 2, min: 0, max: 5, required: false, source: Person.daysPerWeek, description: Empty means the Settings MW days (5). Scales working days, bank holidays and absence alike. }
+      - { schemaName: wp_modifieroverride, displayName: Modifier override, type: decimal, precision: 4, min: 0, max: 1, required: false, source: Person.modifierOverride, description: Overrides the default and lead modifiers for this person. }
+      - { schemaName: wp_startdate, displayName: Start date, type: date, required: false, source: Person.startDate, description: Date only, time zone independent. }
+      - { schemaName: wp_enddate, displayName: End date, type: date, required: false, source: Person.endDate, description: Date only, time zone independent. }
+      - { schemaName: wp_systemuserid, displayName: User, type: lookup, target: systemuser, required: false, source: New, description: Links the person to the signed-in user, so "my work" filters and the Squad member role work. }
+      - { schemaName: wp_netmw, displayName: Net MW (quarter), type: decimal, precision: 4, required: false, computedIn: app, source: netMW() in capacity.ts, description: Not stored. The close flow writes the squad totals onto the QuarterSnapshot. }
+      - { schemaName: wp_teamid, displayName: Team, type: lookup, target: wp_team, required: true, source: New, description: The team the row belongs to. }
+    alternateKeys:
+      - { name: wp_person_name, columns: [wp_name] }
+      - { name: wp_person_coreid, columns: [wp_coreid], note: Only where Core IDs are always present; otherwise match in the flow. }
+    relationships:
+      - { type: lookup, from: wp_person.wp_squadid, to: wp_squad, cascade: { assign: Cascade, delete: RemoveLink, reparent: Cascade, share: NoCascade, unshare: NoCascade }, note: Deleting a squad must not delete its people. }
+      - { type: lookup, from: wp_person.wp_regionid, to: wp_listvalue, cascade: { delete: Restrict }, note: validate.ts refuses to remove a region still used by a person. }
+      - { type: lookup, from: wp_person.wp_teamid, to: wp_team, cascade: { delete: Restrict }, note: The team the row belongs to. }
+
+  - logicalName: wp_squad
+    displayName: Squad
+    displayCollectionName: Squads
+    source: Squad in types.ts
+    primaryColumn: wp_name
+    description: A delivery squad. Capacity, utilisation and reservations are reported per squad.
+    columns:
+      - { schemaName: wp_name, displayName: Squad name, type: text, maxLength: 100, required: true, source: Squad.name }
+      - { schemaName: wp_leadid, displayName: Lead, type: lookup, target: wp_person, required: false, source: Squad.lead, description: The person who leads it. }
+      - { schemaName: wp_remit, displayName: Remit, type: memo, maxLength: 1000, required: false, source: Squad.remit }
+      - { schemaName: wp_colour, displayName: Palette colour, type: text, maxLength: 40, required: true, source: Squad.colour, description: A palette name, not a literal colour. The app maps it onto a theme token. }
+      - { schemaName: wp_netmw, displayName: Net MW, type: decimal, precision: 4, computedIn: app, source: squadNetMW() in capacity.ts, description: Sum of the net MW of its people. Depends on absence, so not a Dataverse rollup. }
+      - { schemaName: wp_committedmw, displayName: Committed MW, type: decimal, precision: 4, computedIn: app, source: squadCommittedMW() in work.ts }
+      - { schemaName: wp_utilisation, displayName: Utilisation, type: decimal, precision: 6, computedIn: app, source: "compute() squads.rows[].utilisation" }
+      - { schemaName: wp_teamid, displayName: Team, type: lookup, target: wp_team, required: true, source: New, description: The team the row belongs to. }
+    alternateKeys:
+      - { name: wp_squad_name, columns: [wp_name] }
+    relationships:
+      - { type: lookup, from: wp_squad.wp_leadid, to: wp_person, cascade: { delete: RemoveLink }, note: A squad without a lead is allowed; the Team page says so. }
+      - { type: lookup, from: wp_squad.wp_teamid, to: wp_team, cascade: { assign: Cascade, delete: Restrict, reparent: Cascade }, note: The team the row belongs to. }
+
+  - logicalName: wp_workitem
+    displayName: Work item
+    displayCollectionName: Work items
+    source: WorkItem in types.ts
+    primaryColumn: wp_title
+    description: A feature, spike or component. The register the whole plan hangs off.
+    columns:
+      - { schemaName: wp_title, displayName: Title, type: text, maxLength: 200, required: true, source: WorkItem.title, description: Unique, case insensitive. validate.ts refuses a duplicate. }
+      - { schemaName: wp_kind, displayName: Kind, type: choice, choiceSet: wp_workkind, required: true, source: WorkItem.kind }
+      - { schemaName: wp_phase, displayName: Phase, type: choice, choiceSet: wp_workphase, required: false, source: WorkItem.phase, description: Stored, but phaseOf() derives it from the state where the state names one. }
+      - { schemaName: wp_source, displayName: Source, type: choice, choiceSet: wp_worksource, required: false, source: New, description: How the item arrived. Front door for a promoted request, Direct for the new-work form, Jira for an import. Editable after creation. }
+      - { schemaName: wp_stateid, displayName: State, type: lookup, target: wp_workstate, required: true, source: WorkItem.state, description: A lookup, not a choice, because Settings lets the team edit the state model and its impacts. }
+      - { schemaName: wp_parentid, displayName: Part of, type: lookup, target: wp_workitem, required: false, source: WorkItem.parent, description: Self-lookup. One level only, and the parent must be a Feature. }
+      - { schemaName: wp_epicid, displayName: Epic, type: lookup, target: wp_epic, required: false, source: WorkItem.epic }
+      - { schemaName: wp_squadid, displayName: Squad, type: lookup, target: wp_squad, required: false, source: WorkItem.squad }
+      - { schemaName: wp_skillid, displayName: Skill, type: lookup, target: wp_listvalue, required: false, source: WorkItem.skill, description: Filtered to list = Skill. }
+      - { schemaName: wp_sizeid, displayName: Size, type: lookup, target: wp_size, required: false, source: WorkItem.size, description: XS to XXL; the band carries the MW. }
+      - { schemaName: wp_sizeoverride, displayName: MW override, type: decimal, precision: 2, min: 0, required: false, source: WorkItem.sizeOverride, description: A typed total MW that replaces the band. }
+      - { schemaName: wp_priority, displayName: Priority, type: text, maxLength: 40, required: false, source: WorkItem.priority }
+      - { schemaName: wp_confidence, displayName: Confidence, type: text, maxLength: 40, required: false, source: WorkItem.confidence }
+      - { schemaName: wp_commitment, displayName: Commitment, type: choice, choiceSet: wp_commitment, required: true, source: "WorkItem.proposed, inverted", description: "Stored as a choice because the forms read it as a word. commitment() still overrides it to Proposed when the state is Identified or In discovery." }
+      - { schemaName: wp_startsprint, displayName: Start sprint, type: whole, min: 1, required: false, source: WorkItem.startSprint }
+      - { schemaName: wp_endsprint, displayName: End sprint, type: whole, min: 1, required: false, source: WorkItem.endSprint }
+      - { schemaName: wp_spanstart, displayName: Absolute start sprint, type: whole, required: false, source: "WorkItem.span[0]", description: The sprint number once the seed's quarter offset is applied. The engine reads span, never startSprint. }
+      - { schemaName: wp_spanend, displayName: Absolute end sprint, type: whole, required: false, source: "WorkItem.span[1]" }
+      - { schemaName: wp_assessedbyid, displayName: Assessed by, type: lookup, target: wp_person, required: false, source: WorkItem.assessedBy }
+      - { schemaName: wp_assessedon, displayName: Assessed on, type: date, format: DateAndTime, required: false, source: New, description: Stamped when the assessment is recorded. }
+      - { schemaName: wp_validatedon, displayName: Validated on, type: date, format: DateAndTime, required: false, source: New, description: Stamped when every benefit claim has an actual and the item is validated. }
+      - { schemaName: wp_productownerid, displayName: Product owner, type: lookup, target: wp_person, required: false, source: WorkItem.productOwner }
+      - { schemaName: wp_jira, displayName: Jira key, type: text, maxLength: 40, required: false, source: WorkItem.jira, description: The key a Jira import matches on. Unique where present. }
+      - { schemaName: wp_jiraalign, displayName: Jira Align ID, type: text, maxLength: 40, required: false, source: WorkItem.jiraAlign }
+      - { schemaName: wp_claimedfte, displayName: FTE released, type: decimal, precision: 2, required: false, source: WorkItem.claimedFTE, description: The primary benefit. Needs a landing month, a landing year and a business grade. }
+      - { schemaName: wp_landingmonth, displayName: Landing month, type: choice, choiceSet: wp_month, required: false, source: WorkItem.landingMonth }
+      - { schemaName: wp_landingyear, displayName: Landing year, type: whole, min: 2020, max: 2040, required: false, source: WorkItem.landingYear }
+      - { schemaName: wp_gradeid, displayName: Business grade, type: lookup, target: wp_graderate, required: false, source: WorkItem.grade, description: The grade whose rate values the released FTE. }
+      - { schemaName: wp_gradeblendid, displayName: Grade blend, type: lookup, target: wp_gradeblend, required: false, source: "WorkItem.grade, where the name is a blend", description: At most one of Business grade and Grade blend is set. The mock keeps one text field, which is why validate.ts has to police name collisions between the two lists. }
+      - { schemaName: wp_cancelreason, displayName: Cancellation reason, type: memo, maxLength: 1000, required: false, source: WorkItem.cancelReason, description: Required when the state's impact is Removed. }
+      - { schemaName: wp_stoppedreason, displayName: Stopped reason, type: memo, maxLength: 1000, required: false, source: New, description: Required when the item is stopped. Cleared on Reopen. }
+      - { schemaName: wp_originalestimate, displayName: Original estimate (MW), type: decimal, precision: 2, required: false, source: WorkItem.originalEstimate }
+      - { schemaName: wp_actualeffort, displayName: Actual effort (MW), type: decimal, precision: 2, required: false, source: WorkItem.actualEffort }
+      - { schemaName: wp_doneinsprint, displayName: Done in sprint, type: whole, required: false, source: WorkItem.doneInSprint }
+      - { schemaName: wp_dependsonid, displayName: Depends on, type: lookup, target: wp_workitem, required: false, source: WorkItem.dependsOn, description: Second self-lookup. Cannot be the item itself. }
+      - { schemaName: wp_archivedinquarter, displayName: Archived in quarter, type: lookup, target: wp_quarter, required: false, source: WorkItem.archivedInQuarter, description: The close stamps it and reads it as its own guard against archiving twice. }
+      - { schemaName: wp_question, displayName: Spike question, type: memo, maxLength: 1000, required: false, source: WorkItem.question }
+      - { schemaName: wp_timeboxsprints, displayName: Timebox (sprints), type: whole, min: 1, required: false, source: WorkItem.timeboxSprints }
+      - { schemaName: wp_spikeoutcome, displayName: Spike outcome, type: choice, choiceSet: wp_spikeoutcome, required: false, source: WorkItem.spikeOutcome, description: Empty while the spike is still running. }
+      - { schemaName: wp_findings, displayName: Findings, type: memo, maxLength: 4000, required: false, source: WorkItem.findings }
+      - { schemaName: wp_convertedtoid, displayName: Converted to, type: lookup, target: wp_workitem, required: false, source: WorkItem.convertedTo, description: The feature a feasible spike became. Third self-lookup. }
+      - { schemaName: wp_convertedfromid, displayName: Converted from, type: lookup, target: wp_workitem, required: false, source: WorkItem.convertedFrom, description: The spike a feature came out of. Fourth self-lookup, kept because the mock stores both directions and the Close page reads them separately. }
+      - { schemaName: wp_notes, displayName: Notes, type: memo, maxLength: 4000, required: false, source: WorkItem.notes }
+      - { schemaName: wp_childcount, displayName: Component count, type: whole, computedIn: dataverse, rollup: "COUNT of wp_workitem where wp_parentid = this", source: ctx.kids in context.ts, description: A rollup, so a feature knows whether it has components without reading them. Rollups refresh hourly, so the screens recount from their collection. }
+      - { schemaName: wp_ownmw, displayName: Own MW, type: decimal, precision: 2, computedIn: dataverse, calculated: "If(IsNotNull(wp_sizeoverride), wp_sizeoverride, wp_sizeid.wp_mw)", source: ownMW() in work.ts, description: A calculated column can read a related field one hop away, which is all this needs. }
+      - { schemaName: wp_totalmw, displayName: Total MW, type: decimal, precision: 2, computedIn: dataverse, rollup: "SUM of child wp_ownmw", source: totalMW() in work.ts, description: Reporting only. The screens use the Power Fx version so the number never lags. }
+      - { schemaName: wp_workmw, displayName: MW this quarter, type: decimal, precision: 4, computedIn: app, source: workMW() in work.ts, description: Depends on the sprint grid and the quarter, so it cannot be a Dataverse calculated column. }
+      - { schemaName: wp_deliverystatus, displayName: Delivery status, type: choice, choiceSet: wp_deliverystatus, computedIn: app, source: deliveryStatuses() in delivery.ts }
+      - { schemaName: wp_teamid, displayName: Team, type: lookup, target: wp_team, required: true, source: New, description: The team the row belongs to. }
+    alternateKeys:
+      - { name: wp_workitem_title, columns: [wp_title] }
+      - { name: wp_workitem_jira, columns: [wp_jira], note: A Dataverse key treats blanks as equal, so use it only if every item carries a key; otherwise enforce uniqueness in the import flow. }
+    relationships:
+      - { type: lookup, from: wp_workitem.wp_parentid, to: wp_workitem, cascade: { assign: Cascade, delete: Restrict, reparent: Cascade }, note: Restrict, so a feature cannot be deleted out from under its components. }
+      - { type: lookup, from: wp_workitem.wp_dependsonid, to: wp_workitem, cascade: { delete: RemoveLink } }
+      - { type: lookup, from: wp_workitem.wp_convertedtoid, to: wp_workitem, cascade: { delete: RemoveLink } }
+      - { type: lookup, from: wp_workitem.wp_convertedfromid, to: wp_workitem, cascade: { delete: RemoveLink } }
+      - { type: lookup, from: wp_workitem.wp_stateid, to: wp_workstate, cascade: { delete: Restrict } }
+      - { type: lookup, from: wp_workitem.wp_squadid, to: wp_squad, cascade: { assign: Cascade, delete: RemoveLink } }
+      - { type: lookup, from: wp_workitem.wp_epicid, to: wp_epic, cascade: { delete: RemoveLink } }
+      - { type: lookup, from: wp_workitem.wp_teamid, to: wp_team, cascade: { delete: Restrict }, note: The team the row belongs to. }
+
+  - logicalName: wp_assignee
+    displayName: Assignee
+    displayCollectionName: Assignees
+    source: "WorkItem.assignees, which the workbook holds as asg1 to asg3"
+    primaryColumn: wp_name
+    description: >-
+      The mock keeps up to three assignees in an array on the work item. Dataverse gets a child table,
+      so the capacity check reads one row per person and the cap of three is a rule rather than a
+      column count. The slot is kept because the workbook's columns are ordered.
+    columns:
+      - { schemaName: wp_name, displayName: Name, type: text, maxLength: 260, required: true, source: Derived, description: "Work item title and person name, so the row reads in a grid." }
+      - { schemaName: wp_workitemid, displayName: Work item, type: lookup, target: wp_workitem, required: true, source: WorkItem.assignees }
+      - { schemaName: wp_personid, displayName: Person, type: lookup, target: wp_person, required: true, source: WorkItem.assignees }
+      - { schemaName: wp_slot, displayName: Slot, type: whole, min: 1, max: 3, required: true, source: "assignees index; MAX_ASSIGNEES = 3 in validate.ts" }
+      - { schemaName: wp_teamid, displayName: Team, type: lookup, target: wp_team, required: false, source: New, description: A copy of the parent team, written by the app on create and on reparent so a filter never needs two hops. }
+    alternateKeys:
+      - { name: wp_assignee_pair, columns: [wp_workitemid, wp_personid] }
+    relationships:
+      - { type: lookup, from: wp_assignee.wp_workitemid, to: wp_workitem, cascade: { assign: Cascade, delete: Cascade, reparent: Cascade }, note: Parental. Deleting the item removes its assignee rows. }
+      - { type: lookup, from: wp_assignee.wp_personid, to: wp_person, cascade: { delete: Restrict }, note: The mock refuses to remove a person who is still assigned and says why. }
+      - { type: lookup, from: wp_assignee.wp_teamid, to: wp_team, cascade: { delete: RemoveLink }, note: A copy of the parent team, written by the app on create and on reparent so a filter never needs two hops. }
+
+  - logicalName: wp_assignment
+    displayName: Assignment
+    displayCollectionName: Assignments
+    source: Assignment in types.ts
+    primaryColumn: wp_label
+    description: >-
+      A typed booking: work, or the non-work a person is really doing. A typed row stands in for the
+      automatic booking the sheet would otherwise write for an assignee.
+    columns:
+      - { schemaName: wp_label, displayName: Label, type: text, maxLength: 200, required: false, source: Assignment.label }
+      - { schemaName: wp_personid, displayName: Person, type: lookup, target: wp_person, required: true, source: Assignment.person }
+      - { schemaName: wp_workitemid, displayName: Work item, type: lookup, target: wp_workitem, required: false, source: Assignment.item, description: Blank for a booking against no item, such as BAU. }
+      - { schemaName: wp_typeid, displayName: Booking type, type: lookup, target: wp_listvalue, required: false, source: Assignment.type, description: "Reservation category for non-work bookings; blank for work bookings, which carry a work item instead." }
+      - { schemaName: wp_from, displayName: From, type: date, required: true, source: Assignment.from }
+      - { schemaName: wp_to, displayName: To, type: date, required: true, source: Assignment.to }
+      - { schemaName: wp_teamid, displayName: Team, type: lookup, target: wp_team, required: true, source: New, description: A copy of the parent team, written by the app on create and on reparent so a filter never needs two hops. }
+    alternateKeys: []
+    relationships:
+      - { type: lookup, from: wp_assignment.wp_personid, to: wp_person, cascade: { delete: RemoveLink }, note: "reservations.ts already tolerates an assignment naming a person who has gone: it draws nothing down." }
+      - { type: lookup, from: wp_assignment.wp_workitemid, to: wp_workitem, cascade: { delete: Cascade } }
+      - { type: lookup, from: wp_assignment.wp_teamid, to: wp_team, cascade: { delete: Restrict }, note: A copy of the parent team, written by the app on create and on reparent so a filter never needs two hops. }
+
+  - logicalName: wp_absence
+    displayName: Absence
+    displayCollectionName: Absences
+    source: Absence in types.ts
+    primaryColumn: wp_name
+    description: A person off, between two dates. Imported from Workday or typed on the Team page.
+    columns:
+      - { schemaName: wp_name, displayName: Name, type: text, maxLength: 200, required: true, source: Derived, description: "Person name and dates, so the row reads in a lookup." }
+      - { schemaName: wp_personid, displayName: Person, type: lookup, target: wp_person, required: true, source: Absence.person }
+      - { schemaName: wp_typeid, displayName: Absence type, type: lookup, target: wp_listvalue, required: true, source: Absence.type, description: Filtered to list = Absence type. isSickness() treats anything starting "sick" as sickness. }
+      - { schemaName: wp_from, displayName: From, type: date, required: true, source: Absence.from }
+      - { schemaName: wp_to, displayName: To, type: date, required: true, source: Absence.to }
+      - { schemaName: wp_note, displayName: Note, type: memo, maxLength: 1000, required: false, source: Absence.note }
+      - { schemaName: wp_sourcekey, displayName: Source key, type: text, maxLength: 200, required: false, source: "absenceKey() in src/import/workday.ts", description: "Person, from and to, lower cased: the key the importer dedupes on." }
+      - { schemaName: wp_importrunid, displayName: Import run, type: lookup, target: wp_importrun, required: false, source: New }
+      - { schemaName: wp_teamid, displayName: Team, type: lookup, target: wp_team, required: true, source: New, description: A copy of the parent team, written by the app on create and on reparent so a filter never needs two hops. }
+    alternateKeys:
+      - { name: wp_absence_dedupe, columns: [wp_personid, wp_from, wp_to], note: Exactly the key readWorkday() dedupes on. It makes the import flow idempotent. }
+    relationships:
+      - { type: lookup, from: wp_absence.wp_personid, to: wp_person, cascade: { assign: Cascade, delete: Cascade, reparent: Cascade }, note: Parental. The mock drops a person's absences with the person. }
+      - { type: lookup, from: wp_absence.wp_importrunid, to: wp_importrun, cascade: { delete: RemoveLink } }
+      - { type: lookup, from: wp_absence.wp_teamid, to: wp_team, cascade: { delete: Restrict }, note: A copy of the parent team, written by the app on create and on reparent so a filter never needs two hops. }
+
+  - logicalName: wp_benefitclaim
+    displayName: Benefit claim
+    displayCollectionName: Benefit claims
+    source: "WorkItem.claims, a Record<string, number> keyed by the Benefits column"
+    primaryColumn: wp_name
+    description: >-
+      One row per claim type, instead of the JSON record the mock stores. Three reasons. Dataverse has
+      no JSON column that filters or reports, and Value, Money and Close all group by claim type. A
+      benefit actual is recorded against a claim type, so a row gives the actual something to point at
+      and the "does that item claim it?" rule in validateBenefitActual becomes a lookup rather than a
+      string dig. And a claim can later carry its own evidence, owner or confidence without a schema
+      change. FTE released stays on the work item, because the engine treats it as the primary benefit
+      with its own grade and rate.
+    columns:
+      - { schemaName: wp_name, displayName: Name, type: text, maxLength: 260, required: true, source: Derived }
+      - { schemaName: wp_workitemid, displayName: Work item, type: lookup, target: wp_workitem, required: true, source: The record that owns the claims }
+      - { schemaName: wp_benefittype, displayName: Benefit type, type: choice, choiceSet: wp_benefittype, required: true, source: BENEFIT_TYPES in validate.ts, description: FTE released is not valid here. }
+      - { schemaName: wp_claimcolumn, displayName: Benefits column, type: choice, choiceSet: wp_claimcolumn, required: true, source: CLAIM_COLUMN in validate.ts, description: T to Y. Kept so a workbook round trip still lands in the right column. }
+      - { schemaName: wp_value, displayName: Claimed value, type: decimal, precision: 4, required: true, source: "WorkItem.claims[column]", description: "Units vary by type: T is £M a year, U and V are percentages, W is a multiple." }
+      - { schemaName: wp_note, displayName: Note, type: memo, maxLength: 1000, required: false, source: New }
+      - { schemaName: wp_teamid, displayName: Team, type: lookup, target: wp_team, required: true, source: New, description: A copy of the parent team, written by the app on create and on reparent so a filter never needs two hops. }
+    alternateKeys:
+      - { name: wp_benefitclaim_pair, columns: [wp_workitemid, wp_benefittype] }
+    relationships:
+      - { type: lookup, from: wp_benefitclaim.wp_workitemid, to: wp_workitem, cascade: { assign: Cascade, delete: Cascade, reparent: Cascade }, note: Parental. }
+      - { type: lookup, from: wp_benefitclaim.wp_teamid, to: wp_team, cascade: { delete: Restrict }, note: A copy of the parent team, written by the app on create and on reparent so a filter never needs two hops. }
+
+  - logicalName: wp_benefitactual
+    displayName: Benefit actual
+    displayCollectionName: Benefit actuals
+    source: BenefitActual in types.ts
+    primaryColumn: wp_name
+    description: What was really recorded against a claim, and the month it was recorded in.
+    columns:
+      - { schemaName: wp_name, displayName: Name, type: text, maxLength: 260, required: true, source: Derived }
+      - { schemaName: wp_workitemid, displayName: Work item, type: lookup, target: wp_workitem, required: true, source: BenefitActual.title }
+      - { schemaName: wp_benefittype, displayName: Benefit type, type: choice, choiceSet: wp_benefittype, required: true, source: BenefitActual.type, description: FTE released and Cost avoidance are the two benefitValue() reads. }
+      - { schemaName: wp_claimid, displayName: Claim, type: lookup, target: wp_benefitclaim, required: false, source: New, description: Blank for an FTE released actual, which has no claim row. }
+      - { schemaName: wp_value, displayName: Actual value, type: decimal, precision: 4, required: true, source: BenefitActual.value, description: "The mock's type allows a string and treats one as zero; Dataverse takes a number, and the form already refuses a blank." }
+      - { schemaName: wp_when, displayName: When, type: date, required: true, source: BenefitActual.when, description: The first of the month it landed in. The pro-rating reads month and year only. }
+      - { schemaName: wp_note, displayName: Note, type: memo, maxLength: 1000, required: false, source: BenefitActual.note }
+      - { schemaName: wp_teamid, displayName: Team, type: lookup, target: wp_team, required: true, source: New, description: A copy of the parent team, written by the app on create and on reparent so a filter never needs two hops. }
+    alternateKeys:
+      - { name: wp_benefitactual_pair, columns: [wp_workitemid, wp_benefittype], note: validateBenefitActual refuses a second actual for the same claim. }
+    relationships:
+      - { type: lookup, from: wp_benefitactual.wp_workitemid, to: wp_workitem, cascade: { delete: Cascade } }
+      - { type: lookup, from: wp_benefitactual.wp_claimid, to: wp_benefitclaim, cascade: { delete: RemoveLink } }
+      - { type: lookup, from: wp_benefitactual.wp_teamid, to: wp_team, cascade: { delete: Restrict }, note: A copy of the parent team, written by the app on create and on reparent so a filter never needs two hops. }
+
+  - logicalName: wp_reservation
+    displayName: Reservation
+    displayCollectionName: Reservations
+    source: Reservation in types.ts
+    primaryColumn: wp_name
+    description: Capacity held for a squad, or across the team, before the work is known.
+    columns:
+      - { schemaName: wp_name, displayName: Name, type: text, maxLength: 200, required: true, source: Derived }
+      - { schemaName: wp_squadid, displayName: Squad, type: lookup, target: wp_squad, required: false, source: Reservation.squad, description: "Blank means Team: capacity held across every squad. The mock writes the word Team in the same field." }
+      - { schemaName: wp_isteam, displayName: Held across the team, type: boolean, required: true, source: "Reservation.squad = 'Team'", description: Explicit, so a blank squad is never mistaken for missing data. }
+      - { schemaName: wp_quarterid, displayName: Quarter, type: lookup, target: wp_quarter, required: true, source: Reservation.quarter }
+      - { schemaName: wp_categoryid, displayName: Category, type: lookup, target: wp_listvalue, required: true, source: Reservation.category, description: Filtered to list = Reservation category. Discovery and Spikes draw on the same MW, so the form refuses both for one squad and quarter. }
+      - { schemaName: wp_mw, displayName: MW reserved, type: decimal, precision: 2, min: 0, required: true, source: Reservation.mw }
+      - { schemaName: wp_note, displayName: Note, type: memo, maxLength: 1000, required: false, source: Reservation.note }
+      - { schemaName: wp_drawn, displayName: Drawn MW, type: decimal, precision: 6, computedIn: app, source: reservationDrawn() in reservations.ts }
+      - { schemaName: wp_remaining, displayName: Remaining MW, type: decimal, precision: 6, computedIn: app, source: reservationRows() in reservations.ts }
+      - { schemaName: wp_teamid, displayName: Team, type: lookup, target: wp_team, required: false, source: New, description: The team the row belongs to. }
+    alternateKeys:
+      - { name: wp_reservation_triple, columns: [wp_squadid, wp_quarterid, wp_categoryid], note: validateReservation refuses a second row for the same squad, quarter and category. }
+    relationships:
+      - { type: lookup, from: wp_reservation.wp_squadid, to: wp_squad, cascade: { delete: Cascade } }
+      - { type: lookup, from: wp_reservation.wp_quarterid, to: wp_quarter, cascade: { delete: Restrict } }
+      - { type: lookup, from: wp_reservation.wp_categoryid, to: wp_listvalue, cascade: { delete: Restrict } }
+      - { type: lookup, from: wp_reservation.wp_teamid, to: wp_team, cascade: { delete: RemoveLink }, note: The team the row belongs to. }
+
+  - logicalName: wp_quarter
+    displayName: Quarter
+    displayCollectionName: Quarters
+    source: "Settings.quarters, plus the Settings values that move with the quarter"
+    primaryColumn: wp_label
+    description: >-
+      The mock keeps one quarter on Settings and a list of labels beside it. Dataverse gets a row per
+      quarter carrying the settings that really vary quarter by quarter, so history is readable and a
+      close is a row change rather than an edit to a singleton.
+    columns:
+      - { schemaName: wp_label, displayName: Label, type: text, maxLength: 20, required: true, source: Settings.quarter, description: "e.g. Q4 2026. quarterRange() parses it: Q, the number, then a four digit year." }
+      - { schemaName: wp_sequence, displayName: Sequence, type: whole, required: true, source: "position in Settings.quarters", description: The close moves to the next label on the list, so the order has to be explicit. }
+      - { schemaName: wp_startdate, displayName: Quarter start, type: date, required: true, computedIn: flow, source: quarterRange() in dates.ts, description: Written when the row is created; Dataverse cannot parse the label itself. }
+      - { schemaName: wp_enddate, displayName: Quarter end, type: date, required: true, computedIn: flow, source: quarterRange() in dates.ts }
+      - { schemaName: wp_epoch, displayName: Sprint 1 started, type: date, required: true, source: Settings.epoch, description: The Monday every sprint number counts from. 2026-01-05 in the seed. }
+      - { schemaName: wp_sprintdays, displayName: Sprint length (days), type: whole, min: 1, required: true, source: Settings.sprintDays, description: 14 in the seed. }
+      - { schemaName: wp_benefityear, displayName: Benefit year, type: whole, min: 2020, max: 2040, required: true, source: Settings.benefitYear }
+      - { schemaName: wp_timelineyear, displayName: Timeline year, type: whole, min: 2020, max: 2040, required: true, source: Settings.timelineYear }
+      - { schemaName: wp_weeks, displayName: Timeline weeks, type: whole, required: true, source: Settings.weeks, description: 53 in the seed. The grid starts at the ISO Monday on or before 1 January. }
+      - { schemaName: wp_ftetarget, displayName: Target FTE released, type: decimal, precision: 2, required: true, source: Settings.fteTarget }
+      - { schemaName: wp_gbptarget, displayName: Target benefit, type: currency, required: true, source: Settings.gbpTarget }
+      - { schemaName: wp_iscurrent, displayName: Current quarter, type: boolean, required: true, source: Settings.quarter, description: Exactly one row is true. The close moves the flag. }
+      - { schemaName: wp_closedon, displayName: Closed on, type: date, required: false, source: New, description: Written by the quarter close flow. }
+      - { schemaName: wp_teamid, displayName: Team, type: lookup, target: wp_team, required: false, source: New, description: Blank means shared across the platform. }
+    alternateKeys:
+      - { name: wp_quarter_label, columns: [wp_label] }
+    relationships:
+      - { type: lookup, from: wp_quarter.wp_teamid, to: wp_team, cascade: { delete: RemoveLink }, note: Blank means shared across the platform. }
+
+  - logicalName: wp_setting
+    displayName: Setting
+    displayCollectionName: Settings
+    source: Settings in types.ts, less the per-quarter values and the lists
+    primaryColumn: wp_name
+    description: >-
+      A singleton. One row, named Waypoint. Everything here is a dial that holds across quarters;
+      anything that moves with the quarter is on the Quarter table instead.
+    columns:
+      - { schemaName: wp_name, displayName: Name, type: text, maxLength: 60, required: true, source: Fixed, description: Always "Waypoint". }
+      - { schemaName: wp_defaultmodifier, displayName: Default modifier, type: decimal, precision: 4, min: 0, max: 0.95, required: true, source: Settings.defaultModifier, description: 0.3 in the seed. }
+      - { schemaName: wp_leadmodifier, displayName: Lead modifier, type: decimal, precision: 4, min: 0, max: 0.95, required: true, source: Settings.leadModifier, description: 0.4 in the seed. }
+      - { schemaName: wp_logabsences, displayName: Deduct absences, type: boolean, required: true, source: Settings.logAbsences, description: "The mock stores Yes or No as text; a Boolean says the same thing." }
+      - { schemaName: wp_mwdays, displayName: Days in a member week, type: decimal, precision: 2, required: true, source: Settings.mwDays, description: 5. }
+      - { schemaName: wp_utilisationwarn, displayName: Amber utilisation from, type: decimal, precision: 4, min: 0, max: 1, required: true, source: Settings.utilisationWarn }
+      - { schemaName: wp_utilisationbad, displayName: Red utilisation from, type: decimal, precision: 4, min: 0, max: 1, required: true, source: Settings.utilisationBad, description: Must be above amber. }
+      - { schemaName: wp_reliabilitywarn, displayName: Low confidence at, type: decimal, precision: 4, min: 0, max: 0.95, required: true, source: Settings.reliabilityWarn }
+      - { schemaName: wp_reliabilitybad, displayName: Medium confidence at, type: decimal, precision: 4, min: 0, max: 0.95, required: true, source: Settings.reliabilityBad, description: Must be above low confidence. }
+      - { schemaName: wp_rankby, displayName: Running total follows, type: text, maxLength: 40, required: false, source: Settings.rankBy }
+      - { schemaName: wp_organisation, displayName: Team / organisation, type: text, maxLength: 200, required: true, source: Settings.organisation }
+      - { schemaName: wp_owner, displayName: Prepared by, type: text, maxLength: 100, required: true, source: Settings.owner }
+      - { schemaName: wp_jiraalignbase, displayName: Jira Align base URL, type: text, format: url, maxLength: 400, required: false, source: Settings.jiraAlignBase }
+      - { schemaName: wp_jirabase, displayName: Jira base URL, type: text, format: url, maxLength: 400, required: false, source: Settings.jiraBase }
+      - { schemaName: wp_estatebaseline, displayName: Baseline value in-year, type: currency, required: false, source: Settings.financials.estateBaseline }
+    alternateKeys:
+      - { name: wp_setting_name, columns: [wp_name], note: The key is what keeps the singleton single. }
+    relationships: []
+
+  - logicalName: wp_graderate
+    displayName: Business grade
+    displayCollectionName: Business grades
+    source: GradeRate in types.ts
+    primaryColumn: wp_grade
+    description: What one released FTE at that grade is worth a year.
+    columns:
+      - { schemaName: wp_grade, displayName: Business grade, type: text, maxLength: 60, required: true, source: GradeRate.grade, description: "A, B, C, D, Offshore and Contractor day rate in the seed. Cannot collide with a blend name." }
+      - { schemaName: wp_rate, displayName: GBP per FTE, type: currency, min: 0, max: 10000000, required: true, source: GradeRate.rate }
+      - { schemaName: wp_teamid, displayName: Team, type: lookup, target: wp_team, required: false, source: New, description: Blank means shared across the platform. }
+    alternateKeys:
+      - { name: wp_graderate_grade, columns: [wp_grade] }
+    relationships:
+      - { type: lookup, from: wp_graderate.wp_teamid, to: wp_team, cascade: { delete: RemoveLink }, note: Blank means shared across the platform. }
+
+  - logicalName: wp_gradeblend
+    displayName: Grade blend
+    displayCollectionName: Grade blends
+    source: GradeBlend in types.ts
+    primaryColumn: wp_name
+    description: A named mix of grades. Its rate is the weighted average of the grades in it.
+    columns:
+      - { schemaName: wp_name, displayName: Blend name, type: text, maxLength: 60, required: true, source: GradeBlend.name, description: "Ops mix in the seed, three C and ten D. Cannot collide with a grade name." }
+      - { schemaName: wp_rate, displayName: Blended rate, type: currency, computedIn: app, source: "gradeRate() in value.ts and blendRate() in validate.ts", description: Count times rate summed, over total heads. A rollup cannot weight, so this stays in Power Fx. }
+      - { schemaName: wp_teamid, displayName: Team, type: lookup, target: wp_team, required: false, source: New, description: Blank means shared across the platform. }
+    alternateKeys:
+      - { name: wp_gradeblend_name, columns: [wp_name] }
+    relationships:
+      - { type: lookup, from: wp_gradeblend.wp_teamid, to: wp_team, cascade: { delete: RemoveLink }, note: Blank means shared across the platform. }
+
+  - logicalName: wp_gradeblendline
+    displayName: Grade blend line
+    displayCollectionName: Grade blend lines
+    source: "GradeBlend.counts, a Record<Grade, number>"
+    primaryColumn: wp_name
+    description: >-
+      Not in the brief's table list, but the record of counts has to land somewhere relational. One row
+      per grade in a blend.
+    columns:
+      - { schemaName: wp_name, displayName: Name, type: text, maxLength: 140, required: true, source: Derived }
+      - { schemaName: wp_gradeblendid, displayName: Blend, type: lookup, target: wp_gradeblend, required: true, source: GradeBlend.name }
+      - { schemaName: wp_graderateid, displayName: Business grade, type: lookup, target: wp_graderate, required: true, source: "key of GradeBlend.counts" }
+      - { schemaName: wp_count, displayName: Heads, type: whole, min: 0, required: true, source: "value of GradeBlend.counts" }
+    alternateKeys:
+      - { name: wp_gradeblendline_pair, columns: [wp_gradeblendid, wp_graderateid] }
+    relationships:
+      - { type: lookup, from: wp_gradeblendline.wp_gradeblendid, to: wp_gradeblend, cascade: { assign: Cascade, delete: Cascade, reparent: Cascade } }
+      - { type: lookup, from: wp_gradeblendline.wp_graderateid, to: wp_graderate, cascade: { delete: Restrict } }
+
+  - logicalName: wp_workstate
+    displayName: Work state
+    displayCollectionName: Work states
+    source: StateRow in types.ts, STATE_ROWS in seed.json
+    primaryColumn: wp_name
+    description: >-
+      The nine planner states and the capacity impact each one carries. A table rather than a choice,
+      because Settings lets the team change an impact and the engine reads the impact, not the name.
+    columns:
+      - { schemaName: wp_name, displayName: State, type: text, maxLength: 60, required: true, source: StateRow.name, description: "Identified, In discovery, Ready, In development, Released, In validation, Done, Deferred, Cancelled." }
+      - { schemaName: wp_jiraalign, displayName: Jira Align states, type: text, maxLength: 200, required: false, source: StateRow.jiraAlign, description: "The Jira Align wording this state maps from. Released reads 'Ready for release, Deployed, Live'." }
+      - { schemaName: wp_impact, displayName: Capacity impact, type: choice, choiceSet: wp_capacityimpact, required: true, source: StateRow.impact }
+      - { schemaName: wp_note, displayName: Note, type: text, maxLength: 200, required: false, source: StateRow.note }
+      - { schemaName: wp_sequence, displayName: Order, type: whole, required: true, source: Row order in STATE_ROWS }
+      - { schemaName: wp_teamid, displayName: Team, type: lookup, target: wp_team, required: false, source: New, description: Blank means shared across the platform. }
+    alternateKeys:
+      - { name: wp_workstate_name, columns: [wp_name] }
+    relationships:
+      - { type: lookup, from: wp_workstate.wp_teamid, to: wp_team, cascade: { delete: RemoveLink }, note: Blank means shared across the platform. }
+
+  - logicalName: wp_outcome
+    displayName: Outcome
+    displayCollectionName: Outcomes
+    source: Outcome in types.ts
+    primaryColumn: wp_name
+    description: A business outcome. Epics serve it; one epic serves one outcome.
+    columns:
+      - { schemaName: wp_name, displayName: Outcome, type: text, maxLength: 200, required: true, source: Outcome.name }
+      - { schemaName: wp_jiraalignkey, displayName: Jira Align key, type: text, maxLength: 60, required: false, source: Outcome.jiraAlignKey, description: Appended to the Jira Align base URL. }
+      - { schemaName: wp_teamid, displayName: Team, type: lookup, target: wp_team, required: true, source: New, description: The team that owns it. }
+    alternateKeys:
+      - { name: wp_outcome_name, columns: [wp_name] }
+    relationships:
+      - { type: lookup, from: wp_outcome.wp_teamid, to: wp_team, cascade: { delete: Restrict }, note: The team that owns it. }
+
+  - logicalName: wp_epic
+    displayName: Epic
+    displayCollectionName: Epics
+    source: "Outcome.epics, and WorkItem.epic"
+    primaryColumn: wp_name
+    description: >-
+      The mock holds epics as strings inside an outcome, with a fallback list built from the work. A
+      table makes outcomeOfEpic() a lookup and stops two spellings of the same epic.
+    columns:
+      - { schemaName: wp_name, displayName: Epic, type: text, maxLength: 200, required: true, source: "Outcome.epics and WorkItem.epic" }
+      - { schemaName: wp_outcomeid, displayName: Outcome, type: lookup, target: wp_outcome, required: false, source: The outcome that names it, description: "Blank where no outcome claims the epic; outcomeOfEpic() returns an empty string for that case." }
+      - { schemaName: wp_teamid, displayName: Team, type: lookup, target: wp_team, required: true, source: New, description: The team that owns it. }
+    alternateKeys:
+      - { name: wp_epic_name, columns: [wp_name] }
+    relationships:
+      - { type: lookup, from: wp_epic.wp_outcomeid, to: wp_outcome, cascade: { assign: Cascade, delete: RemoveLink }, note: Removing an outcome must leave its epics and their work alone. }
+      - { type: lookup, from: wp_epic.wp_teamid, to: wp_team, cascade: { delete: Restrict }, note: The team that owns it. }
+
+  - logicalName: wp_bankholiday
+    displayName: Bank holiday
+    displayCollectionName: Bank holidays
+    source: BankHoliday in types.ts
+    primaryColumn: wp_name
+    description: >-
+      A public holiday in one region. Wales reads England's list, which bankHolidayCount() does in
+      code; the rows themselves are not duplicated.
+    columns:
+      - { schemaName: wp_name, displayName: Holiday, type: text, maxLength: 120, required: true, source: BankHoliday.name }
+      - { schemaName: wp_regionid, displayName: Region, type: lookup, target: wp_listvalue, required: true, source: BankHoliday.region, description: Filtered to list = Region. }
+      - { schemaName: wp_date, displayName: Date, type: date, required: true, source: BankHoliday.date, description: Only counted when it falls Monday to Friday. }
+    alternateKeys:
+      - { name: wp_bankholiday_pair, columns: [wp_regionid, wp_date] }
+    relationships:
+      - { type: lookup, from: wp_bankholiday.wp_regionid, to: wp_listvalue, cascade: { delete: Restrict }, note: validate.ts names the bank holidays that still use a region when a removal is refused. }
+
+  - logicalName: wp_quartersnapshot
+    displayName: Quarter snapshot
+    displayCollectionName: Quarter snapshots
+    source: HistorySnapshot in types.ts
+    primaryColumn: wp_name
+    description: >-
+      History. The figures as they stood when the quarter was closed. The Compare block reads the last
+      one taken.
+    columns:
+      - { schemaName: wp_name, displayName: Name, type: text, maxLength: 60, required: true, source: Derived from the quarter label }
+      - { schemaName: wp_quarterid, displayName: Quarter, type: lookup, target: wp_quarter, required: true, source: HistorySnapshot.quarter }
+      - { schemaName: wp_netmw, displayName: Net capacity (MW), type: decimal, precision: 4, required: true, source: HistorySnapshot.netMW }
+      - { schemaName: wp_inplanmw, displayName: In-plan MW, type: decimal, precision: 4, required: true, source: HistorySnapshot.inPlanMW }
+      - { schemaName: wp_deliveredmw, displayName: Delivered MW, type: decimal, precision: 4, required: true, source: HistorySnapshot.deliveredMW }
+      - { schemaName: wp_fte, displayName: FTE released, type: decimal, precision: 2, required: true, source: HistorySnapshot.fte }
+      - { schemaName: wp_gbp, displayName: Benefit in-year, type: currency, required: true, source: HistorySnapshot.gbp }
+      - { schemaName: wp_note, displayName: Note, type: memo, maxLength: 1000, required: false, source: HistorySnapshot.note }
+      - { schemaName: wp_takenon, displayName: Taken on, type: date, required: true, source: "the date takeSnapshot() writes into its note" }
+      - { schemaName: wp_teamid, displayName: Team, type: lookup, target: wp_team, required: false, source: New, description: The team the row belongs to. }
+    alternateKeys:
+      - { name: wp_quartersnapshot_quarter, columns: [wp_quarterid] }
+    relationships:
+      - { type: lookup, from: wp_quartersnapshot.wp_quarterid, to: wp_quarter, cascade: { delete: Restrict } }
+      - { type: lookup, from: wp_quartersnapshot.wp_teamid, to: wp_team, cascade: { delete: RemoveLink }, note: The team the row belongs to. }
+
+  - logicalName: wp_archiverow
+    displayName: Archive row
+    displayCollectionName: Archive
+    source: ArchiveRow in types.ts
+    primaryColumn: wp_title
+    description: >-
+      The record of a closed item or a held reservation, stamped with the quarter it closed in.
+      Calibration reads it back, so most columns are the values as they stood, not lookups that move.
+    columns:
+      - { schemaName: wp_title, displayName: Title, type: text, maxLength: 200, required: true, source: ArchiveRow.title, description: The category name on a Reservation row. }
+      - { schemaName: wp_quarterid, displayName: Quarter, type: lookup, target: wp_quarter, required: true, source: ArchiveRow.quarter }
+      - { schemaName: wp_kind, displayName: Row kind, type: choice, choiceSet: wp_archivekind, required: true, source: ArchiveRow.kind, description: Work or Reservation. The mock leaves it blank for work. }
+      - { schemaName: wp_itemid, displayName: Work item, type: lookup, target: wp_workitem, required: false, source: New, description: For navigation only; the text columns stand alone if the item is later deleted. }
+      - { schemaName: wp_jira, displayName: Jira key, type: text, maxLength: 40, required: false, source: ArchiveRow.id }
+      - { schemaName: wp_epic, displayName: Epic, type: text, maxLength: 200, required: false, source: ArchiveRow.epic }
+      - { schemaName: wp_squad, displayName: Squad, type: text, maxLength: 100, required: false, source: ArchiveRow.squad }
+      - { schemaName: wp_state, displayName: State, type: text, maxLength: 60, required: false, source: ArchiveRow.state }
+      - { schemaName: wp_assignee, displayName: Assignee, type: text, maxLength: 100, required: false, source: ArchiveRow.assignee, description: The first assignee only, as the close writes it. }
+      - { schemaName: wp_status, displayName: Close status, type: text, maxLength: 40, required: true, source: ArchiveRow.status, description: "Done on time, Done late, Done, Cancelled, or Reserved on a reservation row." }
+      - { schemaName: wp_size, displayName: Size, type: text, maxLength: 10, required: false, source: ArchiveRow.size, description: Text, not a lookup, so recalibrating a band does not rewrite history. }
+      - { schemaName: wp_original, displayName: Original MW, type: decimal, precision: 2, required: true, source: ArchiveRow.original }
+      - { schemaName: wp_latest, displayName: Latest MW, type: decimal, precision: 2, required: true, source: ArchiveRow.latest }
+      - { schemaName: wp_actual, displayName: Actual MW, type: decimal, precision: 2, required: true, source: ArchiveRow.actual }
+      - { schemaName: wp_heldmw, displayName: Held MW, type: decimal, precision: 2, required: false, source: ArchiveRow.heldMW, description: Reservation rows only. }
+      - { schemaName: wp_drawnmw, displayName: Drawn MW, type: decimal, precision: 2, required: false, source: ArchiveRow.drawnMW }
+      - { schemaName: wp_freemw, displayName: Free MW, type: decimal, precision: 2, required: false, source: ArchiveRow.freeMW }
+      - { schemaName: wp_teamid, displayName: Team, type: lookup, target: wp_team, required: false, source: New, description: The team the row belongs to. }
+    alternateKeys:
+      - { name: wp_archiverow_row, columns: [wp_quarterid, wp_title, wp_kind], note: The close already guards itself with archivedInQuarter; the key makes a re-run safe. }
+    relationships:
+      - { type: lookup, from: wp_archiverow.wp_quarterid, to: wp_quarter, cascade: { delete: Restrict } }
+      - { type: lookup, from: wp_archiverow.wp_itemid, to: wp_workitem, cascade: { delete: RemoveLink }, note: RemoveLink, not Cascade. The archive outlives the item. }
+      - { type: lookup, from: wp_archiverow.wp_teamid, to: wp_team, cascade: { delete: RemoveLink }, note: The team the row belongs to. }
+
+  - logicalName: wp_activitylog
+    displayName: Activity log
+    displayCollectionName: Activity log
+    source: Dataset.log, an array of LogEntry in src/model/types.ts
+    primaryColumn: wp_name
+    description: >-
+      Who did what, when, and what changed. The mock already keeps this as Dataset.log, a capped
+      audit trail of LogEntry rows that every commit appends to, an undo included. Here it is the same
+      trail, uncapped, written by a plugin step or a flow on create, update and delete of the business
+      tables, and by the import and close flows for the big moves. Read-only in the app.
+    columns:
+      - { schemaName: wp_name, displayName: Label, type: text, maxLength: 300, required: true, source: LogEntry.label, description: "What was done, as the commit names it: e.g. Commit Statement matching rules v2." }
+      - { schemaName: wp_summary, displayName: Summary, type: text, maxLength: 300, required: false, source: LogEntry.summary, description: "What changed, in a phrase: e.g. 3 items committed, 1 deferred. A separate column from the label, as LogEntry keeps them." }
+      - { schemaName: wp_action, displayName: Action, type: choice, choiceSet: wp_activityaction, required: true, source: New }
+      - { schemaName: wp_tablename, displayName: Table, type: text, maxLength: 60, required: true, source: New, description: Logical name of the table the change landed on. }
+      - { schemaName: wp_recordid, displayName: Record, type: text, maxLength: 40, required: true, source: New, description: The GUID as text, so the log survives the record. }
+      - { schemaName: wp_recordname, displayName: Record name, type: text, maxLength: 200, required: false, source: New }
+      - { schemaName: wp_byuserid, displayName: By, type: lookup, target: systemuser, required: true, source: LogEntry.user }
+      - { schemaName: wp_at, displayName: At, type: date, format: DateAndTime, required: true, source: LogEntry.at, description: User local behaviour; the log is read by people, not by the engine. }
+      - { schemaName: wp_before, displayName: Before, type: memo, maxLength: 4000, required: false, source: New, description: The changed columns as they were, one per line. Not a full record dump. }
+      - { schemaName: wp_after, displayName: After, type: memo, maxLength: 4000, required: false, source: New }
+      - { schemaName: wp_quarterid, displayName: Quarter, type: lookup, target: wp_quarter, required: false, source: New, description: The quarter current at the time, so a close reads in context. }
+    alternateKeys: []
+    relationships:
+      - { type: lookup, from: wp_activitylog.wp_quarterid, to: wp_quarter, cascade: { delete: RemoveLink } }
+
+  - logicalName: wp_importprofile
+    displayName: Import profile
+    displayCollectionName: Import profiles
+    source: "MappingProfile in src/import/mapping.ts, stored under waypoint-import-profiles-v1"
+    primaryColumn: wp_name
+    description: >-
+      The saved column mapping for one source. The mock keeps it in localStorage per browser; in
+      Dataverse it is shared, so the second person to run an import gets the first person's mapping.
+    columns:
+      - { schemaName: wp_name, displayName: Name, type: text, maxLength: 100, required: true, source: Derived from the source }
+      - { schemaName: wp_source, displayName: Source, type: choice, choiceSet: wp_importsource, required: true, source: MappingProfile.source }
+      - { schemaName: wp_columns, displayName: Column mapping, type: memo, maxLength: 8000, required: true, source: MappingProfile.columns, description: "JSON: field key to header, null where the export has no such column. Read with ParseJSON." }
+      - { schemaName: wp_valuemaps, displayName: Value maps, type: memo, maxLength: 8000, required: false, source: MappingProfile.valueMaps, description: "JSON: field key to a map of export value onto model value, such as Jira status onto planner state." }
+      - { schemaName: wp_savedat, displayName: Saved at, type: date, format: DateAndTime, required: true, source: MappingProfile.savedAt }
+      - { schemaName: wp_dateformat, displayName: Date format, type: text, maxLength: 10, required: false, source: DateFormat in workday.ts, description: "iso, dmy or mdy. Detected per file; stored as a hint." }
+    alternateKeys:
+      - { name: wp_importprofile_source, columns: [wp_source], note: One profile per source, exactly as loadProfiles() keys them. }
+    relationships: []
+
+  - logicalName: wp_importrun
+    displayName: Import run
+    displayCollectionName: Import runs
+    source: New. The mock applies an import and forgets it.
+    primaryColumn: wp_name
+    description: >-
+      One execution of the import flow, so an operator can see what a file did and a re-run can be
+      recognised. Not in the brief's table list; added because Absence points at it.
+    columns:
+      - { schemaName: wp_name, displayName: Name, type: text, maxLength: 200, required: true, source: New, description: File name and time. }
+      - { schemaName: wp_source, displayName: Source, type: choice, choiceSet: wp_importsource, required: true, source: New }
+      - { schemaName: wp_profileid, displayName: Profile used, type: lookup, target: wp_importprofile, required: false, source: New }
+      - { schemaName: wp_rowsread, displayName: Rows read, type: whole, required: true, source: New }
+      - { schemaName: wp_rowsapplied, displayName: Rows applied, type: whole, required: true, source: New }
+      - { schemaName: wp_rowsskipped, displayName: Rows skipped, type: whole, required: true, source: New }
+      - { schemaName: wp_log, displayName: Log, type: memo, maxLength: 16000, required: false, source: "the skipped reasons in workday.ts and jira.ts", description: "One line per skipped row: No person matched, No worker name, No start date, Not approved, Already recorded, No issue key, No summary." }
+      - { schemaName: wp_byuserid, displayName: Run by, type: lookup, target: systemuser, required: true, source: New }
+      - { schemaName: wp_at, displayName: Run at, type: date, format: DateAndTime, required: true, source: New }
+      - { schemaName: wp_teamid, displayName: Team, type: lookup, target: wp_team, required: false, source: New, description: A copy of the parent team, written by the app on create and on reparent so a filter never needs two hops. }
+    alternateKeys: []
+    relationships:
+      - { type: lookup, from: wp_importrun.wp_profileid, to: wp_importprofile, cascade: { delete: RemoveLink } }
+      - { type: lookup, from: wp_importrun.wp_teamid, to: wp_team, cascade: { delete: RemoveLink }, note: A copy of the parent team, written by the app on create and on reparent so a filter never needs two hops. }
+
+  - logicalName: wp_size
+    displayName: Size band
+    displayCollectionName: Size bands
+    source: "Settings.sizes, a Record<string, number>"
+    primaryColumn: wp_name
+    description: A t-shirt size and the member weeks it is worth. Calibration suggests changes to it.
+    columns:
+      - { schemaName: wp_name, displayName: Size, type: text, maxLength: 10, required: true, source: "key of Settings.sizes", description: "XS, S, M, L, XL, XXL." }
+      - { schemaName: wp_mw, displayName: Member weeks, type: decimal, precision: 2, min: 0, required: true, source: "value of Settings.sizes", description: "0.5, 1, 2, 4, 8 and 13 in the seed." }
+      - { schemaName: wp_sequence, displayName: Order, type: whole, required: true, source: Row order in SIZE_MW }
+    alternateKeys:
+      - { name: wp_size_name, columns: [wp_name] }
+    relationships: []
+
+  - logicalName: wp_listvalue
+    displayName: List value
+    displayCollectionName: List values
+    source: "Settings.skills, .regions, .absenceTypes and .reservationCategories; LISTS in validate.ts"
+    primaryColumn: wp_name
+    description: >-
+      The four editable Settings lists in one table. A table rather than four choice sets, because the
+      app adds, renames and removes values at run time and refuses a removal that is still in use.
+    columns:
+      - { schemaName: wp_name, displayName: Value, type: text, maxLength: 100, required: true, source: The list entry }
+      - { schemaName: wp_list, displayName: List, type: choice, choiceSet: wp_listname, required: true, source: LISTS in validate.ts }
+      - { schemaName: wp_grade, displayName: Grade, type: text, maxLength: 4, required: false, source: "Person.grade, for a Role list value", description: "For Role list values: the team grade this role maps to (C, D, E, F)." }
+      - { schemaName: wp_sequence, displayName: Order, type: whole, required: false, source: Position in the list }
+      - { schemaName: wp_teamid, displayName: Team, type: lookup, target: wp_team, required: false, source: New, description: Blank means shared across the platform. }
+    alternateKeys:
+      - { name: wp_listvalue_pair, columns: [wp_list, wp_name] }
+    relationships:
+      - { type: lookup, from: wp_listvalue.wp_teamid, to: wp_team, cascade: { delete: RemoveLink }, note: Blank means shared across the platform. }
+
+  - logicalName: wp_teamgradecost
+    displayName: Team grade cost
+    displayCollectionName: Team grade costs
+    source: TeamGradeCost in types.ts
+    primaryColumn: wp_name
+    description: What one head at a team grade costs a year. Feeds cost of ownership on Money.
+    columns:
+      - { schemaName: wp_name, displayName: Team grade, type: text, maxLength: 10, required: true, source: TeamGradeCost.grade, description: "C, D, E or F. Text because a Dataverse primary column has to be text; the wp_teamgrade choice is the same list where a form wants a picker." }
+      - { schemaName: wp_annualcost, displayName: Annual cost, type: currency, min: 0, required: true, source: TeamGradeCost.annualCost }
+      - { schemaName: wp_teamid, displayName: Team, type: lookup, target: wp_team, required: false, source: New, description: The team the row belongs to. }
+    alternateKeys:
+      - { name: wp_teamgradecost_grade, columns: [wp_name] }
+    relationships:
+      - { type: lookup, from: wp_teamgradecost.wp_teamid, to: wp_team, cascade: { delete: RemoveLink }, note: The team the row belongs to. }
+
+  - logicalName: wp_costline
+    displayName: Cost line
+    displayCollectionName: Cost lines
+    source: CostLine in types.ts
+    primaryColumn: wp_name
+    description: A licence, subscription or piece of infrastructure, and what it costs a year.
+    columns:
+      - { schemaName: wp_name, displayName: Item, type: text, maxLength: 200, required: true, source: CostLine.name }
+      - { schemaName: wp_costtable, displayName: Cost table, type: choice, choiceSet: wp_costtable, required: true, source: CostLine.costLine }
+      - { schemaName: wp_fundingline, displayName: Funding, type: choice, choiceSet: wp_fundingline, required: true, source: CostLine.fundingLine }
+      - { schemaName: wp_annual, displayName: Annual cost, type: currency, min: 0, required: true, source: CostLine.annual }
+      - { schemaName: wp_teamid, displayName: Team, type: lookup, target: wp_team, required: false, source: New, description: The team the row belongs to. }
+    alternateKeys:
+      - { name: wp_costline_name, columns: [wp_name], note: validateFinancials refuses the same item twice. }
+    relationships:
+      - { type: lookup, from: wp_costline.wp_teamid, to: wp_team, cascade: { delete: RemoveLink }, note: The team the row belongs to. }
+
+  - logicalName: wp_request
+    displayName: Request
+    displayCollectionName: Requests
+    source: New. The front door in power/design-front-door.md, section 3.
+    primaryColumn: wp_name
+    description: >-
+      The front door. A request arrives here, a product owner screens it, and it is promoted to a
+      work item or declined with a reason. User owned, so a requester reading at user depth sees
+      only their own requests. No alternate key, because a request is never addressed by name.
+    columns:
+      - { schemaName: wp_name, displayName: Title, type: text, maxLength: 200, required: true, source: New, description: A short title for the request. Not unique. }
+      - { schemaName: wp_requesterid, displayName: Requester, type: lookup, target: systemuser, required: false, source: New, description: The signed-in user who submitted it. Blank where the row was loaded rather than typed. }
+      - { schemaName: wp_requestername, displayName: Requester name, type: text, maxLength: 100, required: true, source: Question 1, description: Pre-filled from the signed-in user, and kept as text so the request reads without the user row. }
+      - { schemaName: wp_requesteremail, displayName: Requester email, type: text, format: email, maxLength: 200, required: true, source: Question 1 }
+      - { schemaName: wp_businessarea, displayName: Business area, type: text, maxLength: 100, required: true, source: Question 2 }
+      - { schemaName: wp_sponsor, displayName: Sponsor, type: text, maxLength: 100, required: true, source: Question 3, description: The person who will back it, and who knows they are being named. }
+      - { schemaName: wp_sponsoremail, displayName: Sponsor email, type: text, format: email, maxLength: 200, required: false, source: Question 3 }
+      - { schemaName: wp_labid, displayName: Lab, type: lookup, target: wp_lab, required: false, source: Question 4, description: Where the requester thinks it belongs. Blank is an answer. }
+      - { schemaName: wp_teamid, displayName: Team, type: lookup, target: wp_team, required: false, source: Question 4, description: Where the requester thinks it belongs. Blank is an answer, and the product owner sets it on screening. }
+      - { schemaName: wp_productline, displayName: Product line, type: choice, choiceSet: wp_productline, required: true, source: Question 35, description: Blue Prism, Power Automate, Power Apps, Copilot Studio or Other. }
+      - { schemaName: wp_productlineother, displayName: Other product line, type: text, maxLength: 100, required: false, source: Question 35, description: Only where the product line is Other. }
+      - { schemaName: wp_problem, displayName: The problem, type: memo, maxLength: 1000, required: true, source: Question 5, description: One sentence. It becomes the spike question on promotion. }
+      - { schemaName: wp_desiredoutcome, displayName: What good looks like, type: memo, maxLength: 1000, required: true, source: Question 17 }
+      - { schemaName: wp_whobenefits, displayName: Who benefits, type: memo, maxLength: 1000, required: true, source: Question 7 }
+      - { schemaName: wp_peopleaffected, displayName: People affected, type: whole, min: 0, required: false, source: Question 7, description: Roughly how many people feel the problem. }
+      - { schemaName: wp_currentprocess, displayName: Process today, type: memo, maxLength: 4000, required: true, source: Question 10, description: Step by step, as it runs today. }
+      - { schemaName: wp_volume, displayName: Runs per period, type: whole, min: 0, required: false, source: Question 11, description: How many times it runs. The period is the frequency beside it. }
+      - { schemaName: wp_frequency, displayName: Frequency, type: choice, choiceSet: wp_frequency, required: false, source: Question 11 }
+      - { schemaName: wp_handlingminutes, displayName: Minutes per run, type: whole, min: 0, required: false, source: Question 12, description: How long one run takes a person. With the volume it is the time released estimate. }
+      - { schemaName: wp_systems, displayName: Systems touched, type: memo, maxLength: 1000, required: false, source: Question 13, description: Semicolon separated where the requester lists them. }
+      - { schemaName: wp_datasensitivity, displayName: Data sensitivity, type: choice, choiceSet: wp_datasensitivity, required: true, source: Question 15 }
+      - { schemaName: wp_urgency, displayName: Urgency, type: choice, choiceSet: wp_urgency, required: false, source: Question 21 }
+      - { schemaName: wp_deadline, displayName: Live by, type: date, required: false, source: Question 21, description: Date only, time zone independent. }
+      - { schemaName: wp_deadlinereason, displayName: What happens if it slips, type: memo, maxLength: 1000, required: false, source: Question 21 }
+      - { schemaName: wp_benefittype, displayName: Benefit type, type: choice, choiceSet: wp_benefittype, required: false, source: Question 18, description: The same set the work item and the claims use, so the estimate carries across on promotion. }
+      - { schemaName: wp_benefitsize, displayName: Benefit size, type: text, maxLength: 200, required: false, source: Question 19, description: Free text, because a requester estimates in people or in pounds and a guess is fine. }
+      - { schemaName: wp_constraints, displayName: Constraints, type: memo, maxLength: 2000, required: true, source: Question 36, description: What could stop this working. Policy, access, a contract, a team that has to agree. }
+      - { schemaName: wp_attachments, displayName: Link, type: text, format: url, maxLength: 500, required: false, source: Question 37, description: A link rather than files. Real attachments are deferred. }
+      - { schemaName: wp_status, displayName: Request status, type: choice, choiceSet: wp_requeststatus, required: true, source: The lifecycle table, description: New on submit. Only the product owner and the engineering lead move it on. }
+      - { schemaName: wp_screeningnotes, displayName: Screening notes, type: memo, maxLength: 4000, required: false, source: The Screen action }
+      - { schemaName: wp_screenedbyid, displayName: Screened by, type: lookup, target: wp_person, required: false, source: The Screen action }
+      - { schemaName: wp_screenedon, displayName: Screened on, type: date, required: false, source: The Screen action, description: With the created date it is how long a request waited for a decision. }
+      - { schemaName: wp_promotedtoid, displayName: Promoted to, type: lookup, target: wp_workitem, required: false, source: The Promote actions, description: The work item the request became. The link is read from the request side, so the register gains no column. }
+      - { schemaName: wp_declinecategory, displayName: Decline category, type: text, maxLength: 100, required: false, source: The Decline action, description: Text rather than a choice until the queue has run long enough to say what the categories are. }
+      - { schemaName: wp_declinereason, displayName: Decline reason, type: memo, maxLength: 2000, required: false, source: The Decline action, description: Required with the category when the status is Declined. }
+    alternateKeys: []
+    relationships:
+      - { type: lookup, from: wp_request.wp_labid, to: wp_lab, cascade: { delete: RemoveLink } }
+      - { type: lookup, from: wp_request.wp_teamid, to: wp_team, cascade: { assign: Cascade, delete: RemoveLink }, note: A request keeps its history when a team goes. }
+      - { type: lookup, from: wp_request.wp_requesterid, to: systemuser, cascade: { delete: RemoveLink } }
+      - { type: lookup, from: wp_request.wp_screenedbyid, to: wp_person, cascade: { delete: RemoveLink } }
+      - { type: lookup, from: wp_request.wp_promotedtoid, to: wp_workitem, cascade: { delete: RemoveLink }, note: Deleting the work item leaves the request, which is how a promotion is undone. }
+
+# ---------------------------------------------------------------------------
+# Security roles. Dataverse roles are solution components, not rows; this is the
+# privilege matrix the four roles are built from.
+#   C create, R read, U write (update), D delete. Depth O is organisation.
+#   "-" is no privilege at all.
+# ---------------------------------------------------------------------------
+securityRoles:
+  roles:
+    - name: Waypoint Product Owner
+      description: Owns the shape of the plan and the benefits. Does not touch the engine's dials.
+    - name: Waypoint Engineering lead
+      description: Sizes, schedules and closes. The only role that can run a quarter close.
+    - name: Waypoint Squad member
+      description: Updates their own work and their own absences. Reads everything else.
+    - name: Waypoint Viewer
+      description: Reads the plan. Writes nothing.
+
+  privileges:
+    wp_platform:       { ProductOwner: "R O",    EngineeringLead: "R O",    SquadMember: "R O",             Viewer: "R O" }
+    wp_lab:            { ProductOwner: "R O",    EngineeringLead: "R O",    SquadMember: "R O",             Viewer: "R O" }
+    wp_team:           { ProductOwner: "R O",    EngineeringLead: "R O",    SquadMember: "R O",             Viewer: "R O" }
+    wp_request:        { ProductOwner: "CRUD O", EngineeringLead: "CRU O",  SquadMember: "R O",             Viewer: "R O" }
+    wp_person:         { ProductOwner: "R O",    EngineeringLead: "CRUD O", SquadMember: "R O, U self",     Viewer: "R O" }
+    wp_squad:          { ProductOwner: "R O",    EngineeringLead: "CRUD O", SquadMember: "R O",             Viewer: "R O" }
+    wp_workitem:       { ProductOwner: "CRU O",  EngineeringLead: "CRUD O", SquadMember: "R O, U assigned", Viewer: "R O" }
+    wp_assignee:       { ProductOwner: "CRUD O", EngineeringLead: "CRUD O", SquadMember: "R O",             Viewer: "R O" }
+    wp_assignment:     { ProductOwner: "R O",    EngineeringLead: "CRUD O", SquadMember: "R O, CU self",    Viewer: "R O" }
+    wp_absence:        { ProductOwner: "R O",    EngineeringLead: "CRUD O", SquadMember: "R O, CRUD self",  Viewer: "R O" }
+    wp_benefitclaim:   { ProductOwner: "CRUD O", EngineeringLead: "R O",    SquadMember: "R O",             Viewer: "R O" }
+    wp_benefitactual:  { ProductOwner: "CRUD O", EngineeringLead: "R O",    SquadMember: "R O",             Viewer: "R O" }
+    wp_reservation:    { ProductOwner: "R O",    EngineeringLead: "CRUD O", SquadMember: "R O",             Viewer: "R O" }
+    wp_quarter:        { ProductOwner: "R O",    EngineeringLead: "CRU O",  SquadMember: "R O",             Viewer: "R O" }
+    wp_setting:        { ProductOwner: "R O",    EngineeringLead: "RU O",   SquadMember: "R O",             Viewer: "R O" }
+    wp_graderate:      { ProductOwner: "CRUD O", EngineeringLead: "R O",    SquadMember: "R O",             Viewer: "R O" }
+    wp_gradeblend:     { ProductOwner: "CRUD O", EngineeringLead: "R O",    SquadMember: "R O",             Viewer: "R O" }
+    wp_gradeblendline: { ProductOwner: "CRUD O", EngineeringLead: "R O",    SquadMember: "R O",             Viewer: "R O" }
+    wp_workstate:      { ProductOwner: "R O",    EngineeringLead: "CRUD O", SquadMember: "R O",             Viewer: "R O" }
+    wp_outcome:        { ProductOwner: "CRUD O", EngineeringLead: "R O",    SquadMember: "R O",             Viewer: "R O" }
+    wp_epic:           { ProductOwner: "CRUD O", EngineeringLead: "CRU O",  SquadMember: "R O",             Viewer: "R O" }
+    wp_bankholiday:    { ProductOwner: "R O",    EngineeringLead: "CRUD O", SquadMember: "R O",             Viewer: "R O" }
+    wp_quartersnapshot: { ProductOwner: "R O",    EngineeringLead: "CR O",   SquadMember: "R O",             Viewer: "R O" }
+    wp_archiverow:     { ProductOwner: "R O",    EngineeringLead: "CR O",   SquadMember: "R O",             Viewer: "R O" }
+    wp_activitylog:    { ProductOwner: "R O",    EngineeringLead: "R O",    SquadMember: "R O",             Viewer: "R O" }
+    wp_importprofile:  { ProductOwner: "CRU O",  EngineeringLead: "CRU O",  SquadMember: "R O",             Viewer: "-" }
+    wp_importrun:      { ProductOwner: "CR O",   EngineeringLead: "CR O",   SquadMember: "R O",             Viewer: "-" }
+    wp_size:           { ProductOwner: "R O",    EngineeringLead: "CRUD O", SquadMember: "R O",             Viewer: "R O" }
+    wp_listvalue:      { ProductOwner: "CRU O",  EngineeringLead: "CRUD O", SquadMember: "R O",             Viewer: "R O" }
+    wp_teamgradecost:  { ProductOwner: "R O",    EngineeringLead: "R O",    SquadMember: "-",               Viewer: "-" }
+    wp_costline:       { ProductOwner: "R O",    EngineeringLead: "R O",    SquadMember: "-",               Viewer: "-" }
+
+  notes:
+    - >-
+      Nobody deletes an activity log row, a quarter snapshot or an archive row. Only the system
+      administrator can, and that is deliberate.
+    - >-
+      "U self" and "U assigned" are not Dataverse depths. They are enforced by record ownership plus a
+      business rule, or by the app filtering the form to the signed-in user's Person row. The build
+      guide says which for each case.
+    - >-
+      Financials (team grade costs and cost lines) is money the wider team should not see, so the
+      Squad member and Viewer roles have no privilege on those two tables.

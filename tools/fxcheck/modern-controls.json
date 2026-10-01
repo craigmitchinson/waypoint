@@ -1,0 +1,2465 @@
+{
+  "common": [
+    "X",
+    "Y",
+    "Width",
+    "Height",
+    "Visible",
+    "ZIndex",
+    "DisplayMode"
+  ],
+  "enums": {
+    "Align": [
+      "Left",
+      "Center",
+      "Right",
+      "Justify"
+    ],
+    "Appearance": [
+      "FilledDarker",
+      "FilledLighter",
+      "Outline",
+      "Filled"
+    ],
+    "AvatarColor": [
+      "Brand",
+      "Neutral",
+      "Colorful",
+      "DarkRed",
+      "Cranberry",
+      "Red",
+      "Pumpkin",
+      "Peach",
+      "Marigold",
+      "Gold",
+      "Brass",
+      "Brown",
+      "Forest",
+      "Seafoam",
+      "DarkGreen",
+      "LightTeal",
+      "Teal",
+      "Steel",
+      "Blue",
+      "RoyalBlue",
+      "Cornflower",
+      "Navy",
+      "Lavender",
+      "Purple",
+      "Grape",
+      "Lilac",
+      "Pink",
+      "Magenta",
+      "Plum",
+      "Beige",
+      "Mink",
+      "Platinum",
+      "Anchor"
+    ],
+    "AvatarShape": [
+      "Circular",
+      "Square"
+    ],
+    "BadgeCanvas.Appearance": [
+      "Filled",
+      "Outline",
+      "Ghost",
+      "Inverted",
+      "Tint"
+    ],
+    "BadgeCanvas.Shape": [
+      "Circular",
+      "Square",
+      "Rounded"
+    ],
+    "BadgeCanvas.ThemeColor": [
+      "Brand",
+      "Danger",
+      "Important",
+      "Informative",
+      "Severe",
+      "Subtle",
+      "Success",
+      "Warning"
+    ],
+    "BorderStyle": [
+      "Solid",
+      "Dashed",
+      "Dotted",
+      "None"
+    ],
+    "ButtonAppearance": [
+      "Primary",
+      "Secondary",
+      "Outline",
+      "Subtle",
+      "Transparent"
+    ],
+    "ButtonLayout": [
+      "IconBefore",
+      "IconAfter",
+      "IconOnly"
+    ],
+    "CardDirection": [
+      "Vertical",
+      "Horizontal"
+    ],
+    "DatePickerFormat": [
+      "Short",
+      "LongAbbreviated",
+      "YearMonth",
+      "Custom"
+    ],
+    "DateTimeZone": [
+      "Local",
+      "UTC"
+    ],
+    "DecimalPrecision": [
+      "Auto",
+      "0",
+      "1",
+      "2",
+      "3"
+    ],
+    "DropShadow": [
+      "None",
+      "Light",
+      "Semilight",
+      "Regular",
+      "Semibold",
+      "Bold",
+      "ExtraBold"
+    ],
+    "Font": [
+      "'Open Sans'",
+      "'Segoe UI'",
+      "Arial",
+      "'Courier New'",
+      "Georgia",
+      "'Great Vibes'",
+      "Lato",
+      "'Lato Black'",
+      "'Lato Hairline'",
+      "'Lato Light'",
+      "Verdana",
+      "'Patrick Hand'",
+      "'Dancing Script'"
+    ],
+    "FontWeight": [
+      "Bold",
+      "Semibold",
+      "Normal",
+      "Lighter"
+    ],
+    "Header.Style": [
+      "Brand",
+      "Light",
+      "Dark",
+      "Neutral",
+      "Subtle",
+      "Transparent"
+    ],
+    "IconStyle": [
+      "Outline",
+      "Filled"
+    ],
+    "ImagePosition": [
+      "Before",
+      "After"
+    ],
+    "LayoutDirection": [
+      "Horizontal",
+      "Vertical"
+    ],
+    "LinkAppearance": [
+      "Default",
+      "Subtle"
+    ],
+    "OptionLayout": [
+      "Vertical",
+      "Horizontal",
+      "HorizontalStacked"
+    ],
+    "PresenceBadge": [
+      "Available",
+      "Busy",
+      "DoNotDisturb",
+      "Away",
+      "Offline",
+      "OutOfOffice",
+      "Unknown"
+    ],
+    "ProgressColor": [
+      "Brand",
+      "Error",
+      "Warning",
+      "Success"
+    ],
+    "ProgressShape": [
+      "Rounded",
+      "Square"
+    ],
+    "ProgressThickness": [
+      "Medium",
+      "Large"
+    ],
+    "SliderSize": [
+      "Small",
+      "Medium",
+      "Large"
+    ],
+    "SpinnerAppearance": [
+      "Primary",
+      "Inverted"
+    ],
+    "SpinnerLabelPosition": [
+      "Before",
+      "After",
+      "Above",
+      "Below"
+    ],
+    "SpinnerSize": [
+      "ExtraTiny",
+      "Tiny",
+      "ExtraSmall",
+      "Small",
+      "Medium",
+      "Large",
+      "ExtraLarge",
+      "Huge"
+    ],
+    "StartOfWeek": [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday"
+    ],
+    "TabListAlignment": [
+      "Start",
+      "Center",
+      "End"
+    ],
+    "TabListAppearance": [
+      "Transparent",
+      "Subtle",
+      "Underline",
+      "Filled"
+    ],
+    "Table.ReflowBehavior": [
+      "Reflow",
+      "None"
+    ],
+    "Table.Size": [
+      "Small",
+      "Medium",
+      "Large"
+    ],
+    "TextInputType": [
+      "SingleLine",
+      "Multiline",
+      "Password",
+      "Search"
+    ],
+    "ToggleLabelPosition": [
+      "Before",
+      "After",
+      "Above",
+      "Below"
+    ],
+    "TriggerOutput": [
+      "Keypress",
+      "FocusOut",
+      "Delayed"
+    ],
+    "ValidationState": [
+      "Error",
+      "None"
+    ],
+    "VerticalAlign": [
+      "Top",
+      "Middle",
+      "Bottom"
+    ],
+    "DisplayMode": [
+      "Edit",
+      "View",
+      "Disabled"
+    ]
+  },
+  "controls": {
+    "ModernAvatar@1.1.0": {
+      "doc": "Avatar modern control in canvas apps",
+      "properties": {
+        "AccessibleLabel": {
+          "type": "Text"
+        },
+        "Appearance": {
+          "type": "Enum",
+          "enum": "AvatarColor"
+        },
+        "Badge": {
+          "type": "Enum",
+          "enum": "PresenceBadge"
+        },
+        "BasePaletteColor": {
+          "type": "Color"
+        },
+        "BorderColor": {
+          "type": "Color"
+        },
+        "Color": {
+          "type": "Color"
+        },
+        "ContentLanguage": {
+          "type": "Text"
+        },
+        "DisplayMode": {
+          "type": "Enum",
+          "enum": "DisplayMode"
+        },
+        "Fill": {
+          "type": "Color"
+        },
+        "Font": {
+          "type": "Enum",
+          "enum": "Font"
+        },
+        "FontWeight": {
+          "type": "Enum",
+          "enum": "FontWeight"
+        },
+        "Height": {
+          "type": "Number"
+        },
+        "Image": {
+          "type": "Image"
+        },
+        "Italic": {
+          "type": "Boolean"
+        },
+        "Name": {
+          "type": "Text"
+        },
+        "OnSelect": {
+          "type": "Behaviour"
+        },
+        "RadiusBottomLeft": {
+          "type": "Number"
+        },
+        "RadiusBottomRight": {
+          "type": "Number"
+        },
+        "RadiusTopLeft": {
+          "type": "Number"
+        },
+        "RadiusTopRight": {
+          "type": "Number"
+        },
+        "Shape": {
+          "type": "Enum",
+          "enum": "AvatarShape"
+        },
+        "Size": {
+          "type": "Number"
+        },
+        "Strikethrough": {
+          "type": "Boolean"
+        },
+        "Tooltip": {
+          "type": "Text"
+        },
+        "Underline": {
+          "type": "Boolean"
+        },
+        "Visible": {
+          "type": "Boolean"
+        },
+        "Width": {
+          "type": "Number"
+        },
+        "X": {
+          "type": "Number"
+        },
+        "Y": {
+          "type": "Number"
+        }
+      }
+    },
+    "Badge@0.0.24": {
+      "doc": "Badge control in Power Apps",
+      "properties": {
+        "AccessibleLabel": {
+          "type": "Text"
+        },
+        "Align": {
+          "type": "Enum",
+          "enum": "Align"
+        },
+        "Appearance": {
+          "type": "Enum",
+          "enum": "BadgeCanvas.Appearance"
+        },
+        "BasePaletteColor": {
+          "type": "Color"
+        },
+        "Content": {
+          "type": "Text"
+        },
+        "DisplayMode": {
+          "type": "Enum",
+          "enum": "DisplayMode"
+        },
+        "Font": {
+          "type": "Enum",
+          "enum": "Font"
+        },
+        "FontColor": {
+          "type": "Color"
+        },
+        "FontItalic": {
+          "type": "Boolean"
+        },
+        "FontSize": {
+          "type": "Number"
+        },
+        "FontStrikethrough": {
+          "type": "Boolean"
+        },
+        "FontUnderline": {
+          "type": "Boolean"
+        },
+        "FontWeight": {
+          "type": "Enum",
+          "enum": "FontWeight"
+        },
+        "Height": {
+          "type": "Number"
+        },
+        "Shape": {
+          "type": "Enum",
+          "enum": "BadgeCanvas.Shape"
+        },
+        "ThemeColor": {
+          "type": "Enum",
+          "enum": "BadgeCanvas.ThemeColor"
+        },
+        "VerticalAlign": {
+          "type": "Enum",
+          "enum": "VerticalAlign"
+        },
+        "Visible": {
+          "type": "Boolean"
+        },
+        "Width": {
+          "type": "Number"
+        },
+        "X": {
+          "type": "Number"
+        },
+        "Y": {
+          "type": "Number"
+        }
+      }
+    },
+    "ModernButton@1.0.0": {
+      "doc": "Button modern control in canvas apps",
+      "properties": {
+        "AccessibleLabel": {
+          "type": "Text"
+        },
+        "Align": {
+          "type": "Enum",
+          "enum": "Align"
+        },
+        "Appearance": {
+          "type": "Enum",
+          "enum": "ButtonAppearance"
+        },
+        "BasePaletteColor": {
+          "type": "Color"
+        },
+        "BorderColor": {
+          "type": "Color"
+        },
+        "BorderStyle": {
+          "type": "Enum",
+          "enum": "BorderStyle"
+        },
+        "BorderThickness": {
+          "type": "Number"
+        },
+        "Color": {
+          "type": "Color"
+        },
+        "ContentLanguage": {
+          "type": "Text"
+        },
+        "DisplayMode": {
+          "type": "Enum",
+          "enum": "DisplayMode"
+        },
+        "Font": {
+          "type": "Enum",
+          "enum": "Font"
+        },
+        "FontWeight": {
+          "type": "Enum",
+          "enum": "FontWeight"
+        },
+        "Height": {
+          "type": "Number"
+        },
+        "Icon": {
+          "type": "Text"
+        },
+        "IconRotation": {
+          "type": "Number"
+        },
+        "IconStyle": {
+          "type": "Enum",
+          "enum": "IconStyle"
+        },
+        "Italic": {
+          "type": "Boolean"
+        },
+        "Layout": {
+          "type": "Enum",
+          "enum": "ButtonLayout"
+        },
+        "OnSelect": {
+          "type": "Behaviour"
+        },
+        "PaddingBottom": {
+          "type": "Number"
+        },
+        "PaddingLeft": {
+          "type": "Number"
+        },
+        "PaddingRight": {
+          "type": "Number"
+        },
+        "PaddingTop": {
+          "type": "Number"
+        },
+        "RadiusBottomLeft": {
+          "type": "Number"
+        },
+        "RadiusBottomRight": {
+          "type": "Number"
+        },
+        "RadiusTopLeft": {
+          "type": "Number"
+        },
+        "RadiusTopRight": {
+          "type": "Number"
+        },
+        "Size": {
+          "type": "Number"
+        },
+        "Strikethrough": {
+          "type": "Boolean"
+        },
+        "Text": {
+          "type": "Text"
+        },
+        "Tooltip": {
+          "type": "Text"
+        },
+        "Underline": {
+          "type": "Boolean"
+        },
+        "VerticalAlign": {
+          "type": "Enum",
+          "enum": "VerticalAlign"
+        },
+        "Visible": {
+          "type": "Boolean"
+        },
+        "Width": {
+          "type": "Number"
+        },
+        "X": {
+          "type": "Number"
+        },
+        "Y": {
+          "type": "Number"
+        }
+      }
+    },
+    "ModernCard@1.3.0": {
+      "doc": "Card modern control",
+      "properties": {
+        "Description": {
+          "type": "Text"
+        },
+        "DescriptionColor": {
+          "type": "Color"
+        },
+        "DescriptionSize": {
+          "type": "Number"
+        },
+        "Direction": {
+          "type": "Enum",
+          "enum": "CardDirection"
+        },
+        "DisplayMode": {
+          "type": "Enum",
+          "enum": "DisplayMode"
+        },
+        "DropShadow": {
+          "type": "Enum",
+          "enum": "DropShadow"
+        },
+        "Fill": {
+          "type": "Color"
+        },
+        "HeaderImage": {
+          "type": "Image"
+        },
+        "HeaderImageAltText": {
+          "type": "Text"
+        },
+        "Image": {
+          "type": "Image"
+        },
+        "ImageAltText": {
+          "type": "Text"
+        },
+        "ImagePosition": {
+          "type": "Enum",
+          "enum": "ImagePosition"
+        },
+        "OnSelect": {
+          "type": "Behaviour"
+        },
+        "Radius": {
+          "type": "Number"
+        },
+        "Subtitle": {
+          "type": "Text"
+        },
+        "SubtitleColor": {
+          "type": "Color"
+        },
+        "SubtitleSize": {
+          "type": "Number"
+        },
+        "Title": {
+          "type": "Text"
+        },
+        "TitleColor": {
+          "type": "Color"
+        },
+        "TitleSize": {
+          "type": "Number"
+        },
+        "Visible": {
+          "type": "Boolean"
+        },
+        "X": {
+          "type": "Number"
+        },
+        "Y": {
+          "type": "Number"
+        }
+      }
+    },
+    "ModernCheckbox@1.0.1": {
+      "doc": "Checkbox modern control in Power Apps",
+      "properties": {
+        "AccessibleLabel": {
+          "type": "Text"
+        },
+        "BasePaletteColor": {
+          "type": "Color"
+        },
+        "Checked": {
+          "type": "Boolean"
+        },
+        "Color": {
+          "type": "Color"
+        },
+        "DisplayMode": {
+          "type": "Enum",
+          "enum": "DisplayMode"
+        },
+        "Font": {
+          "type": "Enum",
+          "enum": "Font"
+        },
+        "FontItalic": {
+          "type": "Boolean"
+        },
+        "FontStrikethrough": {
+          "type": "Boolean"
+        },
+        "FontUnderline": {
+          "type": "Boolean"
+        },
+        "FontWeight": {
+          "type": "Enum",
+          "enum": "FontWeight"
+        },
+        "Height": {
+          "type": "Number"
+        },
+        "Label": {
+          "type": "Text"
+        },
+        "OnCheck": {
+          "type": "Behaviour"
+        },
+        "OnSelect": {
+          "type": "Behaviour"
+        },
+        "OnUncheck": {
+          "type": "Behaviour"
+        },
+        "Size": {
+          "type": "Number"
+        },
+        "Tooltip": {
+          "type": "Text"
+        },
+        "Visible": {
+          "type": "Boolean"
+        },
+        "Width": {
+          "type": "Number"
+        },
+        "X": {
+          "type": "Number"
+        },
+        "Y": {
+          "type": "Number"
+        }
+      }
+    },
+    "ModernCombobox@1.1.1": {
+      "doc": "Combo box modern control in canvas apps",
+      "properties": {
+        "AccessibleLabel": {
+          "type": "Text"
+        },
+        "AllowMultipleSelection": {
+          "type": "Boolean"
+        },
+        "AllowSearching": {
+          "type": "Boolean"
+        },
+        "Appearance": {
+          "type": "Enum",
+          "enum": "Appearance"
+        },
+        "BasePaletteColor": {
+          "type": "Color"
+        },
+        "BorderColor": {
+          "type": "Color"
+        },
+        "BorderStyle": {
+          "type": "Enum",
+          "enum": "BorderStyle"
+        },
+        "BorderThickness": {
+          "type": "Number"
+        },
+        "Color": {
+          "type": "Color"
+        },
+        "DefaultSelectedItems": {
+          "type": "ItemsRowTable"
+        },
+        "DelayOutput": {
+          "type": "Boolean"
+        },
+        "DisplayMode": {
+          "type": "Enum",
+          "enum": "DisplayMode"
+        },
+        "Fill": {
+          "type": "Color"
+        },
+        "Font": {
+          "type": "Enum",
+          "enum": "Font"
+        },
+        "FontWeight": {
+          "type": "Enum",
+          "enum": "FontWeight"
+        },
+        "Height": {
+          "type": "Number"
+        },
+        "InputTextPlaceholder": {
+          "type": "Text"
+        },
+        "IsSearchable": {
+          "type": "Boolean"
+        },
+        "Italic": {
+          "type": "Boolean"
+        },
+        "ItemDisplayText": {
+          "type": "ItemsText"
+        },
+        "Items": {
+          "type": "Table"
+        },
+        "MultiValueDelimiter": {
+          "type": "Text"
+        },
+        "OnChange": {
+          "type": "Behaviour"
+        },
+        "PaddingBottom": {
+          "type": "Number"
+        },
+        "PaddingLeft": {
+          "type": "Number"
+        },
+        "PaddingRight": {
+          "type": "Number"
+        },
+        "PaddingTop": {
+          "type": "Number"
+        },
+        "RadiusBottomLeft": {
+          "type": "Number"
+        },
+        "RadiusBottomRight": {
+          "type": "Number"
+        },
+        "RadiusTopLeft": {
+          "type": "Number"
+        },
+        "RadiusTopRight": {
+          "type": "Number"
+        },
+        "Required": {
+          "type": "Boolean"
+        },
+        "SearchText": {
+          "type": "Text"
+        },
+        "SelectMultiple": {
+          "type": "Boolean"
+        },
+        "Selected": {
+          "type": "ItemsRow"
+        },
+        "SelectedItems": {
+          "type": "ItemsRowTable"
+        },
+        "Size": {
+          "type": "Number"
+        },
+        "Strikethrough": {
+          "type": "Boolean"
+        },
+        "TabIndex": {
+          "type": "Number"
+        },
+        "Underline": {
+          "type": "Boolean"
+        },
+        "ValidationState": {
+          "type": "Enum",
+          "enum": "ValidationState"
+        },
+        "Visible": {
+          "type": "Boolean"
+        },
+        "Width": {
+          "type": "Number"
+        },
+        "X": {
+          "type": "Number"
+        },
+        "Y": {
+          "type": "Number"
+        }
+      }
+    },
+    "ModernDataGrid@1.5.1": {
+      "doc": "Data Grid modern control in canvas apps",
+      "properties": {
+        "AccessibleLabel": {
+          "type": "Text"
+        },
+        "BasePaletteColor": {
+          "type": "Color"
+        },
+        "Color": {
+          "type": "Color"
+        },
+        "DisplayMode": {
+          "type": "Enum",
+          "enum": "DisplayMode"
+        },
+        "Font": {
+          "type": "Enum",
+          "enum": "Font"
+        },
+        "Height": {
+          "type": "Number"
+        },
+        "Icon": {
+          "type": "Text"
+        },
+        "Image": {
+          "type": "Image"
+        },
+        "Items": {
+          "type": "Table"
+        },
+        "Required": {
+          "type": "Boolean"
+        },
+        "SearchText": {
+          "type": "Text"
+        },
+        "Searchable": {
+          "type": "Boolean"
+        },
+        "SelectMultiple": {
+          "type": "Boolean"
+        },
+        "Selected": {
+          "type": "Record"
+        },
+        "SelectedItems": {
+          "type": "Table"
+        },
+        "ShowHeaders": {
+          "type": "Boolean"
+        },
+        "ShowSelector": {
+          "type": "Boolean"
+        },
+        "Size": {
+          "type": "Number"
+        },
+        "Sortable": {
+          "type": "Boolean"
+        },
+        "Text": {
+          "type": "Text"
+        },
+        "Visible": {
+          "type": "Boolean"
+        },
+        "Width": {
+          "type": "Number"
+        },
+        "X": {
+          "type": "Number"
+        },
+        "Y": {
+          "type": "Number"
+        }
+      }
+    },
+    "ModernDatePicker@1.0.1": {
+      "doc": "Date picker control in Power Apps",
+      "properties": {
+        "AccessibleLabel": {
+          "type": "Text"
+        },
+        "Appearance": {
+          "type": "Enum",
+          "enum": "Appearance"
+        },
+        "BasePaletteColor": {
+          "type": "Color"
+        },
+        "Color": {
+          "type": "Color"
+        },
+        "DateTimeZone": {
+          "type": "Enum",
+          "enum": "DateTimeZone"
+        },
+        "DisplayMode": {
+          "type": "Enum",
+          "enum": "DisplayMode"
+        },
+        "EndDate": {
+          "type": "DateTime"
+        },
+        "Font": {
+          "type": "Enum",
+          "enum": "Font"
+        },
+        "FontColor": {
+          "type": "Color"
+        },
+        "FontItalic": {
+          "type": "Boolean"
+        },
+        "FontSize": {
+          "type": "Number"
+        },
+        "FontStrikethrough": {
+          "type": "Boolean"
+        },
+        "FontUnderline": {
+          "type": "Boolean"
+        },
+        "FontWeight": {
+          "type": "Enum",
+          "enum": "FontWeight"
+        },
+        "Format": {
+          "type": "Enum",
+          "enum": "DatePickerFormat"
+        },
+        "Height": {
+          "type": "Number"
+        },
+        "IsEditable": {
+          "type": "Boolean"
+        },
+        "OnChange": {
+          "type": "Behaviour"
+        },
+        "PlaceHolder": {
+          "type": "Text"
+        },
+        "Placeholder": {
+          "type": "Text"
+        },
+        "Required": {
+          "type": "Boolean"
+        },
+        "SelectedDate": {
+          "type": "DateTime"
+        },
+        "Size": {
+          "type": "Number"
+        },
+        "StartDate": {
+          "type": "DateTime"
+        },
+        "StartOfWeek": {
+          "type": "Enum",
+          "enum": "StartOfWeek"
+        },
+        "Underline": {
+          "type": "Boolean"
+        },
+        "ValidationState": {
+          "type": "Enum",
+          "enum": "ValidationState"
+        },
+        "Visible": {
+          "type": "Boolean"
+        },
+        "Width": {
+          "type": "Number"
+        },
+        "X": {
+          "type": "Number"
+        },
+        "Y": {
+          "type": "Number"
+        }
+      }
+    },
+    "ModernDropdown@1.0.2": {
+      "doc": "Dropdown modern control in canvas apps",
+      "properties": {
+        "AccessibleLabel": {
+          "type": "Text"
+        },
+        "Appearance": {
+          "type": "Enum",
+          "enum": "Appearance"
+        },
+        "BasePaletteColor": {
+          "type": "Color"
+        },
+        "BorderColor": {
+          "type": "Color"
+        },
+        "BorderStyle": {
+          "type": "Enum",
+          "enum": "BorderStyle"
+        },
+        "BorderThickness": {
+          "type": "Number"
+        },
+        "Color": {
+          "type": "Color"
+        },
+        "ContentLanguage": {
+          "type": "Text"
+        },
+        "Default": {
+          "type": "ItemsRow"
+        },
+        "DisplayMode": {
+          "type": "Enum",
+          "enum": "DisplayMode"
+        },
+        "Fill": {
+          "type": "Color"
+        },
+        "Font": {
+          "type": "Enum",
+          "enum": "Font"
+        },
+        "FontWeight": {
+          "type": "Enum",
+          "enum": "FontWeight"
+        },
+        "Height": {
+          "type": "Number"
+        },
+        "Italic": {
+          "type": "Boolean"
+        },
+        "ItemDisplayText": {
+          "type": "ItemsText"
+        },
+        "Items": {
+          "type": "Table"
+        },
+        "OnChange": {
+          "type": "Behaviour"
+        },
+        "PaddingBottom": {
+          "type": "Number"
+        },
+        "PaddingLeft": {
+          "type": "Number"
+        },
+        "PaddingRight": {
+          "type": "Number"
+        },
+        "PaddingTop": {
+          "type": "Number"
+        },
+        "RadiusBottomLeft": {
+          "type": "Number"
+        },
+        "RadiusBottomRight": {
+          "type": "Number"
+        },
+        "RadiusTopLeft": {
+          "type": "Number"
+        },
+        "RadiusTopRight": {
+          "type": "Number"
+        },
+        "Required": {
+          "type": "Boolean"
+        },
+        "Selected": {
+          "type": "ItemsRow"
+        },
+        "Size": {
+          "type": "Number"
+        },
+        "Strikethrough": {
+          "type": "Boolean"
+        },
+        "Underline": {
+          "type": "Boolean"
+        },
+        "ValidationState": {
+          "type": "Enum",
+          "enum": "ValidationState"
+        },
+        "Visible": {
+          "type": "Boolean"
+        },
+        "Width": {
+          "type": "Number"
+        },
+        "X": {
+          "type": "Number"
+        },
+        "Y": {
+          "type": "Number"
+        }
+      }
+    },
+    "Header@0.0.44": {
+      "doc": "Header modern control in Power Apps",
+      "properties": {
+        "BasePaletteColor": {
+          "type": "Color"
+        },
+        "BorderColor": {
+          "type": "Color"
+        },
+        "BorderRadiusBottomLeft": {
+          "type": "Text"
+        },
+        "BorderRadiusBottomRight": {
+          "type": "Text"
+        },
+        "BorderRadiusTopLeft": {
+          "type": "Text"
+        },
+        "BorderRadiusTopRight": {
+          "type": "Text"
+        },
+        "DisplayMode": {
+          "type": "Enum",
+          "enum": "DisplayMode"
+        },
+        "Fill": {
+          "type": "Color"
+        },
+        "Font": {
+          "type": "Enum",
+          "enum": "Font"
+        },
+        "FontColor": {
+          "type": "Color"
+        },
+        "Height": {
+          "type": "Number"
+        },
+        "IsLogoVisible": {
+          "type": "Boolean"
+        },
+        "IsProfilePictureVisible": {
+          "type": "Boolean"
+        },
+        "IsTitleVisible": {
+          "type": "Boolean"
+        },
+        "Logo": {
+          "type": "Image"
+        },
+        "LogoMaxHeight": {
+          "type": "Number"
+        },
+        "LogoToolTip": {
+          "type": "Text"
+        },
+        "OnSelectLogo": {
+          "type": "Behaviour"
+        },
+        "Style": {
+          "type": "Enum",
+          "enum": "Header.Style"
+        },
+        "Title": {
+          "type": "Text"
+        },
+        "TitleFontSize": {
+          "type": "Number"
+        },
+        "Visible": {
+          "type": "Boolean"
+        },
+        "Width": {
+          "type": "Number"
+        },
+        "X": {
+          "type": "Number"
+        },
+        "Y": {
+          "type": "Number"
+        }
+      }
+    },
+    "ModernInformationButton@1.0.1": {
+      "doc": "Info button modern control in canvas apps",
+      "properties": {
+        "AccessibleLabel": {
+          "type": "Text"
+        },
+        "BasePaletteColor": {
+          "type": "Color"
+        },
+        "Color": {
+          "type": "Color"
+        },
+        "Content": {
+          "type": "Text"
+        },
+        "ContentLanguage": {
+          "type": "Text"
+        },
+        "DisplayMode": {
+          "type": "Enum",
+          "enum": "DisplayMode"
+        },
+        "Font": {
+          "type": "Enum",
+          "enum": "Font"
+        },
+        "FontWeight": {
+          "type": "Enum",
+          "enum": "FontWeight"
+        },
+        "Height": {
+          "type": "Number"
+        },
+        "IconColor": {
+          "type": "Color"
+        },
+        "Italic": {
+          "type": "Boolean"
+        },
+        "OnSelect": {
+          "type": "Behaviour"
+        },
+        "PaddingBottom": {
+          "type": "Number"
+        },
+        "PaddingLeft": {
+          "type": "Number"
+        },
+        "PaddingRight": {
+          "type": "Number"
+        },
+        "PaddingTop": {
+          "type": "Number"
+        },
+        "Size": {
+          "type": "Number"
+        },
+        "Strikethrough": {
+          "type": "Boolean"
+        },
+        "Underline": {
+          "type": "Boolean"
+        },
+        "Visible": {
+          "type": "Boolean"
+        },
+        "Width": {
+          "type": "Number"
+        },
+        "X": {
+          "type": "Number"
+        },
+        "Y": {
+          "type": "Number"
+        }
+      }
+    },
+    "ModernLink@1.0.1": {
+      "doc": "Link modern control in canvas apps",
+      "properties": {
+        "AccessibleLabel": {
+          "type": "Text"
+        },
+        "Align": {
+          "type": "Enum",
+          "enum": "Align"
+        },
+        "AutoHeight": {
+          "type": "Boolean"
+        },
+        "BasePaletteColor": {
+          "type": "Color"
+        },
+        "BorderColor": {
+          "type": "Color"
+        },
+        "BorderStyle": {
+          "type": "Enum",
+          "enum": "BorderStyle"
+        },
+        "BorderThickness": {
+          "type": "Number"
+        },
+        "Color": {
+          "type": "Color"
+        },
+        "ContentLanguage": {
+          "type": "Text"
+        },
+        "DisplayMode": {
+          "type": "Enum",
+          "enum": "DisplayMode"
+        },
+        "Fill": {
+          "type": "Color"
+        },
+        "Font": {
+          "type": "Enum",
+          "enum": "Font"
+        },
+        "FontWeight": {
+          "type": "Enum",
+          "enum": "FontWeight"
+        },
+        "Height": {
+          "type": "Number"
+        },
+        "Italic": {
+          "type": "Boolean"
+        },
+        "PaddingBottom": {
+          "type": "Number"
+        },
+        "PaddingLeft": {
+          "type": "Number"
+        },
+        "PaddingRight": {
+          "type": "Number"
+        },
+        "PaddingTop": {
+          "type": "Number"
+        },
+        "RadiusBottomLeft": {
+          "type": "Number"
+        },
+        "RadiusBottomRight": {
+          "type": "Number"
+        },
+        "RadiusTopLeft": {
+          "type": "Number"
+        },
+        "RadiusTopRight": {
+          "type": "Number"
+        },
+        "Size": {
+          "type": "Number"
+        },
+        "Strikethrough": {
+          "type": "Boolean"
+        },
+        "Text": {
+          "type": "Text"
+        },
+        "Type": {
+          "type": "Enum",
+          "enum": "LinkAppearance"
+        },
+        "Underline": {
+          "type": "Boolean"
+        },
+        "Url": {
+          "type": "Text"
+        },
+        "VerticalAlign": {
+          "type": "Enum",
+          "enum": "VerticalAlign"
+        },
+        "Visible": {
+          "type": "Boolean"
+        },
+        "Width": {
+          "type": "Number"
+        },
+        "Wrap": {
+          "type": "Boolean"
+        },
+        "X": {
+          "type": "Number"
+        },
+        "Y": {
+          "type": "Number"
+        }
+      }
+    },
+    "ModernNumberInput@1.1.1": {
+      "doc": "Number Input modern control in canvas apps",
+      "properties": {
+        "AccessibleLabel": {
+          "type": "Text"
+        },
+        "Align": {
+          "type": "Enum",
+          "enum": "Align"
+        },
+        "Appearance": {
+          "type": "Enum",
+          "enum": "Appearance"
+        },
+        "BasePaletteColor": {
+          "type": "Color"
+        },
+        "BorderColor": {
+          "type": "Color"
+        },
+        "BorderStyle": {
+          "type": "Enum",
+          "enum": "BorderStyle"
+        },
+        "BorderThickness": {
+          "type": "Number"
+        },
+        "Color": {
+          "type": "Color"
+        },
+        "ContentLanguage": {
+          "type": "Text"
+        },
+        "Default": {
+          "type": "Text"
+        },
+        "DisplayMode": {
+          "type": "Enum",
+          "enum": "DisplayMode"
+        },
+        "Fill": {
+          "type": "Color"
+        },
+        "Font": {
+          "type": "Enum",
+          "enum": "Font"
+        },
+        "Height": {
+          "type": "Number"
+        },
+        "HintText": {
+          "type": "Text"
+        },
+        "Max": {
+          "type": "Number"
+        },
+        "Min": {
+          "type": "Number"
+        },
+        "OnChange": {
+          "type": "Behaviour"
+        },
+        "PaddingBottom": {
+          "type": "Number"
+        },
+        "PaddingLeft": {
+          "type": "Number"
+        },
+        "PaddingRight": {
+          "type": "Number"
+        },
+        "PaddingTop": {
+          "type": "Number"
+        },
+        "Precision": {
+          "type": "Enum",
+          "enum": "DecimalPrecision"
+        },
+        "RadiusBottomLeft": {
+          "type": "Number"
+        },
+        "RadiusBottomRight": {
+          "type": "Number"
+        },
+        "RadiusTopLeft": {
+          "type": "Number"
+        },
+        "RadiusTopRight": {
+          "type": "Number"
+        },
+        "Size": {
+          "type": "Number"
+        },
+        "Step": {
+          "type": "Number"
+        },
+        "ValidationState": {
+          "type": "Enum",
+          "enum": "ValidationState"
+        },
+        "Value": {
+          "type": "Number"
+        },
+        "Visible": {
+          "type": "Boolean"
+        },
+        "Width": {
+          "type": "Number"
+        },
+        "X": {
+          "type": "Number"
+        },
+        "Y": {
+          "type": "Number"
+        }
+      }
+    },
+    "ModernProgressBar@1.0.0": {
+      "doc": "Progress bar modern control in Power Apps",
+      "properties": {
+        "AccessibleLabel": {
+          "type": "Text"
+        },
+        "BasePaletteColor": {
+          "type": "Color"
+        },
+        "DisplayMode": {
+          "type": "Enum",
+          "enum": "DisplayMode"
+        },
+        "FillColor": {
+          "type": "Color"
+        },
+        "Height": {
+          "type": "Number"
+        },
+        "Indeterminate": {
+          "type": "Boolean"
+        },
+        "Max": {
+          "type": "Number"
+        },
+        "OnChange": {
+          "type": "Behaviour"
+        },
+        "ProgressColor": {
+          "type": "Enum",
+          "enum": "ProgressColor"
+        },
+        "Shape": {
+          "type": "Enum",
+          "enum": "ProgressShape"
+        },
+        "Thickness": {
+          "type": "Enum",
+          "enum": "ProgressThickness"
+        },
+        "TrackColor": {
+          "type": "Color"
+        },
+        "Value": {
+          "type": "Number"
+        },
+        "Visible": {
+          "type": "Boolean"
+        },
+        "Width": {
+          "type": "Number"
+        },
+        "X": {
+          "type": "Number"
+        },
+        "Y": {
+          "type": "Number"
+        }
+      }
+    },
+    "ModernRadio@1.0.1": {
+      "doc": "Radio modern control in canvas apps",
+      "properties": {
+        "AccessibleLabel": {
+          "type": "Text"
+        },
+        "BasePaletteColor": {
+          "type": "Color"
+        },
+        "BorderColor": {
+          "type": "Color"
+        },
+        "BorderStyle": {
+          "type": "Enum",
+          "enum": "BorderStyle"
+        },
+        "BorderThickness": {
+          "type": "Number"
+        },
+        "Color": {
+          "type": "Color"
+        },
+        "ContentLanguage": {
+          "type": "Text"
+        },
+        "Default": {
+          "type": "Text"
+        },
+        "DisabledColor": {
+          "type": "Color"
+        },
+        "DisplayMode": {
+          "type": "Enum",
+          "enum": "DisplayMode"
+        },
+        "Fill": {
+          "type": "Color"
+        },
+        "Font": {
+          "type": "Enum",
+          "enum": "Font"
+        },
+        "FontWeight": {
+          "type": "Enum",
+          "enum": "FontWeight"
+        },
+        "Height": {
+          "type": "Number"
+        },
+        "HoverColor": {
+          "type": "Color"
+        },
+        "Italic": {
+          "type": "Boolean"
+        },
+        "ItemDisplayText": {
+          "type": "Text"
+        },
+        "Items": {
+          "type": "Table"
+        },
+        "Layout": {
+          "type": "Enum",
+          "enum": "OptionLayout"
+        },
+        "LineHeight": {
+          "type": "Number"
+        },
+        "OnChange": {
+          "type": "Behaviour"
+        },
+        "PaddingBottom": {
+          "type": "Number"
+        },
+        "PaddingLeft": {
+          "type": "Number"
+        },
+        "PaddingRight": {
+          "type": "Number"
+        },
+        "PaddingTop": {
+          "type": "Number"
+        },
+        "PressedColor": {
+          "type": "Color"
+        },
+        "RadioBackgroundFill": {
+          "type": "Color"
+        },
+        "RadioBorderColor": {
+          "type": "Color"
+        },
+        "RadioSelectionFill": {
+          "type": "Color"
+        },
+        "RadioSize": {
+          "type": "Number"
+        },
+        "RadiusBottomLeft": {
+          "type": "Number"
+        },
+        "RadiusBottomRight": {
+          "type": "Number"
+        },
+        "RadiusTopLeft": {
+          "type": "Number"
+        },
+        "RadiusTopRight": {
+          "type": "Number"
+        },
+        "Required": {
+          "type": "Boolean"
+        },
+        "Selected": {
+          "type": "Record"
+        },
+        "Size": {
+          "type": "Number"
+        },
+        "Strikethrough": {
+          "type": "Boolean"
+        },
+        "TriggerOutput": {
+          "type": "Enum",
+          "enum": "TriggerOutput"
+        },
+        "Underline": {
+          "type": "Boolean"
+        },
+        "Visible": {
+          "type": "Boolean"
+        },
+        "Width": {
+          "type": "Number"
+        },
+        "X": {
+          "type": "Number"
+        },
+        "Y": {
+          "type": "Number"
+        }
+      }
+    },
+    "ModernSpinner@1.1.0": {
+      "doc": "Spinner modern control in Power Apps",
+      "properties": {
+        "AccessibleLabel": {
+          "type": "Text"
+        },
+        "Appearance": {
+          "type": "Enum",
+          "enum": "SpinnerAppearance"
+        },
+        "BasePaletteColor": {
+          "type": "Color"
+        },
+        "Color": {
+          "type": "Color"
+        },
+        "DisplayMode": {
+          "type": "Enum",
+          "enum": "DisplayMode"
+        },
+        "Font": {
+          "type": "Enum",
+          "enum": "Font"
+        },
+        "FontColor": {
+          "type": "Color"
+        },
+        "FontItalic": {
+          "type": "Boolean"
+        },
+        "FontSize": {
+          "type": "Number"
+        },
+        "FontStrikethrough": {
+          "type": "Boolean"
+        },
+        "FontUnderline": {
+          "type": "Boolean"
+        },
+        "FontWeight": {
+          "type": "Enum",
+          "enum": "FontWeight"
+        },
+        "Height": {
+          "type": "Number"
+        },
+        "Label": {
+          "type": "Text"
+        },
+        "LabelPosition": {
+          "type": "Enum",
+          "enum": "SpinnerLabelPosition"
+        },
+        "OnChange": {
+          "type": "Behaviour"
+        },
+        "PaddingTop": {
+          "type": "Number"
+        },
+        "Size": {
+          "type": "Number"
+        },
+        "SpinnerColor": {
+          "type": "Color"
+        },
+        "SpinnerSize": {
+          "type": "Enum",
+          "enum": "SpinnerSize"
+        },
+        "Strikethrough": {
+          "type": "Boolean"
+        },
+        "TrackColor": {
+          "type": "Color"
+        },
+        "Underline": {
+          "type": "Boolean"
+        },
+        "Visible": {
+          "type": "Boolean"
+        },
+        "Width": {
+          "type": "Number"
+        },
+        "X": {
+          "type": "Number"
+        },
+        "Y": {
+          "type": "Number"
+        }
+      }
+    },
+    "ModernSlider@1.0.1": {
+      "doc": "Slider modern control in canvas apps",
+      "properties": {
+        "AccessibleLabel": {
+          "type": "Text"
+        },
+        "BasePaletteColor": {
+          "type": "Color"
+        },
+        "ContentLanguage": {
+          "type": "Text"
+        },
+        "Default": {
+          "type": "Text"
+        },
+        "DisplayMode": {
+          "type": "Enum",
+          "enum": "DisplayMode"
+        },
+        "Height": {
+          "type": "Number"
+        },
+        "LayoutDirection": {
+          "type": "Enum",
+          "enum": "LayoutDirection"
+        },
+        "Max": {
+          "type": "Number"
+        },
+        "Min": {
+          "type": "Number"
+        },
+        "OnChange": {
+          "type": "Behaviour"
+        },
+        "Size": {
+          "type": "Enum",
+          "enum": "SliderSize"
+        },
+        "Tooltip": {
+          "type": "Text"
+        },
+        "Value": {
+          "type": "Number"
+        },
+        "Visible": {
+          "type": "Boolean"
+        },
+        "Width": {
+          "type": "Number"
+        },
+        "X": {
+          "type": "Number"
+        },
+        "Y": {
+          "type": "Number"
+        }
+      }
+    },
+    "Table@1.0.278": {
+      "doc": "Table modern control in Power Apps (preview)",
+      "properties": {
+        "AccessibleLabel": {
+          "type": "Text"
+        },
+        "BasePaletteColor": {
+          "type": "Color"
+        },
+        "DisplayMode": {
+          "type": "Enum",
+          "enum": "DisplayMode"
+        },
+        "EnableRangeSelection": {
+          "type": "Boolean"
+        },
+        "EnableSorting": {
+          "type": "Boolean"
+        },
+        "Font": {
+          "type": "Enum",
+          "enum": "Font"
+        },
+        "FontColor": {
+          "type": "Color"
+        },
+        "FontSize": {
+          "type": "Number"
+        },
+        "FontWeight": {
+          "type": "Enum",
+          "enum": "FontWeight"
+        },
+        "HeaderFont": {
+          "type": "Enum",
+          "enum": "Font"
+        },
+        "HeaderFontColor": {
+          "type": "Color"
+        },
+        "HeaderFontSize": {
+          "type": "Text"
+        },
+        "HeaderFontWeight": {
+          "type": "Enum",
+          "enum": "FontWeight"
+        },
+        "Height": {
+          "type": "Number"
+        },
+        "Items": {
+          "type": "Table"
+        },
+        "NoDataText": {
+          "type": "Text"
+        },
+        "OnSelect": {
+          "type": "Behaviour"
+        },
+        "ReflowBehavior": {
+          "type": "Enum",
+          "enum": "Table.ReflowBehavior"
+        },
+        "Selected": {
+          "type": "Record"
+        },
+        "ShowAvatar": {
+          "type": "Boolean"
+        },
+        "ShowColumnHeaders": {
+          "type": "Boolean"
+        },
+        "ShowFooter": {
+          "type": "Boolean"
+        },
+        "Size": {
+          "type": "Enum",
+          "enum": "Table.Size"
+        },
+        "Visible": {
+          "type": "Boolean"
+        },
+        "Width": {
+          "type": "Number"
+        },
+        "X": {
+          "type": "Number"
+        },
+        "Y": {
+          "type": "Number"
+        }
+      }
+    },
+    "ModernTabList@1.0.1": {
+      "doc": "Tab List modern control in canvas apps",
+      "properties": {
+        "AccessibleLabel": {
+          "type": "Text"
+        },
+        "Align": {
+          "type": "Enum",
+          "enum": "Align"
+        },
+        "Alignment": {
+          "type": "Enum",
+          "enum": "TabListAlignment"
+        },
+        "Appearance": {
+          "type": "Enum",
+          "enum": "TabListAppearance"
+        },
+        "BasePaletteColor": {
+          "type": "Color"
+        },
+        "BorderColor": {
+          "type": "Color"
+        },
+        "BorderStyle": {
+          "type": "Enum",
+          "enum": "BorderStyle"
+        },
+        "BorderThickness": {
+          "type": "Number"
+        },
+        "Color": {
+          "type": "Color"
+        },
+        "ContentLanguage": {
+          "type": "Text"
+        },
+        "Default": {
+          "type": "ItemsRow"
+        },
+        "DisplayMode": {
+          "type": "Enum",
+          "enum": "DisplayMode"
+        },
+        "Font": {
+          "type": "Enum",
+          "enum": "Font"
+        },
+        "FontWeight": {
+          "type": "Enum",
+          "enum": "FontWeight"
+        },
+        "Height": {
+          "type": "Number"
+        },
+        "Italic": {
+          "type": "Boolean"
+        },
+        "Items": {
+          "type": "Table"
+        },
+        "OnChange": {
+          "type": "Behaviour"
+        },
+        "OnSelect": {
+          "type": "Behaviour"
+        },
+        "PaddingBottom": {
+          "type": "Number"
+        },
+        "PaddingLeft": {
+          "type": "Number"
+        },
+        "PaddingRight": {
+          "type": "Number"
+        },
+        "PaddingTop": {
+          "type": "Number"
+        },
+        "RadiusBottomLeft": {
+          "type": "Number"
+        },
+        "RadiusBottomRight": {
+          "type": "Number"
+        },
+        "RadiusTopLeft": {
+          "type": "Number"
+        },
+        "RadiusTopRight": {
+          "type": "Number"
+        },
+        "Selected": {
+          "type": "ItemsRow"
+        },
+        "Size": {
+          "type": "Number"
+        },
+        "Strikethrough": {
+          "type": "Boolean"
+        },
+        "Underline": {
+          "type": "Boolean"
+        },
+        "Visible": {
+          "type": "Boolean"
+        },
+        "Width": {
+          "type": "Number"
+        },
+        "X": {
+          "type": "Number"
+        },
+        "Y": {
+          "type": "Number"
+        }
+      }
+    },
+    "ModernText@1.0.0": {
+      "doc": "Text modern control in canvas apps",
+      "properties": {
+        "AccessibleLabel": {
+          "type": "Text"
+        },
+        "Align": {
+          "type": "Enum",
+          "enum": "Align"
+        },
+        "AutoHeight": {
+          "type": "Boolean"
+        },
+        "BorderColor": {
+          "type": "Color"
+        },
+        "BorderStyle": {
+          "type": "Enum",
+          "enum": "BorderStyle"
+        },
+        "BorderThickness": {
+          "type": "Number"
+        },
+        "Color": {
+          "type": "Color"
+        },
+        "Fill": {
+          "type": "Color"
+        },
+        "Font": {
+          "type": "Enum",
+          "enum": "Font"
+        },
+        "FontWeight": {
+          "type": "Enum",
+          "enum": "FontWeight"
+        },
+        "Height": {
+          "type": "Number"
+        },
+        "Italic": {
+          "type": "Boolean"
+        },
+        "OnSelect": {
+          "type": "Behaviour"
+        },
+        "PaddingBottom": {
+          "type": "Number"
+        },
+        "PaddingLeft": {
+          "type": "Number"
+        },
+        "PaddingRight": {
+          "type": "Number"
+        },
+        "PaddingTop": {
+          "type": "Number"
+        },
+        "RadiusBottomLeft": {
+          "type": "Number"
+        },
+        "RadiusBottomRight": {
+          "type": "Number"
+        },
+        "RadiusTopLeft": {
+          "type": "Number"
+        },
+        "RadiusTopRight": {
+          "type": "Number"
+        },
+        "Size": {
+          "type": "Number"
+        },
+        "Strikethrough": {
+          "type": "Boolean"
+        },
+        "Text": {
+          "type": "Text"
+        },
+        "Underline": {
+          "type": "Boolean"
+        },
+        "VerticalAlign": {
+          "type": "Enum",
+          "enum": "VerticalAlign"
+        },
+        "Visible": {
+          "type": "Boolean"
+        },
+        "Width": {
+          "type": "Number"
+        },
+        "Wrap": {
+          "type": "Boolean"
+        },
+        "X": {
+          "type": "Number"
+        },
+        "Y": {
+          "type": "Number"
+        }
+      }
+    },
+    "ModernTextInput@1.1.1": {
+      "doc": "Text Input modern control in canvas apps",
+      "properties": {
+        "AccessibleLabel": {
+          "type": "Text"
+        },
+        "Align": {
+          "type": "Enum",
+          "enum": "Align"
+        },
+        "Appearance": {
+          "type": "Enum",
+          "enum": "Appearance"
+        },
+        "BasePaletteColor": {
+          "type": "Color"
+        },
+        "BorderColor": {
+          "type": "Color"
+        },
+        "BorderStyle": {
+          "type": "Enum",
+          "enum": "BorderStyle"
+        },
+        "BorderThickness": {
+          "type": "Number"
+        },
+        "Color": {
+          "type": "Color"
+        },
+        "ContentLanguage": {
+          "type": "Text"
+        },
+        "Default": {
+          "type": "Text"
+        },
+        "DisplayMode": {
+          "type": "Enum",
+          "enum": "DisplayMode"
+        },
+        "Fill": {
+          "type": "Color"
+        },
+        "Font": {
+          "type": "Enum",
+          "enum": "Font"
+        },
+        "FontWeight": {
+          "type": "Enum",
+          "enum": "FontWeight"
+        },
+        "Height": {
+          "type": "Number"
+        },
+        "Italic": {
+          "type": "Boolean"
+        },
+        "MaxLength": {
+          "type": "Number"
+        },
+        "OnChange": {
+          "type": "Behaviour"
+        },
+        "OnSelect": {
+          "type": "Behaviour"
+        },
+        "PaddingBottom": {
+          "type": "Number"
+        },
+        "PaddingLeft": {
+          "type": "Number"
+        },
+        "PaddingRight": {
+          "type": "Number"
+        },
+        "PaddingTop": {
+          "type": "Number"
+        },
+        "Placeholder": {
+          "type": "Text"
+        },
+        "RadiusBottomLeft": {
+          "type": "Number"
+        },
+        "RadiusBottomRight": {
+          "type": "Number"
+        },
+        "RadiusTopLeft": {
+          "type": "Number"
+        },
+        "RadiusTopRight": {
+          "type": "Number"
+        },
+        "Required": {
+          "type": "Boolean"
+        },
+        "Size": {
+          "type": "Number"
+        },
+        "Strikethrough": {
+          "type": "Boolean"
+        },
+        "Text": {
+          "type": "Text"
+        },
+        "TriggerOutput": {
+          "type": "Enum",
+          "enum": "TriggerOutput"
+        },
+        "Type": {
+          "type": "Enum",
+          "enum": "TextInputType"
+        },
+        "Underline": {
+          "type": "Boolean"
+        },
+        "ValidationState": {
+          "type": "Enum",
+          "enum": "ValidationState"
+        },
+        "Visible": {
+          "type": "Boolean"
+        },
+        "Width": {
+          "type": "Number"
+        },
+        "X": {
+          "type": "Number"
+        },
+        "Y": {
+          "type": "Number"
+        }
+      }
+    },
+    "ModernToggle@1.0.0": {
+      "doc": "Toggle modern control in Power Apps",
+      "properties": {
+        "AccessibleLabel": {
+          "type": "Text"
+        },
+        "BasePaletteColor": {
+          "type": "Color"
+        },
+        "Checked": {
+          "type": "Boolean"
+        },
+        "Color": {
+          "type": "Color"
+        },
+        "DisplayMode": {
+          "type": "Enum",
+          "enum": "DisplayMode"
+        },
+        "Font": {
+          "type": "Enum",
+          "enum": "Font"
+        },
+        "FontItalic": {
+          "type": "Boolean"
+        },
+        "FontStrikethrough": {
+          "type": "Boolean"
+        },
+        "FontUnderline": {
+          "type": "Boolean"
+        },
+        "FontWeight": {
+          "type": "Enum",
+          "enum": "FontWeight"
+        },
+        "Height": {
+          "type": "Number"
+        },
+        "Italic": {
+          "type": "Boolean"
+        },
+        "Label": {
+          "type": "Text"
+        },
+        "LabelPosition": {
+          "type": "Enum",
+          "enum": "ToggleLabelPosition"
+        },
+        "OnCheck": {
+          "type": "Behaviour"
+        },
+        "OnSelect": {
+          "type": "Behaviour"
+        },
+        "OnUncheck": {
+          "type": "Behaviour"
+        },
+        "Size": {
+          "type": "Number"
+        },
+        "Tooltip": {
+          "type": "Text"
+        },
+        "Visible": {
+          "type": "Boolean"
+        },
+        "Width": {
+          "type": "Number"
+        },
+        "X": {
+          "type": "Number"
+        },
+        "Y": {
+          "type": "Number"
+        }
+      }
+    }
+  }
+}

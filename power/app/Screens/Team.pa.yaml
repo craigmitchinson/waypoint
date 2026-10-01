@@ -1,0 +1,2910 @@
+# Waypoint canvas app: the Team screen, the people and the capacity they really bring.
+#
+# Valid against pa.schema.yaml (v3.0): a Screens map, each screen with a Properties formula map and a
+# Children sequence whose items are single-key maps of control name to control instance.
+#
+# Team is src/pages/Team.tsx: the band of the quarter's headline people figures, then one pivot over
+# three tables — the roster, the squads and the non-work time booked inside the quarter. Every
+# number is the engine's, through the named formulas in Formulas.pa.yaml: PeopleTable, SquadTable
+# and colAbsences, with the sorted views TeamPeopleRows, TeamSquadRows and TeamAbsenceRowsAll
+# over them. Nothing here works a number out for itself. The squad-level capacity holds the
+# workbook calls reservations stay engine data and have no surface here
+# (power/decisions.md, "Product decisions, 20 September 2026 evening").
+#
+# The shell is scrWork's, unchanged: tmRoot is a vertical GroupContainer the size of the screen,
+# holding the 48px header and a horizontal row of the rail and the body. X and Y appear only inside
+# the gallery templates, which are not auto-layout.
+#
+# The pivot is one ModernTabList. Its selection lands in varTeamTab, and TeamTab is the formula
+# every gallery's Visible reads, so the screen opens on People before the tab list is ever touched.
+#
+# What is hidden, and why: the add button on the Squads tab is still to come, so the page head
+# carries one button for a person and one for an absence, each shown on its own tab.
+
+Screens:
+  scrTeam:
+    Properties:
+      Fill: =NeutralCanvas
+
+    Children:
+
+      # ---- the root: one vertical auto-layout container the size of the screen ----
+      - tmRoot:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =Parent.Height
+            Fill: =NeutralCanvas
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutOverflowY: =LayoutOverflow.Hide
+            LayoutOverflowX: =LayoutOverflow.Hide
+            LayoutGap: =0
+          Children:
+
+            # ---- shell: the app header ----
+            - tmHeader:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  FillPortions: =0
+                  Height: =AppHeaderH
+                  Fill: =BrandBg
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                  LayoutOverflowY: =LayoutOverflow.Hide
+                  LayoutOverflowX: =LayoutOverflow.Hide
+                  LayoutGap: =Gap
+                  PaddingLeft: =Pad
+                  PaddingRight: =Pad
+                Children:
+                  - tmHeaderName:
+                      Control: Label@2.5.1
+                      Properties:
+                        Width: =Parent.Width / 3
+                        Height: =AppHeaderH
+                        Text: ="Waypoint"
+                        Size: =TypeSubtitle
+                        FontWeight: =FontWeight.Semibold
+                        Font: =FontUI
+                        VerticalAlign: =VerticalAlign.Middle
+                        Color: =BrandFg
+                        Wrap: =true
+                        Overflow: =Overflow.Hidden
+                        PaddingTop: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        AutoHeight: =true
+                  # ---- shell: the scope selector, one cmpScope instance for every screen ----
+                  - tmHeaderScope:
+                      Control: CanvasComponent
+                      ComponentName: cmpScope
+                      Properties:
+                        Width: =Max(Parent.Width * 0.14, 180)
+                        Height: =ControlHeight
+                        Visible: =IncludeScope
+                  # ---- shell: the header search, one cmpSearch instance for every screen ----
+                  - tmHeaderSearch:
+                      Control: CanvasComponent
+                      ComponentName: cmpSearch
+                      Properties:
+                        Width: =Max(Parent.Width * 0.24, 280)
+                        Height: =ControlHeight
+                  - tmHeaderQuarter:
+                      Control: Label@2.5.1
+                      Properties:
+                        Width: =Parent.Width / 3
+                        Height: =AppHeaderH
+                        Text: =CurrentQuarter.Label & " · capacity planner"
+                        Size: =TypeCaption
+                        Font: =FontUI
+                        Align: =Align.Right
+                        VerticalAlign: =VerticalAlign.Middle
+                        Color: =ColorFade(BrandFg, -0.2)
+                        Wrap: =true
+                        Overflow: =Overflow.Hidden
+                        PaddingTop: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        AutoHeight: =true
+
+            # ---- shell: the rail, and the body beside it ----
+            - tmMain:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  FillPortions: =1
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutOverflowY: =LayoutOverflow.Hide
+                  LayoutOverflowX: =LayoutOverflow.Hide
+                  LayoutGap: =0
+                Children:
+
+                  # ---- shell: the rail, one cmpRail instance for every screen ----
+                  - tmRail:
+                      Control: CanvasComponent
+                      ComponentName: cmpRail
+                      Properties:
+                        LayoutMinWidth: =If(RailCollapsed, RailWidthTight, NavW)
+                        Width: =If(RailCollapsed, RailWidthTight, NavW)
+                        Height: =Parent.Height
+                        Active: ="Team"
+
+                  # ---- shell: the body everything else sits inside ----
+                  - tmBody:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        FillPortions: =1
+                        Fill: =NeutralBg3
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutOverflowY: =LayoutOverflow.Scroll
+                        LayoutOverflowX: =LayoutOverflow.Hide
+                        LayoutGap: =Gap
+                        PaddingLeft: =Pad
+                        PaddingRight: =Pad
+                        PaddingTop: =Pad
+                        PaddingBottom: =Pad
+                      Children:
+
+                        # ---- page head: the eyebrow and one h1 on the left, the add button right ----
+                        - tmPageHead:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              FillPortions: =0
+                              Height: =PageHeadH
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutGap: =Gap
+                            Children:
+                              - tmHeadText:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    FillPortions: =1
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutGap: =0
+                                  Children:
+                                    - tmEyebrow:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeKickerLine
+                                          Visible: =!IsCompact
+                                          Text: =CurrentQuarter.Label
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - tmTitle:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeDisplayLine
+                                          Text: ="Team"
+                                          Size: =TypeTitle
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                              # The add button for the roster, whose label follows the pivot.
+                              # It shows on the People tab and opens the person panel empty.
+                              - tmAdd:
+                                  Control: ModernButton@1.0.0
+                                  Properties:
+                                    Appearance: =ButtonAppearance.Primary
+                                    BasePaletteColor: =BrandBg
+                                    Color: =BrandFg
+                                    Font: =FontUI
+                                    Size: =TypeBodyPx
+                                    RadiusTopLeft: =CtrlR
+                                    RadiusTopRight: =CtrlR
+                                    RadiusBottomLeft: =CtrlR
+                                    RadiusBottomRight: =CtrlR
+                                    Width: =Max(Parent.Width * 0.08, 160)
+                                    Height: =ControlHeight
+                                    # the squad form is still to come; absences have
+                                    # their own button beside this one
+                                    Visible: =TeamTab = "People"
+                                    Text: =TeamAddLabel
+                                    AccessibleLabel: =TeamAddLabel
+                                    OnSelect: |
+                                      =Set(varPersonEdit, Blank());
+                                       Set(varPersonSaveError, "");
+                                       Set(varPersonFormOpen, true);
+                                       Set(varTeamFormTried, false);
+                                       // every input starts from its Default, not the last open
+                                       Reset(tmFieldName);
+                                       Reset(tmFieldRole);
+                                       Reset(tmFieldSquad);
+                                       Reset(tmFieldRegion);
+                                       Reset(tmFieldDpw);
+                                       Reset(tmFieldModifier);
+                                       Reset(tmFieldLead);
+                                       Reset(tmFieldEmployment);
+                                       Reset(tmFieldSkills)
+                              # Absences are typed here and nowhere else: the button beside the
+                              # person's opens the panel on nobody, for the planner to pick a
+                              # scope or a few names.
+                              - tmAddAbsence:
+                                  Control: ModernButton@1.0.0
+                                  Properties:
+                                    Appearance: =ButtonAppearance.Primary
+                                    BasePaletteColor: =BrandBg
+                                    Color: =BrandFg
+                                    Font: =FontUI
+                                    Size: =TypeBodyPx
+                                    RadiusTopLeft: =CtrlR
+                                    RadiusTopRight: =CtrlR
+                                    RadiusBottomLeft: =CtrlR
+                                    RadiusBottomRight: =CtrlR
+                                    Width: =Max(Parent.Width * 0.08, 160)
+                                    Height: =ControlHeight
+                                    Visible: =TeamTab = "Absences"
+                                    Text: ="Add absence"
+                                    AccessibleLabel: ="Add an absence"
+                                    OnSelect: |
+                                      =Set(varAbsEdit, Blank());
+                                       Set(varAbsSaveError, "");
+                                       Set(varAbsFromPicked, false);
+                                       // The week each dropdown opens on, the same default its
+                                       // Default property computes: a named formula cannot read
+                                       // a control, so these are what FormAbsenceFromMonday and
+                                       // FormAbsenceToMonday read instead.
+                                       Set(varAbsFromWeek, FormAbsenceFromWeek);
+                                       Set(varAbsToWeek, FormAbsenceToWeek);
+                                       Set(varAbsOpen, true);
+                                       Set(varTeamFormTried, false);
+                                       // every input starts from its Default, not the last open
+                                       Reset(tmAbsScope);
+                                       Reset(tmAbsPeople);
+                                       Reset(tmAbsType);
+                                       Reset(tmAbsFrom);
+                                       Reset(tmAbsTo);
+                                       Reset(tmAbsNote)
+
+                        # ---- the brand band: the quarter's headline people figures ----
+                        - tmBand:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              FillPortions: =0
+                              Height: |
+                                =If(App.Width < (4 * 200 + BandKickerW), BandH * 2, BandH)
+                              LayoutWrap: =true
+                              Fill: =BrandBg
+                              RadiusTopLeft: =CardR
+                              RadiusTopRight: =CardR
+                              RadiusBottomLeft: =CardR
+                              RadiusBottomRight: =CardR
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutGap: =Gap
+                              PaddingLeft: =Pad
+                              PaddingRight: =Pad
+                              PaddingTop: =10
+                              PaddingBottom: =10
+                            Children:
+                              - tmBandKicker:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Width: =BandKickerW
+                                    Height: =TypeKickerLine * 2
+                                    Text: ="The team this quarter"
+                                    Size: =TypeCaption
+                                    FontWeight: =FontWeight.Normal
+                                    Font: =FontUI
+                                    Color: =ColorFade(BrandFg, -0.2)
+                                    Wrap: =true
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    AutoHeight: =true
+                              - tmStatPeople:
+                                  Control: CanvasComponent
+                                  ComponentName: cmpStat
+                                  Properties:
+                                    Width: =Max((Parent.Width - Pad * 2 - BandKickerW - Gap * 4) / 4, 180)
+                                    LayoutMinWidth: =180
+                                    Height: =BandH - 20
+                                    OnBrand: =true
+                                    Label: ="People"
+                                    Value: =Text(TeamPeopleCount, "[$-en-US]#,##0")
+                                    Sub: =TeamInSquadCount & " in a squad"
+                              - tmStatSquads:
+                                  Control: CanvasComponent
+                                  ComponentName: cmpStat
+                                  Properties:
+                                    Width: =Max((Parent.Width - Pad * 2 - BandKickerW - Gap * 4) / 4, 180)
+                                    LayoutMinWidth: =180
+                                    Height: =BandH - 20
+                                    OnBrand: =true
+                                    Label: ="Squads"
+                                    Value: =Text(TeamSquadCount, "[$-en-US]#,##0")
+                                    Sub: =TeamLedCount & " with a lead"
+                              - tmStatNet:
+                                  Control: CanvasComponent
+                                  ComponentName: cmpStat
+                                  Properties:
+                                    Width: =Max((Parent.Width - Pad * 2 - BandKickerW - Gap * 4) / 4, 180)
+                                    LayoutMinWidth: =180
+                                    Height: =BandH - 20
+                                    OnBrand: =true
+                                    Label: ="Net capacity"
+                                    Value: =Text(NetTotal, "[$-en-US]#,##0.0")
+                                    Unit: ="MW"
+                                    Sub: ="Net member weeks across every squad"
+                              - tmStatAbsence:
+                                  Control: CanvasComponent
+                                  ComponentName: cmpStat
+                                  Properties:
+                                    Width: =Max((Parent.Width - Pad * 2 - BandKickerW - Gap * 4) / 4, 180)
+                                    LayoutMinWidth: =180
+                                    Height: =BandH - 20
+                                    OnBrand: =true
+                                    Tone: ="accent"
+                                    Label: ="Absence days"
+                                    Value: =Text(TeamAbsenceDays, "[$-en-US]#,##0.0")
+                                    Sub: ="Absences"
+
+                        # ---- the pivot: three views over the same team ----
+                        # The tab list writes varTeamTab; TeamTab is what the three galleries and
+                        # their header rows read, so People is the view the screen opens on.
+                        - tmPivot:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              FillPortions: =0
+                              Height: =ControlHeight + 16
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutGap: =Gap
+                            Children:
+                              - tmTabs:
+                                  Control: ModernTabList@1.0.1
+                                  Properties:
+                                    Width: =Max(Parent.Width * 0.24, 460)
+                                    Height: =ControlHeight + 8
+                                    Items: =Table({Value:"People"}, {Value:"Squads"}, {Value:"Absences"})
+                                    Default: ={Value:"People"}
+                                    Font: =FontUI
+                                    Size: =TypeBodyPx
+                                    Color: =NeutralFg1
+                                    BasePaletteColor: =BrandBg
+                                    AccessibleLabel: ="Team views"
+                                    OnChange: =Set(varTeamTab, tmTabs.Selected.Value)
+                                    FontWeight: =FontWeight.Semibold
+
+                        # ---- the card the three tables share ----
+                        - tmCard:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              FillPortions: =1
+                              Fill: =NeutralBg1
+                              BorderColor: =NeutralStroke1
+                              BorderThickness: =1
+                              RadiusTopLeft: =CardR
+                              RadiusTopRight: =CardR
+                              RadiusBottomLeft: =CardR
+                              RadiusBottomRight: =CardR
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              # The grid inside is never narrower than its own column minimums, so the card
+                              # scrolls sideways rather than squeezing a cell (power/RUNBOOK.md, "Tables").
+                              LayoutOverflowX: =LayoutOverflow.Scroll
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              LayoutJustifyContent: =LayoutJustifyContent.Start
+                              LayoutGap: =8
+                              PaddingLeft: =Pad
+                              PaddingRight: =Pad
+                              PaddingTop: =Pad
+                              PaddingBottom: =Pad
+                            Children:
+
+                              # ---- the squad filter chip: shown while the roster is narrowed to one squad ----
+                              # Command navigates here with varTeamSquad set, and the Squads tab sets it too.
+                              # Clear puts it back to blank and the whole roster returns.
+                              - tmChipRow:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    FillPortions: =0
+                                    Width: =Parent.Width
+                                    Height: =ControlHeight
+                                    Visible: =TeamSquadFilter && TeamTab = "People"
+                                  Children:
+                                    - tmChipLabel:
+                                        Control: CanvasComponent
+                                        ComponentName: cmpPill
+                                        Properties:
+                                          X: =0
+                                          Y: =(ControlHeight - TypeLabelLine) / 2
+                                          Label: |
+                                            ="Squad: " & varTeamSquad
+                                          Width: |
+                                            =With({t: "Squad: " & varTeamSquad}, Min(Max(Len(t) * 7 + 20, 56), 200))
+                                          Height: =TypeLabelLine
+                                          Tone: ="brand"
+                                    - tmChipClear:
+                                        Control: ModernButton@1.0.0
+                                        Properties:
+                                          Appearance: =ButtonAppearance.Subtle
+                                          BasePaletteColor: =NeutralBg1
+                                          Color: =NeutralFg1
+                                          Font: =FontUI
+                                          Size: =TypeBodyPx
+                                          RadiusTopLeft: =CtrlR
+                                          RadiusTopRight: =CtrlR
+                                          RadiusBottomLeft: =CtrlR
+                                          RadiusBottomRight: =CtrlR
+                                          X: =Max(Parent.Width * 0.16, 200) + 8
+                                          Y: =0
+                                          Width: =Max(Parent.Width * 0.04, 80)
+                                          Height: =ControlHeight
+                                          Text: ="Clear"
+                                          AccessibleLabel: ="Clear the squad filter"
+                                          OnSelect: =Set(varTeamSquad, Blank())
+
+                              # ---- People: the column heads, then the roster ----
+                              # Every column is a named share of the container that holds the cells, with a
+                              # pixel minimum (Formulas.pa.yaml), and the head cells and the row cells read the
+                              # same share and minimum, so the head row and the rows read as one grid.
+                              - tmPeopleHead:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    FillPortions: =0
+                                    Width: =Max(Parent.Width, TeamPeopleColsW)
+                                    Height: =RowHeight
+                                    Visible: =TeamTab = "People"
+                                  Children:
+                                    - tmHeadName:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =TeamNameX
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * TeamShareName, TeamMinName) - TeamNameX - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Name"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - tmHeadLead:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =Max(Parent.Width * TeamShareName, TeamMinName)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * TeamShareLead, TeamMinLead) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Lead"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Center
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - tmHeadSquad:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * TeamShareName, TeamMinName)
+                                             + Max(Parent.Width * TeamShareLead, TeamMinLead)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * TeamShareSquad, TeamMinSquad) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Squad"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - tmHeadGrade:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * TeamShareName, TeamMinName)
+                                             + Max(Parent.Width * TeamShareLead, TeamMinLead)
+                                             + Max(Parent.Width * TeamShareSquad, TeamMinSquad)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * TeamShareGrade, TeamMinGrade) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Grade"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - tmHeadSkills:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * TeamShareName, TeamMinName)
+                                             + Max(Parent.Width * TeamShareLead, TeamMinLead)
+                                             + Max(Parent.Width * TeamShareSquad, TeamMinSquad)
+                                             + Max(Parent.Width * TeamShareGrade, TeamMinGrade)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * TeamShareSkills, TeamMinSkills) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Skills"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - tmHeadDpw:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * TeamShareName, TeamMinName)
+                                             + Max(Parent.Width * TeamShareLead, TeamMinLead)
+                                             + Max(Parent.Width * TeamShareSquad, TeamMinSquad)
+                                             + Max(Parent.Width * TeamShareGrade, TeamMinGrade)
+                                             + Max(Parent.Width * TeamShareSkills, TeamMinSkills)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * TeamShareDpw, TeamMinDpw) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Days per week"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - tmHeadRegion:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * TeamShareName, TeamMinName)
+                                             + Max(Parent.Width * TeamShareLead, TeamMinLead)
+                                             + Max(Parent.Width * TeamShareSquad, TeamMinSquad)
+                                             + Max(Parent.Width * TeamShareGrade, TeamMinGrade)
+                                             + Max(Parent.Width * TeamShareSkills, TeamMinSkills)
+                                             + Max(Parent.Width * TeamShareDpw, TeamMinDpw)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * TeamShareRegion, TeamMinRegion) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Region"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - tmHeadModifier:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * TeamShareName, TeamMinName)
+                                             + Max(Parent.Width * TeamShareLead, TeamMinLead)
+                                             + Max(Parent.Width * TeamShareSquad, TeamMinSquad)
+                                             + Max(Parent.Width * TeamShareGrade, TeamMinGrade)
+                                             + Max(Parent.Width * TeamShareSkills, TeamMinSkills)
+                                             + Max(Parent.Width * TeamShareDpw, TeamMinDpw)
+                                             + Max(Parent.Width * TeamShareRegion, TeamMinRegion)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * TeamShareModifier, TeamMinModifier) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Modifier"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - tmHeadNet:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * TeamShareName, TeamMinName)
+                                             + Max(Parent.Width * TeamShareLead, TeamMinLead)
+                                             + Max(Parent.Width * TeamShareSquad, TeamMinSquad)
+                                             + Max(Parent.Width * TeamShareGrade, TeamMinGrade)
+                                             + Max(Parent.Width * TeamShareSkills, TeamMinSkills)
+                                             + Max(Parent.Width * TeamShareDpw, TeamMinDpw)
+                                             + Max(Parent.Width * TeamShareRegion, TeamMinRegion)
+                                             + Max(Parent.Width * TeamShareModifier, TeamMinModifier)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * TeamShareNet, TeamMinNet) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Net MW"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - tmHeadBooked:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * TeamShareName, TeamMinName)
+                                             + Max(Parent.Width * TeamShareLead, TeamMinLead)
+                                             + Max(Parent.Width * TeamShareSquad, TeamMinSquad)
+                                             + Max(Parent.Width * TeamShareGrade, TeamMinGrade)
+                                             + Max(Parent.Width * TeamShareSkills, TeamMinSkills)
+                                             + Max(Parent.Width * TeamShareDpw, TeamMinDpw)
+                                             + Max(Parent.Width * TeamShareRegion, TeamMinRegion)
+                                             + Max(Parent.Width * TeamShareModifier, TeamMinModifier)
+                                             + Max(Parent.Width * TeamShareNet, TeamMinNet)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * TeamShareBooked, TeamMinBooked) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Booked"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - tmHeadFree:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * TeamShareName, TeamMinName)
+                                             + Max(Parent.Width * TeamShareLead, TeamMinLead)
+                                             + Max(Parent.Width * TeamShareSquad, TeamMinSquad)
+                                             + Max(Parent.Width * TeamShareGrade, TeamMinGrade)
+                                             + Max(Parent.Width * TeamShareSkills, TeamMinSkills)
+                                             + Max(Parent.Width * TeamShareDpw, TeamMinDpw)
+                                             + Max(Parent.Width * TeamShareRegion, TeamMinRegion)
+                                             + Max(Parent.Width * TeamShareModifier, TeamMinModifier)
+                                             + Max(Parent.Width * TeamShareNet, TeamMinNet)
+                                             + Max(Parent.Width * TeamShareBooked, TeamMinBooked)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * TeamShareFree, TeamMinFree) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Free"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                              - tmPeopleEmpty:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Width: =Parent.Width
+                                    Height: =TypeBodyLine
+                                    Align: =Align.Left
+                                    Visible: =TeamTab = "People" && CountRows(TeamPeopleRows) = 0
+                                    Text: ="No people yet. Add one."
+                                    Size: =TypeBody
+                                    Font: =FontUI
+                                    Color: =NeutralFg2
+                                    Wrap: =false
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+
+                              - tmPeople:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    TemplatePadding: =0
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Width: =Max(Parent.Width, TeamPeopleColsW)
+                                    ShowScrollbar: =true
+                                    FillPortions: =0
+                                    Height: =Parent.Height - Pad * 2 - RowHeight - TypeLabelLine - 8 * 2 - If(TeamSquadFilter, ControlHeight + 8, 0)
+                                    Visible: =TeamTab = "People" && CountRows(TeamPeopleRows) > 0
+                                    Items: =TeamPeopleRows
+                                    TemplateSize: =TeamPeopleRowH
+                                    AccessibleLabel: |
+                                      ="People: every person on the roster, with the contracted week, "
+                                       & "the modifier and the member weeks they bring."
+                                  Children:
+                                    # The row is the target, not a control inside it: a name is a name, and the
+                                    # container carries the navigation (power/RUNBOOK.md, "Table columns").
+                                    - tmPeopleRow:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: ManualLayout
+                                        Properties:
+                                          X: =0
+                                          Y: =0
+                                          Width: =Parent.TemplateWidth
+                                          Height: =TeamPeopleRowH
+                                        Children:
+                                          # The avatar takes its initials from the name it is given; no picture is held
+                                          # against a person in this model.
+                                          - tmRowAvatar:
+                                              Control: ModernAvatar@1.1.0
+                                              Properties:
+                                                X: =0
+                                                Y: =(TeamPeopleRowH - TeamAvatarSize) / 2
+                                                Width: =TeamAvatarSize
+                                                Height: =TeamAvatarSize
+                                                Size: =TeamAvatarSize
+                                                Shape: =AvatarShape.Circular
+                                                Name: =ThisItem.Name
+                                                AccessibleLabel: =ThisItem.Name
+                                          - tmRowName:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =TeamNameX
+                                                Y: =(TeamPeopleRowH - TypeBodyLine - TypeLabelLine) / 2
+                                                Width: =Max(Parent.Width * TeamShareName, TeamMinName) - TeamNameX - 8
+                                                Height: =TypeBodyLine
+                                                Text: =ThisItem.Name
+                                                Size: =TypeBody
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - tmRowRole:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =TeamNameX
+                                                Y: =(TeamPeopleRowH - TypeBodyLine - TypeLabelLine) / 2 + TypeBodyLine
+                                                Width: =Max(Parent.Width * TeamShareName, TeamMinName) - TeamNameX - 8
+                                                Height: =TypeLabelLine
+                                                Text: =If(ThisItem.Role = "", "No role set", ThisItem.Role)
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          # Filled, not tinted: on the tinted row a tinted neutral badge has no contrast
+                                          # left (power/RUNBOOK.md, "Table columns").
+                                          - tmRowLead:
+                                              Control: Badge@0.0.24
+                                              Properties:
+                                                X: =Max(Parent.Width * TeamShareName, TeamMinName)
+                                                Y: =(TeamPeopleRowH - TypeLabelLine) / 2
+                                                Width: =Min(Max(Len("Lead") * 7 + 20, 56), 200)
+                                                Height: =TypeLabelLine
+                                                Visible: =ThisItem.Lead
+                                                Appearance: ='BadgeCanvas.Appearance'.Filled
+                                                Shape: ='BadgeCanvas.Shape'.Rounded
+                                                ThemeColor: ='BadgeCanvas.ThemeColor'.Brand
+                                                Content: ="Lead"
+                                                FontSize: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Align: =Align.Center
+                                                VerticalAlign: =VerticalAlign.Middle
+                                          # A squad is a name, not a command: the row container carries the navigation.
+                                          - tmRowSquad:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.Width * TeamShareName, TeamMinName)
+                                                   + Max(Parent.Width * TeamShareLead, TeamMinLead)
+                                                Y: =(TeamPeopleRowH - TypeLabelLine) / 2
+                                                Width: =Max(Parent.Width * TeamShareSquad, TeamMinSquad) - 8
+                                                Height: =TypeLabelLine
+                                                Text: =Coalesce(ThisItem.Squad, "No squad")
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =BrandText
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - tmRowGrade:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.Width * TeamShareName, TeamMinName)
+                                                   + Max(Parent.Width * TeamShareLead, TeamMinLead)
+                                                   + Max(Parent.Width * TeamShareSquad, TeamMinSquad)
+                                                Y: =(TeamPeopleRowH - TypeBodyLine) / 2
+                                                Width: =Max(Parent.Width * TeamShareGrade, TeamMinGrade) - 8
+                                                Height: =TypeBodyLine
+                                                Text: =If(ThisItem.Grade = "", "—", ThisItem.Grade)
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - tmRowSkills:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.Width * TeamShareName, TeamMinName)
+                                                   + Max(Parent.Width * TeamShareLead, TeamMinLead)
+                                                   + Max(Parent.Width * TeamShareSquad, TeamMinSquad)
+                                                   + Max(Parent.Width * TeamShareGrade, TeamMinGrade)
+                                                Y: =(TeamPeopleRowH - TypeLabelLine) / 2
+                                                Width: =Max(Parent.Width * TeamShareSkills, TeamMinSkills) - 8
+                                                Height: =TypeLabelLine
+                                                Text: =If(ThisItem.Skills = "", "—", ThisItem.Skills)
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - tmRowDpw:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.Width * TeamShareName, TeamMinName)
+                                                   + Max(Parent.Width * TeamShareLead, TeamMinLead)
+                                                   + Max(Parent.Width * TeamShareSquad, TeamMinSquad)
+                                                   + Max(Parent.Width * TeamShareGrade, TeamMinGrade)
+                                                   + Max(Parent.Width * TeamShareSkills, TeamMinSkills)
+                                                Y: =(TeamPeopleRowH - TypeBodyLine) / 2
+                                                Width: =Max(Parent.Width * TeamShareDpw, TeamMinDpw) - 8
+                                                Height: =TypeBodyLine
+                                                Text: =Text(ThisItem.Dpw, "[$-en-US]#,##0.0")
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - tmRowRegion:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.Width * TeamShareName, TeamMinName)
+                                                   + Max(Parent.Width * TeamShareLead, TeamMinLead)
+                                                   + Max(Parent.Width * TeamShareSquad, TeamMinSquad)
+                                                   + Max(Parent.Width * TeamShareGrade, TeamMinGrade)
+                                                   + Max(Parent.Width * TeamShareSkills, TeamMinSkills)
+                                                   + Max(Parent.Width * TeamShareDpw, TeamMinDpw)
+                                                Y: =(TeamPeopleRowH - TypeBodyLine) / 2
+                                                Width: =Max(Parent.Width * TeamShareRegion, TeamMinRegion) - 8
+                                                Height: =TypeBodyLine
+                                                Text: =ThisItem.Region
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - tmRowModifier:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.Width * TeamShareName, TeamMinName)
+                                                   + Max(Parent.Width * TeamShareLead, TeamMinLead)
+                                                   + Max(Parent.Width * TeamShareSquad, TeamMinSquad)
+                                                   + Max(Parent.Width * TeamShareGrade, TeamMinGrade)
+                                                   + Max(Parent.Width * TeamShareSkills, TeamMinSkills)
+                                                   + Max(Parent.Width * TeamShareDpw, TeamMinDpw)
+                                                   + Max(Parent.Width * TeamShareRegion, TeamMinRegion)
+                                                Y: =(TeamPeopleRowH - TypeBodyLine) / 2
+                                                Width: =Max(Parent.Width * TeamShareModifier, TeamMinModifier) - 8
+                                                Height: =TypeBodyLine
+                                                Text: =Round(ThisItem.Modifier * 100, 0) & "%"
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - tmRowNet:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.Width * TeamShareName, TeamMinName)
+                                                   + Max(Parent.Width * TeamShareLead, TeamMinLead)
+                                                   + Max(Parent.Width * TeamShareSquad, TeamMinSquad)
+                                                   + Max(Parent.Width * TeamShareGrade, TeamMinGrade)
+                                                   + Max(Parent.Width * TeamShareSkills, TeamMinSkills)
+                                                   + Max(Parent.Width * TeamShareDpw, TeamMinDpw)
+                                                   + Max(Parent.Width * TeamShareRegion, TeamMinRegion)
+                                                   + Max(Parent.Width * TeamShareModifier, TeamMinModifier)
+                                                Y: =(TeamPeopleRowH - TypeBodyLine) / 2
+                                                Width: =Max(Parent.Width * TeamShareNet, TeamMinNet) - 8
+                                                Height: =TypeBodyLine
+                                                Text: =Text(ThisItem.Net, "[$-en-US]#,##0.00")
+                                                Size: =TypeBody
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - tmRowBooked:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.Width * TeamShareName, TeamMinName)
+                                                   + Max(Parent.Width * TeamShareLead, TeamMinLead)
+                                                   + Max(Parent.Width * TeamShareSquad, TeamMinSquad)
+                                                   + Max(Parent.Width * TeamShareGrade, TeamMinGrade)
+                                                   + Max(Parent.Width * TeamShareSkills, TeamMinSkills)
+                                                   + Max(Parent.Width * TeamShareDpw, TeamMinDpw)
+                                                   + Max(Parent.Width * TeamShareRegion, TeamMinRegion)
+                                                   + Max(Parent.Width * TeamShareModifier, TeamMinModifier)
+                                                   + Max(Parent.Width * TeamShareNet, TeamMinNet)
+                                                Y: =(TeamPeopleRowH - TypeBodyLine) / 2
+                                                Width: =Max(Parent.Width * TeamShareBooked, TeamMinBooked) - 8
+                                                Height: =TypeBodyLine
+                                                Text: =Text(ThisItem.Booked, "[$-en-US]#,##0.00")
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - tmRowFree:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.Width * TeamShareName, TeamMinName)
+                                                   + Max(Parent.Width * TeamShareLead, TeamMinLead)
+                                                   + Max(Parent.Width * TeamShareSquad, TeamMinSquad)
+                                                   + Max(Parent.Width * TeamShareGrade, TeamMinGrade)
+                                                   + Max(Parent.Width * TeamShareSkills, TeamMinSkills)
+                                                   + Max(Parent.Width * TeamShareDpw, TeamMinDpw)
+                                                   + Max(Parent.Width * TeamShareRegion, TeamMinRegion)
+                                                   + Max(Parent.Width * TeamShareModifier, TeamMinModifier)
+                                                   + Max(Parent.Width * TeamShareNet, TeamMinNet)
+                                                   + Max(Parent.Width * TeamShareBooked, TeamMinBooked)
+                                                Y: =(TeamPeopleRowH - TypeBodyLine) / 2
+                                                Width: =Max(Parent.Width * TeamShareFree, TeamMinFree) - 8
+                                                Height: =TypeBodyLine
+                                                Text: =Text(ThisItem.Free, "[$-en-US]#,##0.00")
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: |
+                                                  =With({ t: LookUp(NumberTones, Metric = "freeMW"),
+                                                          v: ThisItem.Free },
+                                                      If(t.HigherIsWorse,
+                                                         If(v >= t.BadAt, ToneBad, If(v >= t.WarnAt, ToneWarn, ToneNeutral)),
+                                                         If(v <= t.BadAt, ToneBad, If(v <= t.WarnAt, ToneWarn, ToneNeutral))))
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+
+                                          # The row is the target: the whole row opens the person
+                                          # panel, as the squad rows do (power/RUNBOOK.md, "Forms").
+                                          - tmPeopleRowHit:
+                                              Control: Classic/Button@2.2.0
+                                              Properties:
+                                                X: =2
+                                                Y: =2
+                                                Width: =Parent.Width - 4
+                                                Height: =Parent.Height - 4
+                                                Text: =""
+                                                Fill: =RGBA(0, 0, 0, 0)
+                                                HoverFill: =RGBA(0, 0, 0, 0)
+                                                PressedFill: =RGBA(0, 0, 0, 0)
+                                                BorderThickness: =0
+                                                FocusedBorderThickness: =2
+                                                TabIndex: =0
+                                                Tooltip: |
+                                                  ="Edit " & ThisItem.Name
+                                                FocusedBorderColor: =FocusStroke
+                                                OnSelect: |
+                                                  =Set(varPersonEdit,
+                                                       LookUp(People, 'Full name' = ThisItem.Name));
+                                                   Set(varPersonSaveError, "");
+                                                   Set(varPersonFormOpen, true);
+                                                   Set(varTeamFormTried, false);
+                                                   // every input starts from its Default, not the last open
+                                                   Reset(tmFieldName);
+                                                   Reset(tmFieldRole);
+                                                   Reset(tmFieldSquad);
+                                                   Reset(tmFieldRegion);
+                                                   Reset(tmFieldDpw);
+                                                   Reset(tmFieldModifier);
+                                                   Reset(tmFieldLead);
+                                                   Reset(tmFieldEmployment);
+                                                   Reset(tmFieldSkills)
+
+                              # ---- Squads ----
+                              - tmSquadHead:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    FillPortions: =0
+                                    Width: =Max(Parent.Width, TeamSquadColsW)
+                                    Height: =RowHeight
+                                    Visible: =TeamTab = "Squads"
+                                  Children:
+                                    - tmSqHeadName:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * TeamSqShareName, TeamSqMinName) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Squad"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - tmSqHeadLead:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =Max(Parent.Width * TeamSqShareName, TeamSqMinName)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * TeamSqShareLead, TeamSqMinLead) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Lead"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - tmSqHeadRemit:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * TeamSqShareName, TeamSqMinName)
+                                             + Max(Parent.Width * TeamSqShareLead, TeamSqMinLead)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * TeamSqShareRemit, TeamSqMinRemit) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Remit"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - tmSqHeadPeople:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * TeamSqShareName, TeamSqMinName)
+                                             + Max(Parent.Width * TeamSqShareLead, TeamSqMinLead)
+                                             + Max(Parent.Width * TeamSqShareRemit, TeamSqMinRemit)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * TeamSqSharePeople, TeamSqMinPeople) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="People"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - tmSqHeadNet:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * TeamSqShareName, TeamSqMinName)
+                                             + Max(Parent.Width * TeamSqShareLead, TeamSqMinLead)
+                                             + Max(Parent.Width * TeamSqShareRemit, TeamSqMinRemit)
+                                             + Max(Parent.Width * TeamSqSharePeople, TeamSqMinPeople)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * TeamSqShareNet, TeamSqMinNet) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Net MW"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - tmSqHeadCommitted:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * TeamSqShareName, TeamSqMinName)
+                                             + Max(Parent.Width * TeamSqShareLead, TeamSqMinLead)
+                                             + Max(Parent.Width * TeamSqShareRemit, TeamSqMinRemit)
+                                             + Max(Parent.Width * TeamSqSharePeople, TeamSqMinPeople)
+                                             + Max(Parent.Width * TeamSqShareNet, TeamSqMinNet)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * TeamSqShareCommitted, TeamSqMinCommitted) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Committed"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - tmSqHeadUtil:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * TeamSqShareName, TeamSqMinName)
+                                             + Max(Parent.Width * TeamSqShareLead, TeamSqMinLead)
+                                             + Max(Parent.Width * TeamSqShareRemit, TeamSqMinRemit)
+                                             + Max(Parent.Width * TeamSqSharePeople, TeamSqMinPeople)
+                                             + Max(Parent.Width * TeamSqShareNet, TeamSqMinNet)
+                                             + Max(Parent.Width * TeamSqShareCommitted, TeamSqMinCommitted)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * TeamSqShareUtil, TeamSqMinUtil) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Utilisation"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                              - tmSquadsEmpty:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Width: =Parent.Width
+                                    Height: =TypeBodyLine
+                                    Align: =Align.Left
+                                    Visible: =TeamTab = "Squads" && CountRows(TeamSquadRows) = 0
+                                    Text: ="No squads yet."
+                                    Size: =TypeBody
+                                    Font: =FontUI
+                                    Color: =NeutralFg2
+                                    Wrap: =false
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+
+                              - tmSquads:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    TemplatePadding: =0
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Width: =Max(Parent.Width, TeamSquadColsW)
+                                    ShowScrollbar: =true
+                                    FillPortions: =1
+                                    Visible: =TeamTab = "Squads" && CountRows(TeamSquadRows) > 0
+                                    Items: =TeamSquadRows
+                                    TemplateSize: =RowHeight
+                                    AccessibleLabel: |
+                                      ="Squads: each squad's lead, remit, people and how much of its "
+                                       & "capacity is committed."
+                                  Children:
+                                    # Selecting a squad narrows the People tab to it, the way Command does.
+                                    - tmSquadRow:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: ManualLayout
+                                        Properties:
+                                          X: =0
+                                          Y: =0
+                                          Width: =Parent.TemplateWidth
+                                          Height: =RowHeight
+                                        Children:
+                                          - tmSqRowName:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =0
+                                                Y: =(RowHeight - TypeBodyLine) / 2
+                                                Width: =Max(Parent.Width * TeamSqShareName, TeamSqMinName) - 8
+                                                Height: =TypeBodyLine
+                                                Text: =ThisItem.Name
+                                                Size: =TypeBody
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - tmSqRowLead:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =Max(Parent.Width * TeamSqShareName, TeamSqMinName)
+                                                Y: =(RowHeight - TypeBodyLine) / 2
+                                                Width: =Max(Parent.Width * TeamSqShareLead, TeamSqMinLead) - 8
+                                                Height: =TypeBodyLine
+                                                Text: =If(ThisItem.Lead = "", "No lead yet", ThisItem.Lead)
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - tmSqRowRemit:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.Width * TeamSqShareName, TeamSqMinName)
+                                                   + Max(Parent.Width * TeamSqShareLead, TeamSqMinLead)
+                                                Y: =(RowHeight - TypeLabelLine) / 2
+                                                Width: =Max(Parent.Width * TeamSqShareRemit, TeamSqMinRemit) - 8
+                                                Height: =TypeLabelLine
+                                                Text: =If(ThisItem.Remit = "", "—", ThisItem.Remit)
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - tmSqRowPeople:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.Width * TeamSqShareName, TeamSqMinName)
+                                                   + Max(Parent.Width * TeamSqShareLead, TeamSqMinLead)
+                                                   + Max(Parent.Width * TeamSqShareRemit, TeamSqMinRemit)
+                                                Y: =(RowHeight - TypeBodyLine) / 2
+                                                Width: =Max(Parent.Width * TeamSqSharePeople, TeamSqMinPeople) - 8
+                                                Height: =TypeBodyLine
+                                                Text: =Text(ThisItem.People, "[$-en-US]#,##0")
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - tmSqRowNet:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.Width * TeamSqShareName, TeamSqMinName)
+                                                   + Max(Parent.Width * TeamSqShareLead, TeamSqMinLead)
+                                                   + Max(Parent.Width * TeamSqShareRemit, TeamSqMinRemit)
+                                                   + Max(Parent.Width * TeamSqSharePeople, TeamSqMinPeople)
+                                                Y: =(RowHeight - TypeBodyLine) / 2
+                                                Width: =Max(Parent.Width * TeamSqShareNet, TeamSqMinNet) - 8
+                                                Height: =TypeBodyLine
+                                                Text: =Text(ThisItem.Net, "[$-en-US]#,##0.00")
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - tmSqRowCommitted:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.Width * TeamSqShareName, TeamSqMinName)
+                                                   + Max(Parent.Width * TeamSqShareLead, TeamSqMinLead)
+                                                   + Max(Parent.Width * TeamSqShareRemit, TeamSqMinRemit)
+                                                   + Max(Parent.Width * TeamSqSharePeople, TeamSqMinPeople)
+                                                   + Max(Parent.Width * TeamSqShareNet, TeamSqMinNet)
+                                                Y: =(RowHeight - TypeBodyLine) / 2
+                                                Width: =Max(Parent.Width * TeamSqShareCommitted, TeamSqMinCommitted) - 8
+                                                Height: =TypeBodyLine
+                                                Text: =Text(ThisItem.Committed, "[$-en-US]#,##0.00")
+                                                Size: =TypeBody
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: |
+                                                  =With({ t: LookUp(NumberTones, Metric = "utilisation"),
+                                                          v: If(ThisItem.Net = 0, 0, ThisItem.Committed / ThisItem.Net) },
+                                                      If(t.HigherIsWorse,
+                                                         If(v >= t.BadAt, ToneBad, If(v >= t.WarnAt, ToneWarn, ToneNeutral)),
+                                                         If(v <= t.BadAt, ToneBad, If(v <= t.WarnAt, ToneWarn, ToneNeutral))))
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          # The utilisation reads as a figure first: the colour is the threshold from
+                                          # Settings, never the state on its own. No state word, so the text
+                                          # never contradicts NumberTones, the swatch's own source.
+                                          - tmSqRowUtil:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.Width * TeamSqShareName, TeamSqMinName)
+                                                   + Max(Parent.Width * TeamSqShareLead, TeamSqMinLead)
+                                                   + Max(Parent.Width * TeamSqShareRemit, TeamSqMinRemit)
+                                                   + Max(Parent.Width * TeamSqSharePeople, TeamSqMinPeople)
+                                                   + Max(Parent.Width * TeamSqShareNet, TeamSqMinNet)
+                                                   + Max(Parent.Width * TeamSqShareCommitted, TeamSqMinCommitted)
+                                                Y: =(RowHeight - TypeLabelLine) / 2
+                                                Width: =Max(Parent.Width * TeamSqShareUtil, TeamSqMinUtil) - 8
+                                                Height: =TypeLabelLine
+                                                Text: =Round(ThisItem.Utilisation * 100, 0) & "%"
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: |
+                                                  =With({ t: LookUp(NumberTones, Metric = "utilisation"),
+                                                          v: ThisItem.Utilisation },
+                                                      If(t.HigherIsWorse,
+                                                         If(v >= t.BadAt, ToneBad, If(v >= t.WarnAt, ToneWarn, ToneNeutral)),
+                                                         If(v <= t.BadAt, ToneBad, If(v <= t.WarnAt, ToneWarn, ToneNeutral))))
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - tmSquadRowHit:
+                                              Control: Classic/Button@2.2.0
+                                              Properties:
+                                                X: =2
+                                                Y: =2
+                                                Width: =Parent.Width - 4
+                                                Height: =Parent.Height - 4
+                                                Text: =""
+                                                Fill: =RGBA(0, 0, 0, 0)
+                                                HoverFill: =RGBA(0, 0, 0, 0)
+                                                PressedFill: =RGBA(0, 0, 0, 0)
+                                                BorderThickness: =0
+                                                FocusedBorderThickness: =2
+                                                TabIndex: =0
+                                                Tooltip: |
+                                                  =ThisItem.Name & ", " & ThisItem.People & " people, "
+                                                   & Round(ThisItem.Utilisation * 100, 0) & " per cent committed"
+                                                FocusedBorderColor: =FocusStroke
+                                                OnSelect: |
+                                                  =Set(varTeamSquad, ThisItem.Name);
+                                                   Set(varTeamTab, "People")
+
+                              # ---- Absences ----
+                              - tmAbsenceHead:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    FillPortions: =0
+                                    Width: =Max(Parent.Width, TeamAbsenceColsW)
+                                    Height: =RowHeight
+                                    Visible: =TeamTab = "Absences"
+                                  Children:
+                                    - tmAbHeadPerson:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * TeamAbSharePerson, TeamAbMinPerson) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Person"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - tmAbHeadType:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =Max(Parent.Width * TeamAbSharePerson, TeamAbMinPerson)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * TeamAbShareType, TeamAbMinType) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Type"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Center
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - tmAbHeadFrom:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * TeamAbSharePerson, TeamAbMinPerson)
+                                             + Max(Parent.Width * TeamAbShareType, TeamAbMinType)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * TeamAbShareFrom, TeamAbMinFrom) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="From"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - tmAbHeadTo:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * TeamAbSharePerson, TeamAbMinPerson)
+                                             + Max(Parent.Width * TeamAbShareType, TeamAbMinType)
+                                             + Max(Parent.Width * TeamAbShareFrom, TeamAbMinFrom)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * TeamAbShareTo, TeamAbMinTo) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="To"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - tmAbHeadNote:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * TeamAbSharePerson, TeamAbMinPerson)
+                                             + Max(Parent.Width * TeamAbShareType, TeamAbMinType)
+                                             + Max(Parent.Width * TeamAbShareFrom, TeamAbMinFrom)
+                                             + Max(Parent.Width * TeamAbShareTo, TeamAbMinTo)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * TeamAbShareNote, TeamAbMinNote) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Note"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                              - tmAbsencesEmpty:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Width: =Parent.Width
+                                    Height: =TypeBodyLine
+                                    Align: =Align.Left
+                                    Visible: =TeamTab = "Absences" && CountRows(TeamAbsenceRowsAll) = 0
+                                    Text: ="No absences recorded."
+                                    Size: =TypeBody
+                                    Font: =FontUI
+                                    Color: =NeutralFg2
+                                    Wrap: =false
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+
+                              - tmAbsences:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    TemplatePadding: =0
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Width: =Max(Parent.Width, TeamAbsenceColsW)
+                                    ShowScrollbar: =true
+                                    FillPortions: =0
+                                    Height: =Parent.Height - Pad * 2 - RowHeight - TypeLabelLine - 8 * 2
+                                    Visible: =TeamTab = "Absences" && CountRows(TeamAbsenceRowsAll) > 0
+                                    Items: =TeamAbsenceRowsAll
+                                    TemplateSize: =RowHeight
+                                    AccessibleLabel: |
+                                      ="Absences: every absence on the record, most recent first, "
+                                       & "by person, type and dates."
+                                  Children:
+                                    - tmAbsenceRow:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: ManualLayout
+                                        Properties:
+                                          X: =0
+                                          Y: =0
+                                          Width: =Parent.TemplateWidth
+                                          Height: =RowHeight
+                                        Children:
+                                          - tmAbRowPerson:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =0
+                                                Y: =(RowHeight - TypeBodyLine) / 2
+                                                Width: =Max(Parent.Width * TeamAbSharePerson, TeamAbMinPerson) - 8
+                                                Height: =TypeBodyLine
+                                                Text: =ThisItem.PersonName
+                                                Size: =TypeBody
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - tmAbRowType:
+                                              Control: Badge@0.0.24
+                                              Properties:
+                                                X: =Max(Parent.Width * TeamAbSharePerson, TeamAbMinPerson)
+                                                Y: =(RowHeight - TypeLabelLine) / 2
+                                                Width: =Min(Max(Len(ThisItem.TypeName) * 7 + 20, 56), 200)
+                                                Height: =TypeLabelLine
+                                                Appearance: ='BadgeCanvas.Appearance'.Filled
+                                                Shape: ='BadgeCanvas.Shape'.Rounded
+                                                ThemeColor: =If(ThisItem.Sick, 'BadgeCanvas.ThemeColor'.Warning, 'BadgeCanvas.ThemeColor'.Subtle)
+                                                Content: =ThisItem.TypeName
+                                                FontSize: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Align: =Align.Center
+                                                VerticalAlign: =VerticalAlign.Middle
+                                          - tmAbRowFrom:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.Width * TeamAbSharePerson, TeamAbMinPerson)
+                                                   + Max(Parent.Width * TeamAbShareType, TeamAbMinType)
+                                                Y: =(RowHeight - TypeLabelLine) / 2
+                                                Width: =Max(Parent.Width * TeamAbShareFrom, TeamAbMinFrom) - 8
+                                                Height: =TypeLabelLine
+                                                Text: =Text(ThisItem.From, "[$-en-US]dd mmm yyyy")
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - tmAbRowTo:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.Width * TeamAbSharePerson, TeamAbMinPerson)
+                                                   + Max(Parent.Width * TeamAbShareType, TeamAbMinType)
+                                                   + Max(Parent.Width * TeamAbShareFrom, TeamAbMinFrom)
+                                                Y: =(RowHeight - TypeLabelLine) / 2
+                                                Width: =Max(Parent.Width * TeamAbShareTo, TeamAbMinTo) - 8
+                                                Height: =TypeLabelLine
+                                                Text: =Text(ThisItem.To, "[$-en-US]dd mmm yyyy")
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg1
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - tmAbRowNote:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: |
+                                                  =Max(Parent.Width * TeamAbSharePerson, TeamAbMinPerson)
+                                                   + Max(Parent.Width * TeamAbShareType, TeamAbMinType)
+                                                   + Max(Parent.Width * TeamAbShareFrom, TeamAbMinFrom)
+                                                   + Max(Parent.Width * TeamAbShareTo, TeamAbMinTo)
+                                                Y: =(RowHeight - TypeLabelLine) / 2
+                                                Width: =Max(Parent.Width * TeamAbShareNote, TeamAbMinNote) - 8
+                                                Height: =TypeLabelLine
+                                                Text: =Coalesce(ThisItem.Note, "—")
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+
+                                          # The row's hit target, last so it draws over the
+                                          # cells: a transparent button, the people table's own
+                                          # pattern. It opens the panel on this one absence, off
+                                          # the table rather than the collection, because Patch
+                                          # and Remove take a row of the data source.
+                                          - tmAbRowHit:
+                                              Control: Classic/Button@2.2.0
+                                              Properties:
+                                                X: =2
+                                                Y: =2
+                                                Width: =Parent.Width - 4
+                                                Height: =Parent.Height - 4
+                                                Text: =""
+                                                Fill: =RGBA(0, 0, 0, 0)
+                                                HoverFill: =RGBA(0, 0, 0, 0)
+                                                PressedFill: =RGBA(0, 0, 0, 0)
+                                                BorderThickness: =0
+                                                FocusedBorderThickness: =2
+                                                TabIndex: =0
+                                                Tooltip: ="Edit this absence"
+                                                FocusedBorderColor: =FocusStroke
+                                                OnSelect: |
+                                                  =Set(varAbsEdit,
+                                                       LookUp(Absences,
+                                                              'Absence id' = ThisItem.'Absence id'));
+                                                   Set(varAbsSaveError, "");
+                                                   Set(varAbsFromPicked, false);
+                                                   // The week each dropdown opens on, the same
+                                                   // default its Default property computes: a
+                                                   // named formula cannot read a control, so
+                                                   // these are what FormAbsenceFromMonday and
+                                                   // FormAbsenceToMonday read instead.
+                                                   Set(varAbsFromWeek, FormAbsenceFromWeek);
+                                                   Set(varAbsToWeek, FormAbsenceToWeek);
+                                                   Set(varAbsOpen, true);
+                                                   Set(varTeamFormTried, false);
+                                                   // every input starts from its Default, not
+                                                   // the last open
+                                                   Reset(tmAbsScope);
+                                                   Reset(tmAbsPeople);
+                                                   Reset(tmAbsType);
+                                                   Reset(tmAbsFrom);
+                                                   Reset(tmAbsTo);
+                                                   Reset(tmAbsNote)
+
+                              # ---- the count under whichever table is showing ----
+                              - tmCount:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =TypeLabelLine
+                                    Text: =TeamCountLine
+                                    Size: =TypeCaption
+                                    Font: =FontUI
+                                    Color: =NeutralFg2
+                                    Wrap: =false
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    FontWeight: =FontWeight.Normal
+
+
+      # ---- the person form: the scrim, then the panel over the right of the screen ----
+      # The pattern every later form repeats (power/RUNBOOK.md, section 4, "Forms"): a scrim
+      # whose transparent button closes the panel, a manual-layout panel whose fields stack at
+      # FormFieldStep, one error line, and Save with Cancel beside it.
+      - tmScrim:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =Parent.Height
+            Fill: =RGBA(0, 0, 0, 0.4)
+            Visible: =varPersonFormOpen
+          Children:
+            # A container takes no OnSelect (Studio PA2108), so the scrim's own dismiss is a
+            # transparent button over the whole of it.
+            - tmScrimHit:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  X: =2
+                  Y: =2
+                  Width: =Parent.Width - 4
+                  Height: =Parent.Height - 4
+                  Text: =""
+                  Fill: =RGBA(0, 0, 0, 0)
+                  HoverFill: =RGBA(0, 0, 0, 0)
+                  PressedFill: =RGBA(0, 0, 0, 0)
+                  BorderThickness: =0
+                  FocusedBorderThickness: =2
+                  TabIndex: =0
+                  Tooltip: ="Close the person form"
+                  FocusedBorderColor: =FocusStroke
+                  OnSelect: =Set(varPersonFormOpen, false)
+      - tmPersonPanel:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Width: =Max(Parent.Width * 0.32, 420)
+            Height: =Parent.Height
+            X: =Parent.Width - Max(Parent.Width * 0.32, 420)
+            Y: =0
+            Fill: =NeutralBg1
+            BorderColor: =NeutralStroke1
+            BorderThickness: =1
+            Visible: =varPersonFormOpen
+          Children:
+            - tmPersonTitle:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =Pad
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeDisplayLine
+                  Text: =FormTitle
+                  Size: =TypeSubtitle
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg1
+                  Wrap: =true
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  AutoHeight: =true
+            - tmPersonClose:
+                Control: ModernButton@1.0.0
+                Properties:
+                  X: =Parent.Width - Pad - ControlHeight
+                  Y: =Pad
+                  Width: =ControlHeight
+                  Height: =ControlHeight
+                  Appearance: =ButtonAppearance.Subtle
+                  BasePaletteColor: =NeutralBg1
+                  Color: =NeutralFg1
+                  Icon: ="Dismiss"
+                  RadiusTopLeft: =CtrlR
+                  RadiusTopRight: =CtrlR
+                  RadiusBottomLeft: =CtrlR
+                  RadiusBottomRight: =CtrlR
+                  Text: =""
+                  AccessibleLabel: ="Close"
+                  Tooltip: ="Close the person form without saving"
+                  Size: =TypeBodyPx
+                  OnSelect: =Set(varPersonFormOpen, false)
+            - tmLblName:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 0
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: ="Full name"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - tmFieldName:
+                Control: ModernTextInput@1.1.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 0 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Default: =FormPersonName
+                  Placeholder: ="The name the roster uses"
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="Full name"
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            - tmLblRole:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 1
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: ="Role"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            # The roles are the seeded list, not free text: the grade below is read off the role
+            # chosen, so a role the list does not carry has no grade to offer.
+            - tmFieldRole:
+                Control: ModernDropdown@1.0.2
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 1 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Items: |
+                    =ForAll(Sort(Filter(colListValues,
+                                        List = 'List (List values)'.Role), Value) As L,
+                            { Value: L.Value })
+                  ItemDisplayText: =ThisItem.Value
+                  Default: ={Value:FormPersonRole}
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="Role"
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            - tmLblSquad:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 2
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: ="Squad"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - tmFieldSquad:
+                Control: ModernDropdown@1.0.2
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 2 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Items: =ItemSquadOptions
+                  ItemDisplayText: =ThisItem.Value
+                  Default: ={Value:FormPersonSquad}
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="Squad"
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            - tmLblGrade:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 3
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: ="Team grade"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            # The grade is not chosen: it is the grade the list carries for the role above.
+            - tmFieldGrade:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 3 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Text: |
+                    =Coalesce(LookUp(colListValues,
+                                     List = 'List (List values)'.Role
+                                       && Value = tmFieldRole.Selected.Value).Grade,
+                              FormPersonGrade)
+                  Font: =FontUI
+                  Size: =TypeBody
+                  Color: =NeutralFg1
+                  Wrap: =true
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  AutoHeight: =true
+            - tmLblRegion:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: ="Region"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - tmFieldRegion:
+                Control: ModernDropdown@1.0.2
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 4 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Items: =FormRegionOptions
+                  ItemDisplayText: =ThisItem.Value
+                  Default: ={Value:FormPersonRegion}
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="Region"
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            - tmLblDpw:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 5
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: ="Days per week"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - tmFieldDpw:
+                Control: ModernTextInput@1.1.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 5 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Default: =FormPersonDpw
+                  Placeholder: ="1 to 5"
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="Days per week"
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            - tmLblModifier:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 6
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: ="Modifier override (per cent)"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - tmFieldModifier:
+                Control: ModernTextInput@1.1.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 6 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Default: =FormPersonModifier
+                  Placeholder: ="Blank takes the default modifier"
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="Modifier override (per cent)"
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            - tmLblLead:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 7
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: ="Lead"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - tmFieldLead:
+                Control: ModernDropdown@1.0.2
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 7 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Items: =SettingsYesNo
+                  ItemDisplayText: =ThisItem.Value
+                  Default: ={Value:FormPersonLead}
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="Lead"
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            - tmLblEmployment:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 8
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: ="Employment"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - tmFieldEmployment:
+                Control: ModernDropdown@1.0.2
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 8 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Items: =FormEmploymentOptions
+                  ItemDisplayText: =ThisItem.Value
+                  Default: ={Value:FormPersonEmployment}
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="Employment"
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            - tmLblSkills:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 9
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: ="Skills"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - tmFieldSkills:
+                Control: ModernCombobox@1.1.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 9 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Items: =ItemSkillOptions
+                  ItemDisplayText: =ThisItem.Value
+                  SelectMultiple: =true
+                  DefaultSelectedItems: =Filter(ItemSkillOptions, Value in FormPersonSkills)
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="Skills"
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            # The one place a fault is said: the rules while the form is open, and whatever
+            # Dataverse answered if a save was refused.
+            - tmPersonError:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 9 + TypeLabelLine + 4 + ControlHeight + Gap
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Visible: =varTeamFormTried && Self.Text <> ""
+                  Text: |
+                    =If(!IsBlank(varPersonSaveError), varPersonSaveError,
+                        IsBlank(Trim(tmFieldName.Text)), "A name is required.",
+                        IsBlank(tmFieldRole.Selected.Value), "A role is required.",
+                        !IsBlank(Trim(tmFieldDpw.Text))
+                        && (!IsNumeric(tmFieldDpw.Text)
+                            || Value(tmFieldDpw.Text) < 1 || Value(tmFieldDpw.Text) > 5),
+                        "Days per week is 1 to 5.",
+                        !IsBlank(Trim(tmFieldModifier.Text))
+                        && (!IsNumeric(tmFieldModifier.Text)
+                            || Value(tmFieldModifier.Text) < 0 || Value(tmFieldModifier.Text) > 100),
+                        "The modifier is 0 to 100 per cent.", "")
+                  Size: =TypeCaption
+                  Font: =FontUI
+                  Color: =StatusBad
+                  Wrap: =true
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  AutoHeight: =true
+            - tmPersonSave:
+                Control: ModernButton@1.0.0
+                Properties:
+                  X: =Pad
+                  Y: =Parent.Height - ControlHeight - Pad
+                  Width: =(Parent.Width - Pad * 2 - Gap) / 2
+                  Height: =ControlHeight
+                  Appearance: =ButtonAppearance.Primary
+                  BasePaletteColor: =BrandBg
+                  Color: =BrandFg
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  RadiusTopLeft: =CtrlR
+                  RadiusTopRight: =CtrlR
+                  RadiusBottomLeft: =CtrlR
+                  RadiusBottomRight: =CtrlR
+                  Text: ="Save"
+                  AccessibleLabel: =FormTitle
+                  DisplayMode: |
+                    =If(varTeamFormTried && tmPersonError.Text <> "",
+                        DisplayMode.Disabled, DisplayMode.Edit)
+                  OnSelect: |
+                    =Set(varTeamFormTried, true);
+                     Set(varPersonSaveError, "");
+                     // The rules first: nothing is written while the error line has anything to
+                     // say. Only the Patch sits inside the error test, so a refused save cannot
+                     // close the panel or say it worked.
+                     If(tmPersonError.Text = "",
+                        IfError(
+                          Patch(People,
+                                If(IsBlank(varPersonEdit), Defaults(People), varPersonEdit),
+                                { 'Full name': Trim(tmFieldName.Text),
+                                  Role: Coalesce(tmFieldRole.Selected.Value, FormPersonRole),
+                                  Squad: LookUp(Squads,
+                                                'Squad name' = tmFieldSquad.Selected.Value),
+                                  'Team grade':
+                                      With({ g: Coalesce(tmFieldGrade.Text, FormPersonGrade) },
+                                          If(IsBlank(g), Blank(),
+                                             Switch(g,
+                                                    "C", 'Team grade (People)'.C,
+                                                    "D", 'Team grade (People)'.D,
+                                                    "E", 'Team grade (People)'.E,
+                                                    "F", 'Team grade (People)'.F,
+                                                    Blank()))),
+                                  Region: LookUp(Filter('List values',
+                                                        List = 'List (List values)'.Region),
+                                                 Value = tmFieldRegion.Selected.Value),
+                                  Employment:
+                                      If(IsBlank(tmFieldEmployment.Selected.Value), Blank(),
+                                         Switch(tmFieldEmployment.Selected.Value,
+                                                "Permanent", 'Employment (People)'.Permanent,
+                                                "NPW", 'Employment (People)'.NPW,
+                                                "Open vacancy",
+                                                'Employment (People)'.'Open vacancy',
+                                                Blank())),
+                                  Lead: tmFieldLead.Selected.Value = "Yes",
+                                  'Days per week': If(IsBlank(Trim(tmFieldDpw.Text)), Blank(),
+                                                      Value(tmFieldDpw.Text)),
+                                  'Modifier override':
+                                      If(IsBlank(Trim(tmFieldModifier.Text)), Blank(),
+                                         Value(tmFieldModifier.Text) / 100),
+                                  Skills: Concat(tmFieldSkills.SelectedItems, Value, Char(10)) }),
+                          // A refused save says what Dataverse answered and leaves the panel open.
+                          Set(varPersonSaveError, FirstError.Message),
+                          // The collection the screens read is rebuilt from the table, as the work
+                          // item actions do, and only then does the panel close.
+                          ClearCollect(colPeople, People);
+                          Set(varPersonFormOpen, false);
+                          Notify(Trim(tmFieldName.Text) & " saved.",
+                                 NotificationType.Success)))
+            - tmPersonCancel:
+                Control: ModernButton@1.0.0
+                Properties:
+                  X: =Pad + (Parent.Width - Pad * 2 - Gap) / 2 + Gap
+                  Y: =Parent.Height - ControlHeight - Pad
+                  Width: =(Parent.Width - Pad * 2 - Gap) / 2
+                  Height: =ControlHeight
+                  Appearance: =ButtonAppearance.Subtle
+                  BasePaletteColor: =NeutralBg1
+                  Color: =NeutralFg1
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  RadiusTopLeft: =CtrlR
+                  RadiusTopRight: =CtrlR
+                  RadiusBottomLeft: =CtrlR
+                  RadiusBottomRight: =CtrlR
+                  Text: ="Cancel"
+                  AccessibleLabel: ="Close the person form without saving"
+                  OnSelect: =Set(varPersonFormOpen, false)
+
+      # ---- the absence panel: the scrim, then the panel over the right of the screen ----
+      # Non-work time of every sort is entered here, for one person or for many at once: the
+      # scope dropdown fills the people box, and the save writes one Absences row per person.
+      # The person form's pattern, field for field (power/RUNBOOK.md, section 4, "Forms").
+      - tmAbsScrim:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =Parent.Height
+            Fill: =RGBA(0, 0, 0, 0.4)
+            Visible: =varAbsOpen
+          Children:
+            # A container takes no OnSelect (Studio PA2108), so the scrim's own dismiss is a
+            # transparent button over the whole of it.
+            - tmAbsScrimHit:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  X: =2
+                  Y: =2
+                  Width: =Parent.Width - 4
+                  Height: =Parent.Height - 4
+                  Text: =""
+                  Fill: =RGBA(0, 0, 0, 0)
+                  HoverFill: =RGBA(0, 0, 0, 0)
+                  PressedFill: =RGBA(0, 0, 0, 0)
+                  BorderThickness: =0
+                  FocusedBorderThickness: =2
+                  TabIndex: =0
+                  Tooltip: ="Close the absence panel"
+                  FocusedBorderColor: =FocusStroke
+                  OnSelect: =Set(varAbsEdit, Blank()); Set(varAbsOpen, false)
+      - tmAbsPanel:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Width: =Max(Parent.Width * 0.32, 420)
+            Height: =Parent.Height
+            X: =Parent.Width - Max(Parent.Width * 0.32, 420)
+            Y: =0
+            Fill: =NeutralBg1
+            BorderColor: =NeutralStroke1
+            BorderThickness: =1
+            Visible: =varAbsOpen
+          Children:
+            - tmAbsTitle:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =Pad
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeDisplayLine
+                  Text: =FormAbsenceTitle
+                  Size: =TypeSubtitle
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg1
+                  Wrap: =true
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  AutoHeight: =true
+            - tmAbsClose:
+                Control: ModernButton@1.0.0
+                Properties:
+                  X: =Parent.Width - Pad - ControlHeight
+                  Y: =Pad
+                  Width: =ControlHeight
+                  Height: =ControlHeight
+                  Appearance: =ButtonAppearance.Subtle
+                  BasePaletteColor: =NeutralBg1
+                  Color: =NeutralFg1
+                  Icon: ="Dismiss"
+                  RadiusTopLeft: =CtrlR
+                  RadiusTopRight: =CtrlR
+                  RadiusBottomLeft: =CtrlR
+                  RadiusBottomRight: =CtrlR
+                  Text: =""
+                  AccessibleLabel: ="Close"
+                  Tooltip: ="Close the absence panel without saving"
+                  Size: =TypeBodyPx
+                  OnSelect: =Set(varAbsEdit, Blank()); Set(varAbsOpen, false)
+            - tmAbsLblScope:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 0
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: ="Who this is for"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            # The scope saves nothing of its own: it fills the box below, which the planner can
+            # then add to or take from. Picking one resets that box so the new set is what it
+            # opens on.
+            - tmAbsScope:
+                Control: ModernDropdown@1.0.2
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 0 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Items: =FormAbsenceScopeOptions
+                  ItemDisplayText: =ThisItem.Value
+                  Default: ={Value:"Choose people"}
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="Who this absence is for"
+                  DisplayMode: |
+                    =If(FormAbsenceEditing, DisplayMode.View, DisplayMode.Edit)
+                  OnChange: =Reset(tmAbsPeople)
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            - tmAbsLblPeople:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 1
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: ="People"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            # Onshore is England, Wales, Scotland and Northern Ireland, off the Region list value
+            # each person carries; offshore is everyone else who has a region at all.
+            - tmAbsPeople:
+                Control: ModernCombobox@1.1.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 1 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Items: =FormAbsencePeopleOptions
+                  ItemDisplayText: =ThisItem.Value
+                  SelectMultiple: =true
+                  DefaultSelectedItems: |
+                    =Switch(tmAbsScope.Selected.Value,
+                            "Everyone", FormAbsencePeopleOptions,
+                            "Onshore", Filter(FormAbsencePeopleOptions, Onshore),
+                            "Offshore", Filter(FormAbsencePeopleOptions, !Onshore),
+                            "Choose people", Filter(FormAbsencePeopleOptions,
+                                                    Value = FormAbsencePerson),
+                            Filter(FormAbsencePeopleOptions,
+                                   Squad = tmAbsScope.Selected.Value))
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="People this absence is for"
+                  DisplayMode: |
+                    =If(FormAbsenceEditing, DisplayMode.View, DisplayMode.Edit)
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            - tmAbsLblType:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 2
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: ="Type"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - tmAbsType:
+                Control: ModernDropdown@1.0.2
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 2 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Items: =FormAbsenceTypeOptions
+                  ItemDisplayText: =ThisItem.Value
+                  Default: ={Value:FormAbsenceType}
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="Absence type"
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            - tmAbsLblFrom:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 3
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: ="From week"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            # There is no date picker in this build, so the dates are weeks: each row carries its
+            # own Monday and the save patches that Monday to the Friday of the To week.
+            - tmAbsFrom:
+                Control: ModernDropdown@1.0.2
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 3 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Items: =FormAbsenceWeekOptions
+                  ItemDisplayText: =ThisItem.Value
+                  Default: =LookUp(FormAbsenceWeekOptions, Value = FormAbsenceFromWeek)
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="From week"
+                  OnChange: =Set(varAbsFromPicked, true); Set(varAbsFromWeek, tmAbsFrom.Selected.Value); Reset(tmAbsTo)
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            - tmAbsLblTo:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: ="To week"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            # To defaults to From: picking a From week resets this one onto it, and a row being
+            # edited opens on its own two weeks until From is touched.
+            - tmAbsTo:
+                Control: ModernDropdown@1.0.2
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 4 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Items: =FormAbsenceWeekOptions
+                  ItemDisplayText: =ThisItem.Value
+                  Default: |
+                    =If(varAbsFromPicked, tmAbsFrom.Selected,
+                        LookUp(FormAbsenceWeekOptions, Value = FormAbsenceToWeek))
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="To week"
+                  OnChange: =Set(varAbsToWeek, tmAbsTo.Selected.Value)
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            - tmAbsLblNote:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 5
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: ="Note"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - tmAbsNote:
+                Control: ModernTextInput@1.1.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 5 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Default: =FormAbsenceNote
+                  Placeholder: ="What the time is for"
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="Note"
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            # The days each person loses: the working days between the two weeks, less the bank
+            # holidays of the first person picked, who is the only region the panel can name.
+            - tmAbsDays:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormAbsenceDaysY
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: |
+                    =With({ f: FormAbsenceFromMonday,
+                            t: DateAdd(FormAbsenceToMonday, 4, TimeUnit.Days),
+                            rg: LookUp(colPeople,
+                                       'Full name'
+                                         = First(tmAbsPeople.SelectedItems).Value).Region.Value },
+                         With({ wd: CountRows(Filter(DayGrid, IsWork, D >= f, D <= t)),
+                                bh: CountRows(Filter(BankHolidayDayRows, RegionName = rg,
+                                                     D >= f, D <= t)) },
+                             Text(Max(0, wd - bh), "[$-en-US]#,##0")
+                             & " working days per person, "
+                             & Text(f, "ddd d mmm") & " to " & Text(t, "ddd d mmm")
+                             & If(bh > 0,
+                                  " · " & Text(bh, "[$-en-US]#,##0") & " bank holiday"
+                                  & If(bh = 1, "", "s") & " in " & rg, "")))
+                  Size: =TypeCaption
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            # A row being edited can be taken off the record here; a new absence has nothing to
+            # remove.
+            - tmAbsRemove:
+                Control: ModernButton@1.0.0
+                Properties:
+                  X: =Pad
+                  Y: =FormAbsenceRemoveY
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Appearance: =ButtonAppearance.Subtle
+                  BasePaletteColor: =NeutralBg1
+                  Color: =StatusBad
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  RadiusTopLeft: =CtrlR
+                  RadiusTopRight: =CtrlR
+                  RadiusBottomLeft: =CtrlR
+                  RadiusBottomRight: =CtrlR
+                  Visible: =FormAbsenceEditing
+                  Text: ="Remove this absence"
+                  AccessibleLabel: ="Remove this absence"
+                  OnSelect: |
+                    =Set(varTeamFormTried, true);
+                     Set(varAbsSaveError, "");
+                     // Only the Remove is inside the error test: a refused delete leaves the row,
+                     // the panel and the message where they are.
+                     IfError(
+                       Remove(Absences, varAbsEdit),
+                       Set(varAbsSaveError, FirstError.Message),
+                       ClearCollect(colAbsences, Absences);
+                       Set(varAbsEdit, Blank());
+                       Set(varAbsOpen, false);
+                       Notify("Absence removed.", NotificationType.Success))
+            # The one place a fault is said: the rules while the panel is open, and whatever
+            # Dataverse answered if a save was refused.
+            - tmAbsError:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormAbsenceErrorY
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Visible: =varTeamFormTried && Self.Text <> ""
+                  Text: |
+                    =If(!IsBlank(varAbsSaveError), varAbsSaveError,
+                        CountRows(tmAbsPeople.SelectedItems) = 0,
+                        "At least one person is required.",
+                        IsBlank(tmAbsType.Selected.Value), "A type is required.",
+                        IsBlank(FormAbsenceFromMonday)
+                        || IsBlank(FormAbsenceToMonday),
+                        "A From week and a To week are required.",
+                        FormAbsenceToMonday < FormAbsenceFromMonday,
+                        "The To week cannot be before the From week.",
+                        "")
+                  Size: =TypeCaption
+                  Font: =FontUI
+                  Color: =StatusBad
+                  Wrap: =true
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  AutoHeight: =true
+            - tmAbsSave:
+                Control: ModernButton@1.0.0
+                Properties:
+                  X: =Pad
+                  Y: =Parent.Height - ControlHeight - Pad
+                  Width: =(Parent.Width - Pad * 2 - Gap) / 2
+                  Height: =ControlHeight
+                  Appearance: =ButtonAppearance.Primary
+                  BasePaletteColor: =BrandBg
+                  Color: =BrandFg
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  RadiusTopLeft: =CtrlR
+                  RadiusTopRight: =CtrlR
+                  RadiusBottomLeft: =CtrlR
+                  RadiusBottomRight: =CtrlR
+                  Text: ="Save"
+                  AccessibleLabel: =FormAbsenceTitle
+                  DisplayMode: |
+                    =If(varTeamFormTried && tmAbsError.Text <> "",
+                        DisplayMode.Disabled, DisplayMode.Edit)
+                  OnSelect: |
+                    =Set(varTeamFormTried, true);
+                     Set(varAbsSaveError, "");
+                     // The rules first, then the write on its own inside the error test: a
+                     // refused save leaves the panel open and says what Dataverse answered.
+                     If(tmAbsError.Text = "",
+                      IfError(
+                       With({ f: FormAbsenceFromMonday,
+                            t: DateAdd(FormAbsenceToMonday, 4, TimeUnit.Days),
+                            ty: LookUp(Filter('List values',
+                                              List = 'List (List values)'.'Absence type'),
+                                       Value = tmAbsType.Selected.Value) },
+                         // A row being edited is one Patch; a new absence is one per person
+                         // picked. The two are separate statements: a record and a table cannot
+                         // be the two arms of one If.
+                         If(FormAbsenceEditing,
+                            Patch(Absences, varAbsEdit,
+                                  { Name: FormAbsencePerson & " " & Text(f, "d mmm")
+                                          & " to " & Text(t, "d mmm"),
+                                    Person: LookUp(People,
+                                                   'Full name' = FormAbsencePerson),
+                                    'Absence type': ty,
+                                    From: f,
+                                    To: t,
+                                    Note: Trim(tmAbsNote.Text) }));
+                         If(!FormAbsenceEditing,
+                            ForAll(tmAbsPeople.SelectedItems As P,
+                                   Patch(Absences, Defaults(Absences),
+                                         { Name: P.Value & " " & Text(f, "d mmm")
+                                                 & " to " & Text(t, "d mmm"),
+                                           Person: LookUp(People, 'Full name' = P.Value),
+                                           'Absence type': ty,
+                                           From: f,
+                                           To: t,
+                                           Note: Trim(tmAbsNote.Text) })))),
+                       Set(varAbsSaveError, FirstError.Message),
+                       // The collection the screens read is rebuilt from the table, as the person
+                       // form does, and only then does the panel close.
+                       ClearCollect(colAbsences, Absences);
+                       Notify(If(FormAbsenceEditing, "1",
+                                 Text(CountRows(tmAbsPeople.SelectedItems), "[$-en-US]#,##0"))
+                              & If(!FormAbsenceEditing
+                                   && CountRows(tmAbsPeople.SelectedItems) <> 1,
+                                   " absences saved.", " absence saved."),
+                              NotificationType.Success);
+                       Set(varAbsEdit, Blank());
+                       Set(varAbsOpen, false)))
+            - tmAbsCancel:
+                Control: ModernButton@1.0.0
+                Properties:
+                  X: =Pad + (Parent.Width - Pad * 2 - Gap) / 2 + Gap
+                  Y: =Parent.Height - ControlHeight - Pad
+                  Width: =(Parent.Width - Pad * 2 - Gap) / 2
+                  Height: =ControlHeight
+                  Appearance: =ButtonAppearance.Subtle
+                  BasePaletteColor: =NeutralBg1
+                  Color: =NeutralFg1
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  RadiusTopLeft: =CtrlR
+                  RadiusTopRight: =CtrlR
+                  RadiusBottomLeft: =CtrlR
+                  RadiusBottomRight: =CtrlR
+                  Text: ="Cancel"
+                  AccessibleLabel: ="Close the absence panel without saving"
+                  OnSelect: =Set(varAbsEdit, Blank()); Set(varAbsOpen, false)

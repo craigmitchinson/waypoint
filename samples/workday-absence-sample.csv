@@ -1,0 +1,4 @@
+Worker,Employee ID,Time Off Type,Start Date,End Date,Total Days,Status,Comment
+"Brooks, Lena",10024,Annual Leave,14/07/2025,18/07/2025,5,Approved,Booked in May
+"Okafor, Daniel",10031,Sick Leave,21/07/2025,21/07/2025,1,Approved,
+"Shah, Priya",10047,Annual Leave,04/08/2025,08/08/2025,5,Pending,Awaiting approval

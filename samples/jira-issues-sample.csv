@@ -1,0 +1,4 @@
+Issue key,Summary,Issue Type,Status,Assignee,Sprint,Custom field (Story Points),Parent,Resolved
+WAY-101,"Payments retry, with backoff",Story,In Progress,Lena Brooks,Sprint 3,8,WAY-100,
+WAY-102,Spike on ledger reconciliation,Spike,Done,Daniel Okafor,Sprint 3,3,WAY-100,2025-07-18
+WAY-103,Card vault component,Sub-task,Backlog,,Sprint 4,5,WAY-100,

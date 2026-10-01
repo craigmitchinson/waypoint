@@ -1,0 +1,619 @@
+# Waypoint canvas app: the component definitions.
+#
+# Valid against pa.schema.yaml (v3.0): the top-level key is ComponentDefinitions, each entry has a
+# DefinitionType of CanvasComponent, optional CustomProperties, a Properties map of Power Fx formulas
+# and a Children sequence of single-key control maps.
+#
+# AccessAppScope is true on every component. Data still comes in as a typed property, but the theme
+# and type roles are App named formulas, and a component cannot see one without app scope: Studio
+# answers "Name isn't valid. 'BrandBg' isn't recognized" on every colour otherwise.
+#
+# A component's own custom properties are always read as `<component>.<property>`, never bare.
+#
+# Every control identifier and property name here was read off Craig's configured sample of every
+# modern control, downloaded from Studio (power/canvas/source/Src/Screen1.pa.yaml):
+# ModernText@1.0.0, ModernButton@1.0.0 and Badge@0.0.24. Gallery@2.15.0 and GroupContainer@1.5.0
+# with the Variants Studio wrote stay as they are: a gallery and a bar have no modern equivalent
+# whose property names this build has seen. The Fluent look comes from the theme formulas, now on
+# modern properties.
+
+ComponentDefinitions:
+
+  cmpStat:
+    DefinitionType: CanvasComponent
+    Description: >-
+      One figure with its label, a unit and a line of context under it. src/ui/Stat.tsx. The unit of
+      a Band or a card.
+    AccessAppScope: true
+    CustomProperties:
+      Label:
+        PropertyKind: Input
+        Description: What the figure is.
+        DataType: Text
+        Default: ="Available"
+      Value:
+        PropertyKind: Input
+        Description: The figure, already formatted.
+        DataType: Text
+        Default: ="0.0"
+      Unit:
+        PropertyKind: Input
+        Description: A short unit set after the value, such as MW.
+        DataType: Text
+        Default: =""
+      Sub:
+        PropertyKind: Input
+        Description: One line of context under the value.
+        DataType: Text
+        Default: =""
+      Tone:
+        PropertyKind: Input
+        Description: "\"default\" or \"accent\". Accent colours the value only."
+        DataType: Text
+        Default: ="default"
+      Color:
+        PropertyKind: Input
+        Description: >-
+          The colour of the value. Left at its default the Tone and OnBrand rules below choose it.
+        DataType: Color
+        Default: =NeutralFg1
+      OnBrand:
+        PropertyKind: Input
+        Description: True when the stat sits on a brand band, where the text is white.
+        DataType: Boolean
+        Default: =false
+    Properties:
+      Fill: =Color.Transparent
+      Height: =BandH - 20
+      Width: =190
+    Children:
+      - statLabel:
+          Control: Label@2.5.1
+          Properties:
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =TypeLabelLine
+            Text: =cmpStat.Label
+            Size: =TypeLabelSize
+            FontWeight: =TypeLabelWeight
+            Font: =TypeFace
+            Color: =If(cmpStat.OnBrand, ColorFade(BrandFg, -0.25), NeutralFg2)
+            Wrap: =false
+            Overflow: =Overflow.Hidden
+            PaddingTop: =0
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+      - statValue:
+          Control: Label@2.5.1
+          Properties:
+            X: =0
+            Y: =TypeLabelLine
+            Width: =Parent.Width
+            Height: =TypeNumberLine
+            Text: =cmpStat.Value & If(IsBlank(cmpStat.Unit), "", " " & cmpStat.Unit)
+            Size: =TypeNumberSize
+            FontWeight: =TypeNumberWeight
+            Font: =TypeFace
+            # On a brand band the value is always BrandFg: a tone token is a colour for a light
+            # surface (StatusBad reads 3.3:1 on BrandBg, StatusGood 2.75:1) and a Color of
+            # ToneNeutral is NeutralFg1, the band's own near-black. Tone is carried by the sub
+            # line below instead. Off-brand, a passed Color still wins.
+            Color: |
+              =If(cmpStat.OnBrand, BrandFg,
+                  If(cmpStat.Color <> NeutralFg1, cmpStat.Color,
+                     If(cmpStat.Tone = "accent", AccentFg, NeutralFg1)))
+            Wrap: =true
+            Overflow: =Overflow.Hidden
+            PaddingTop: =0
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            AutoHeight: =true
+      - statSub:
+          Control: Label@2.5.1
+          Properties:
+            X: =0
+            Y: =TypeLabelLine + TypeNumberLine
+            Width: =Parent.Width
+            Height: =TypeLabelLine
+            Text: =cmpStat.Sub
+            Size: =TypeLabelSize
+            FontWeight: =TypeLabelWeight
+            Font: =TypeFace
+            # The tone the value cannot carry on a brand fill: the status token lifted towards
+            # white so it reads on BrandBg, and the plain white-fade when there is no tone.
+            Color: |
+              =If(cmpStat.OnBrand,
+                  If(cmpStat.Color = ToneBad,  ColorFade(ToneBad, 0.6),
+                     cmpStat.Color = ToneWarn, ColorFade(ToneWarn, 0.6),
+                     cmpStat.Color = ToneGood, ColorFade(ToneGood, 0.6),
+                     ColorFade(BrandFg, -0.3)),
+                  NeutralFg2)
+            Visible: =!IsBlank(cmpStat.Sub)
+            Wrap: =false
+            Overflow: =Overflow.Hidden
+            PaddingTop: =0
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+
+  cmpPill:
+    DefinitionType: CanvasComponent
+    Description: >-
+      A small pill. The tone tints it; the text always says what it means, so state is never carried
+      by colour alone. src/ui/Pill.tsx.
+    AccessAppScope: true
+    CustomProperties:
+      Label:
+        PropertyKind: Input
+        Description: The words in the pill.
+        DataType: Text
+        Default: ="Committed"
+      Tone:
+        PropertyKind: Input
+        Description: neutral, info, brand, accent, good, warn or bad.
+        DataType: Text
+        Default: ="neutral"
+    Properties:
+      Fill: =Color.Transparent
+      Height: =TypeLabelLine
+      Width: =Min(Max(Len(cmpPill.Label) * 7 + 20, 56), 200)
+    Children:
+      # One Badge, where the tint and the border were a container behind a label: the fill
+      # comes from the theme colour and the words are its content.
+      - pillBadge:
+          Control: Badge@0.0.24
+          Properties:
+            X: =0
+            Y: =(Parent.Height - Self.Height) / 2
+            Width: =Parent.Width
+            Height: =Parent.Height
+            Appearance: ='BadgeCanvas.Appearance'.Filled
+            Shape: ='BadgeCanvas.Shape'.Rounded
+            ThemeColor: |
+              =Switch(cmpPill.Tone,
+                  "brand",  'BadgeCanvas.ThemeColor'.Brand,
+                  // The low tone: a tinted fill for a pill that is not a warning, where Subtle
+                  // leaves the words on the card's own background with no pill at all.
+                  "info",   'BadgeCanvas.ThemeColor'.Informative,
+                  "accent", 'BadgeCanvas.ThemeColor'.Danger,
+                  "good",   'BadgeCanvas.ThemeColor'.Success,
+                  "warn",   'BadgeCanvas.ThemeColor'.Warning,
+                  "bad",    'BadgeCanvas.ThemeColor'.Danger,
+                  'BadgeCanvas.ThemeColor'.Subtle)
+            Content: =cmpPill.Label
+            FontSize: =TypeLabelSize
+            FontWeight: =FontWeight.Semibold
+            Font: =TypeFace
+            Align: =Align.Center
+            VerticalAlign: =VerticalAlign.Middle
+
+  cmpStepper:
+    DefinitionType: CanvasComponent
+    Description: >-
+      The track a work item moves through, with the stage it is in unmistakable: a filled marker, a
+      semibold label and the step named for a screen reader. The track is the component's own, one
+      per kind (power/design-work-flow-rev2.md, section 4), so a screen passes the kind and the
+      stage and never builds the table. src/ui/Stepper.tsx.
+    AccessAppScope: true
+    CustomProperties:
+      Kind:
+        PropertyKind: Input
+        Description: '"Feature", "Spike" or "Component". The track is chosen from it.'
+        DataType: Text
+        Default: ="Feature"
+      Stage:
+        PropertyKind: Input
+        Description: >-
+          The stage the item is in, as the step's own name (Intake, Assessment, Delivery, Released,
+          Concluded, Validated) or as the phase behind it (Shaping, Release). Blank is the first step.
+        DataType: Text
+        Default: =""
+      Stopped:
+        PropertyKind: Input
+        Description: >-
+          Whether the item is stopped. The whole track greys and the stage it stopped in reads
+          Stopped, so Stage stays the stage it stopped in.
+        DataType: Boolean
+        Default: =false
+      Label:
+        PropertyKind: Input
+        Description: >-
+          The accessible name of the stepper as a whole, and the parent's name on a Component, whose
+          single line reads "Component of <Label>".
+        DataType: Text
+        Default: ="Stages"
+      Current:
+        PropertyKind: Input
+        Description: Deprecated, the previous name of Stage. Read only while Stage is blank.
+        DataType: Text
+        Default: =""
+      Steps:
+        PropertyKind: Input
+        Description: >-
+          Deprecated and ignored: the track is derived from Kind. Declared only so the instance on
+          the item screen keeps importing until the placement unit drops it.
+        DataType: Table
+        Default: '=Table({Name: ""})'
+    Properties:
+      Fill: =Color.Transparent
+      Height: =RowHeight + TypeLabelLine + 8
+      Width: =520
+    Children:
+      - stepList:
+          Control: Gallery@2.15.0
+          Variant: Horizontal
+          Properties:
+            TemplatePadding: =0
+            BorderColor: =RGBA(0, 0, 0, 0)
+            ShowScrollbar: =false
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =Parent.Height
+            # The two tracks and the component's one line, with the state of each step worked out
+            # once here: the children only read State, so nothing below has to know the track.
+            Items: |
+              =With({ stage: If(IsBlank(cmpStepper.Stage), cmpStepper.Current, cmpStepper.Stage) },
+               With({ track: Switch(cmpStepper.Kind,
+                        "Spike", Table({ Pos: 1, Name: "Intake",     Phase: "Shaping" },
+                                       { Pos: 2, Name: "Assessment", Phase: "Assessment" },
+                                       { Pos: 3, Name: "Delivery",   Phase: "Delivery" },
+                                       { Pos: 4, Name: "Concluded",  Phase: "Release" }),
+                        "Component", Table({ Pos: 1,
+                                             Name: "Component of " & cmpStepper.Label,
+                                             Phase: "" }),
+                        Table({ Pos: 1, Name: "Intake",     Phase: "Shaping" },
+                              { Pos: 2, Name: "Assessment", Phase: "Assessment" },
+                              { Pos: 3, Name: "Delivery",   Phase: "Delivery" },
+                              { Pos: 4, Name: "Released",   Phase: "Release" },
+                              { Pos: 5, Name: "Validated",  Phase: "Validated" })) },
+                With({ here: Coalesce(LookUp(track, Name = stage || Phase = stage, Pos), 1),
+                       last: CountRows(track) },
+                 ForAll(track As S,
+                   { Pos:  S.Pos,
+                     Last: S.Pos = last,
+                     Name: If(cmpStepper.Kind <> "Component" && cmpStepper.Stopped && S.Pos = here,
+                              "Stopped", S.Name),
+                     State: If(cmpStepper.Kind = "Component",       "none",
+                               cmpStepper.Stopped && S.Pos = here,  "stopped",
+                               S.Pos = here,                        "current",
+                               S.Pos < here,                        "done",
+                                                                    "future") }))))
+            TemplateSize: |
+              =Parent.Width / Switch(cmpStepper.Kind, "Spike", 4, "Component", 1, 5)
+            AccessibleLabel: |
+              =If(cmpStepper.Kind = "Component",
+                  "Component of " & cmpStepper.Label, cmpStepper.Label)
+          Children:
+            # The connector, marker to marker, drawn behind them and never after the last step.
+            - stepBar:
+                Control: GroupContainer@1.5.0
+                Variant: ManualLayout
+                Properties:
+                  X: =Parent.TemplateWidth / 2 + 12
+                  Y: =RowHeight / 2 - 1
+                  Width: =Max(0, Parent.TemplateWidth - 24)
+                  Height: =2
+                  Visible: =!ThisItem.Last && ThisItem.State <> "none"
+                  Fill: |
+                    =If(!cmpStepper.Stopped && ThisItem.State = "done", BrandBg, NeutralStroke1)
+            # The marker. Shape and weight carry the state before colour does: a filled disc for the
+            # step the item is in, a ringed disc with a tick behind it, a hollow ring ahead of it,
+            # and a filled square with a cross where a stopped item is.
+            - stepMark:
+                Control: GroupContainer@1.5.0
+                Variant: ManualLayout
+                Properties:
+                  X: =Parent.TemplateWidth / 2 - 10
+                  Y: =RowHeight / 2 - 10
+                  Width: =20
+                  Height: =20
+                  Visible: =ThisItem.State <> "none"
+                  Fill: |
+                    =Switch(ThisItem.State, "stopped", NeutralFg2,
+                                            "current", If(cmpStepper.Stopped, NeutralFg2, BrandBg),
+                                            NeutralBg1)
+                  BorderThickness: |
+                    =If(ThisItem.State = "current" || ThisItem.State = "stopped", 0, 2)
+                  BorderColor: |
+                    =If(!cmpStepper.Stopped && ThisItem.State = "done", BrandBg, NeutralStroke1)
+                  RadiusTopLeft: =If(ThisItem.State = "stopped", 3, 10)
+                  RadiusTopRight: =If(ThisItem.State = "stopped", 3, 10)
+                  RadiusBottomLeft: =If(ThisItem.State = "stopped", 3, 10)
+                  RadiusBottomRight: =If(ThisItem.State = "stopped", 3, 10)
+            - stepGlyph:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Parent.TemplateWidth / 2 - 10
+                  Y: =RowHeight / 2 - 10
+                  Width: =20
+                  Height: =20
+                  Text: |
+                    =Switch(ThisItem.State, "done", UniChar(10003), "stopped", UniChar(215), "")
+                  Size: =TypeLabelSize
+                  FontWeight: =FontWeight.Semibold
+                  Font: =TypeFace
+                  Color: |
+                    =If(ThisItem.State = "stopped", NeutralBg1,
+                        cmpStepper.Stopped, NeutralFg2, BrandText)
+                  Align: =Align.Center
+                  VerticalAlign: =VerticalAlign.Middle
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - stepName:
+                Control: Label@2.5.1
+                Properties:
+                  X: =4
+                  Y: |
+                    =If(ThisItem.State = "none", (RowHeight - TypeLabelLine) / 2, RowHeight)
+                  Width: =Parent.TemplateWidth - 8
+                  Height: =TypeLabelLine
+                  Text: =ThisItem.Name
+                  Size: =TypeLabelSize
+                  FontWeight: |
+                    =If(ThisItem.State = "current", FontWeight.Semibold, FontWeight.Normal)
+                  Font: =TypeFace
+                  Color: |
+                    =If(ThisItem.State = "future" || cmpStepper.Stopped, NeutralFg2, NeutralFg1)
+                  Align: =If(ThisItem.State = "none", Align.Left, Align.Center)
+                  VerticalAlign: =VerticalAlign.Middle
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+
+  cmpRail:
+    DefinitionType: CanvasComponent
+    Description: >-
+      The shell's navigation rail, one instance on every screen. It lists NavItems as icon buttons,
+      marks the screen it is on through its Active property, and carries the collapse and theme
+      toggles in a fixed footer at its bottom. A gallery inside a component is allowed; a
+      component instance inside a gallery is not, which is why the rail is the component and the sections are its rows.
+    AccessAppScope: true
+    CustomProperties:
+      Active:
+        PropertyKind: Input
+        Description: The Key of the section whose screen this rail is on.
+        DataType: Text
+        Default: ="Command"
+    Properties:
+      Fill: =NeutralBg2
+      Width: =If(RailCollapsed, RailWidthTight, NavW)
+      Height: =App.Height
+    Children:
+      - railBox:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            LayoutOverflowX: =LayoutOverflow.Hide
+            LayoutOverflowY: =LayoutOverflow.Hide
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =Parent.Height
+            Fill: =NeutralBg2
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutJustifyContent: =LayoutJustifyContent.Start
+            LayoutGap: =8
+            PaddingLeft: =8
+            PaddingRight: =8
+            PaddingTop: =8
+            PaddingBottom: =8
+          Children:
+            - railList:
+                Control: Gallery@2.15.0
+                Variant: Vertical
+                Properties:
+                  TemplatePadding: =0
+                  BorderColor: =RGBA(0, 0, 0, 0)
+                  ShowScrollbar: =false
+                  FillPortions: =1
+                  TemplateSize: =RowHeight + 4
+                  AccessibleLabel: ="Sections"
+                  Items: =NavItems
+                Children:
+                  - railItem:
+                      Control: ModernButton@1.0.0
+                      Properties:
+                        Appearance: |
+                          =If(ThisItem.Key = cmpRail.Active, ButtonAppearance.Primary,
+                              ButtonAppearance.Subtle)
+                        BasePaletteColor: =If(ThisItem.Key = cmpRail.Active, BrandBg, NeutralBg2)
+                        Align: =Align.Left
+                        Font: =TypeFace
+                        Size: =TypeNavPx
+                        RadiusTopLeft: =CtrlR
+                        RadiusTopRight: =CtrlR
+                        RadiusBottomLeft: =CtrlR
+                        RadiusBottomRight: =CtrlR
+                        X: =0
+                        Y: =0
+                        Width: =Parent.TemplateWidth
+                        Height: =RowHeight
+                        Icon: =ThisItem.Icon
+                        IconStyle: =IconStyle.Outline
+                        Text: =If(RailCollapsed, "", ThisItem.Label)
+                        Tooltip: =ThisItem.Label
+                        AccessibleLabel: =ThisItem.Label
+                        # The active item is filled BrandBg, so its ink is the on-brand one.
+                        Color: =If(ThisItem.Key = cmpRail.Active, BrandFg, NeutralFg1)
+                        FontWeight: |
+                          =If(ThisItem.Key = cmpRail.Active, FontWeight.Semibold, FontWeight.Normal)
+                        OnSelect: |
+                          =Switch(ThisItem.Key,
+                              "Command",      Navigate(scrCommand, ScreenTransition.None),
+                              "Work",         Navigate(scrWork, ScreenTransition.None),
+                              "Timeline",     Navigate(scrTimeline, ScreenTransition.None),
+                              "Team",         Navigate(scrTeam, ScreenTransition.None),
+                              // hidden 20 Sep 2026: unlikely to be used; restore by adding the tab
+                              // back — "Import", Navigate(scrImport, ScreenTransition.None) sat here.
+                              "Benefits",     Navigate(scrBenefits, ScreenTransition.None),
+                              "Financials",   Navigate(scrFinancials, ScreenTransition.None),
+                              "QuarterClose", Navigate(scrQuarterClose, ScreenTransition.None),
+                              "Settings",     Navigate(scrSettings, ScreenTransition.None))
+
+            # The footer is the last child and its layout does not depend on the state: a fixed
+            # 96px vertical stack of two 40x40 icon-only buttons, in both states. Nothing here
+            # hides, changes direction or resizes, which is what stopped the collapsed rail
+            # rendering its toggle before (power/RUNBOOK.md, "Layout calibration").
+            - railFoot:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  LayoutOverflowX: =LayoutOverflow.Hide
+                  LayoutOverflowY: =LayoutOverflow.Scroll
+                  FillPortions: =0
+                  Height: =96
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutAlignItems: =LayoutAlignItems.Start
+                  LayoutJustifyContent: =LayoutJustifyContent.Start
+                  LayoutGap: =8
+                  PaddingTop: =8
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                Children:
+                  - railToggle:
+                      Control: ModernButton@1.0.0
+                      Properties:
+                        Appearance: =ButtonAppearance.Subtle
+                        BasePaletteColor: =NeutralBg2
+                        Color: =NeutralFg1
+                        Font: =TypeFace
+                        Size: =TypeNavPx
+                        RadiusTopLeft: =CtrlR
+                        RadiusTopRight: =CtrlR
+                        RadiusBottomLeft: =CtrlR
+                        RadiusBottomRight: =CtrlR
+                        Width: =40
+                        Height: =40
+                        Text: =""
+                        Icon: =If(RailCollapsed, "ChevronRight", "ChevronLeft")
+                        IconStyle: =IconStyle.Outline
+                        Tooltip: =If(RailCollapsed, "Expand navigation", "Collapse navigation")
+                        AccessibleLabel: |
+                          =If(RailCollapsed, "Expand navigation", "Collapse navigation")
+                        OnSelect: |
+                          =// The user's own choice, from here on: varNavUserChoice tells
+                           // RailCollapsed to stop following the breakpoint.
+                           Set(varNavCollapsed, !RailCollapsed);
+                           Set(varNavUserChoice, true)
+                  - railTheme:
+                      Control: ModernButton@1.0.0
+                      Properties:
+                        # varTheme is the preference, saved on this device and read back by
+                        # OnStart's LoadData. The formula is the one the screens carried.
+                        Appearance: =ButtonAppearance.Subtle
+                        BasePaletteColor: =NeutralBg2
+                        Color: =NeutralFg1
+                        Font: =TypeFace
+                        Size: =TypeNavPx
+                        RadiusTopLeft: =CtrlR
+                        RadiusTopRight: =CtrlR
+                        RadiusBottomLeft: =CtrlR
+                        RadiusBottomRight: =CtrlR
+                        Width: =40
+                        Height: =40
+                        Text: =""
+                        Icon: ="Eye"
+                        IconStyle: =IconStyle.Outline
+                        Tooltip: =If(IsDark, "Switch to light theme", "Switch to dark theme")
+                        AccessibleLabel: |
+                          =If(IsDark, "Switch to the light theme", "Switch to the dark theme")
+                        OnSelect: |
+                          =Set(varTheme, If(IsDark, "light", "dark"));
+                           ClearCollect(colPreferences, { Theme: varTheme });
+                           SaveData(colPreferences, "waypoint-prefs")
+
+  cmpSearch:
+    DefinitionType: CanvasComponent
+    Description: >-
+      The header search, one instance in every screen's header band. A single-select combo box over
+      the SearchIndex named table: pick a person, a squad or a work item and the app goes there.
+      Navigate() inside a component is allowed, as cmpRail already does.
+    AccessAppScope: true
+    Properties:
+      Fill: =Color.Transparent
+      Width: =280
+      Height: =ControlHeight
+    Children:
+      # ModernCombobox has no DisplayFields/SearchFields pair: one ItemDisplayText is both the row's
+      # text and what IsSearchable matches on, so Name and Sub are joined into it.
+      - searchBox:
+          Control: ModernCombobox@1.1.1
+          Properties:
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =Parent.Height
+            Items: =SearchIndex
+            ItemDisplayText: =ThisItem.Name & " · " & ThisItem.Sub
+            SelectMultiple: =false
+            IsSearchable: =true
+            InputTextPlaceholder: ="Find a person, squad or item"
+            Font: =TypeFace
+            Size: =TypeBodyPx
+            Color: =NeutralFg1
+            BasePaletteColor: =BrandBg
+            AccessibleLabel: ="Find a person, squad or item"
+            OnChange: |
+              =Switch(Self.Selected.Kind,
+                  "Person", Set(varTeamSquad, Self.Selected.Sub);
+                            Set(varTeamTab, "People");
+                            Navigate(scrTeam),
+                  "Squad",  Set(varTeamSquad, Self.Selected.Name);
+                            Set(varTeamTab, "Squads");
+                            Navigate(scrTeam),
+                  "Item",   Set(varItem, LookUp(colWork, Title = Self.Selected.Name));
+                            Navigate(scrWorkItem));
+               Reset(Self)
+            Appearance: =Appearance.Outline
+            Fill: =NeutralBg1
+
+  cmpScope:
+    DefinitionType: CanvasComponent
+    Description: >-
+      The header's team selector, one instance beside the search in every screen's header band. A
+      dropdown over ScopeOptions: "All teams" first, then every team the loaded collections carry,
+      read through the Team lookup because the Teams table itself is not connected in Studio.
+      Picking one sets varScopeTeam and reloads the collections under it, so every named formula,
+      and every roll-up the screens read off them, narrows at once.
+    AccessAppScope: true
+    Properties:
+      Fill: =Color.Transparent
+      Width: =180
+      Height: =ControlHeight
+    Children:
+      - scopeBox:
+          Control: ModernDropdown@1.0.2
+          Properties:
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =Parent.Height
+            Items: =ScopeOptions
+            ItemDisplayText: =ThisItem.Value
+            Default: ={Value:ScopeLabel}
+            Font: =FontUI
+            Size: =TypeBodyPx
+            Color: =NeutralFg1
+            BasePaletteColor: =BrandBg
+            AccessibleLabel: ="Team in scope"
+            OnChange: |
+              =// The scope the whole app is on. The first option is the label for no scope at all,
+               // so it writes a blank rather than a team name. The reload that follows it is flag-gated:
+               // power/app/App.scope.yaml holds it, and scripts/assemble-canvas.mjs substitutes it here
+               // when includeScope is true (power/RUNBOOK.md, section 4, "The scope flag").
+               Set(varScopeTeam, If(Self.Selected.Value = ScopeAllLabel, "", Self.Selected.Value))
+            Appearance: =Appearance.Outline
+            Fill: =NeutralBg1

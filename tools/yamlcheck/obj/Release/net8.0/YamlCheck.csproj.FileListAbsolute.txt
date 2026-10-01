@@ -1,0 +1,17 @@
+C:\Users\Craig\Desktop\Misc\Prototypes\waypoint-app\tools\yamlcheck\bin\Release\net8.0\YamlCheck.exe
+C:\Users\Craig\Desktop\Misc\Prototypes\waypoint-app\tools\yamlcheck\bin\Release\net8.0\YamlCheck.deps.json
+C:\Users\Craig\Desktop\Misc\Prototypes\waypoint-app\tools\yamlcheck\bin\Release\net8.0\YamlCheck.runtimeconfig.json
+C:\Users\Craig\Desktop\Misc\Prototypes\waypoint-app\tools\yamlcheck\bin\Release\net8.0\YamlCheck.dll
+C:\Users\Craig\Desktop\Misc\Prototypes\waypoint-app\tools\yamlcheck\bin\Release\net8.0\YamlCheck.pdb
+C:\Users\Craig\Desktop\Misc\Prototypes\waypoint-app\tools\yamlcheck\bin\Release\net8.0\YamlDotNet.dll
+C:\Users\Craig\Desktop\Misc\Prototypes\waypoint-app\tools\yamlcheck\obj\Release\net8.0\YamlCheck.csproj.AssemblyReference.cache
+C:\Users\Craig\Desktop\Misc\Prototypes\waypoint-app\tools\yamlcheck\obj\Release\net8.0\YamlCheck.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Craig\Desktop\Misc\Prototypes\waypoint-app\tools\yamlcheck\obj\Release\net8.0\YamlCheck.AssemblyInfoInputs.cache
+C:\Users\Craig\Desktop\Misc\Prototypes\waypoint-app\tools\yamlcheck\obj\Release\net8.0\YamlCheck.AssemblyInfo.cs
+C:\Users\Craig\Desktop\Misc\Prototypes\waypoint-app\tools\yamlcheck\obj\Release\net8.0\YamlCheck.csproj.CoreCompileInputs.cache
+C:\Users\Craig\Desktop\Misc\Prototypes\waypoint-app\tools\yamlcheck\obj\Release\net8.0\YamlCheck.csproj.Up2Date
+C:\Users\Craig\Desktop\Misc\Prototypes\waypoint-app\tools\yamlcheck\obj\Release\net8.0\YamlCheck.dll
+C:\Users\Craig\Desktop\Misc\Prototypes\waypoint-app\tools\yamlcheck\obj\Release\net8.0\refint\YamlCheck.dll
+C:\Users\Craig\Desktop\Misc\Prototypes\waypoint-app\tools\yamlcheck\obj\Release\net8.0\YamlCheck.pdb
+C:\Users\Craig\Desktop\Misc\Prototypes\waypoint-app\tools\yamlcheck\obj\Release\net8.0\YamlCheck.genruntimeconfig.cache
+C:\Users\Craig\Desktop\Misc\Prototypes\waypoint-app\tools\yamlcheck\obj\Release\net8.0\ref\YamlCheck.dll

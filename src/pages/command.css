@@ -1,0 +1,318 @@
+/* Command only: one screen that does not scroll, and the two small charts on it. Tokens only. */
+
+/* The view owns the height of the main region so the cards scroll inside themselves, not the page. */
+.wp-main:has(.wp-command) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.wp-command {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.wp-command .wp-band {
+  flex: 0 0 auto;
+}
+
+.wp-command .wp-band__grid {
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px 16px;
+}
+
+.wp-command-action {
+  font-size: var(--wp-fs-label);
+  padding: 4px 10px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+  background: var(--c-surface);
+  color: var(--c-ink);
+  text-decoration: none;
+}
+
+.wp-command-action:hover {
+  background: var(--c-panel);
+}
+
+.wp-command-util {
+  display: block;
+  height: 6px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+}
+
+.wp-command-util__fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.wp-command-cols {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 7fr 5fr;
+  gap: 16px;
+}
+
+.wp-command-right {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wp-command-squads,
+.wp-command-sprint {
+  flex: 0 0 auto;
+}
+
+.wp-command-benefits {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.wp-command-cols .wp-card {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.wp-command-cols .wp-card-title {
+  flex: 0 0 auto;
+  font-size: var(--wp-fs-heading);
+}
+
+.wp-command-cols .wp-card-title a {
+  font-size: var(--wp-fs-label);
+  font-weight: 400;
+}
+
+/* ---- decisions ---- */
+.wp-command-decisions__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.wp-command-group h3 {
+  margin: 0;
+}
+
+.wp-command-group__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-top: 1px solid var(--c-gridline);
+  background: none;
+  font: inherit;
+  font-size: var(--wp-fs-body);
+  font-weight: 600;
+  color: var(--c-ink);
+  cursor: pointer;
+}
+
+.wp-command-group:first-child .wp-command-group__head {
+  border-top: 0;
+}
+
+.wp-command-group__mark {
+  width: 14px;
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.wp-command-group__count {
+  margin-left: auto;
+  font-size: var(--wp-fs-label);
+  font-weight: 400;
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.wp-command-rows {
+  list-style: none;
+  margin: 0 0 4px;
+  padding: 0;
+}
+
+.wp-command-rows li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding-left: 22px;
+  font-size: var(--wp-fs-label);
+}
+
+.wp-command-rows__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--c-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wp-command-rows li a {
+  flex: 0 0 auto;
+  margin-left: auto;
+  font-size: var(--wp-fs-label);
+}
+
+/* ---- squads ---- */
+.wp-command-squads ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.wp-command-squads li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  font-size: var(--wp-fs-label);
+  border-top: 1px solid var(--c-gridline);
+}
+
+.wp-command-squads li:first-child {
+  border-top: 0;
+}
+
+.wp-command-squads li > a {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--wp-fs-body);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wp-command-squads__people,
+.wp-command-squads__pct,
+.wp-command-squads__mw {
+  flex: 0 0 auto;
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.wp-command-squads__bar {
+  flex: 0 0 auto;
+  display: block;
+  width: 80px;
+}
+
+.wp-command-squads__pct {
+  width: 40px;
+  text-align: right;
+  color: var(--c-ink);
+}
+
+.wp-command-squads__mw {
+  width: 108px;
+  text-align: right;
+}
+
+/* ---- this sprint ---- */
+.wp-command-sprint__dates {
+  margin: 0;
+  font-size: var(--wp-fs-label);
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.wp-command-sprint__stats {
+  display: flex;
+  gap: 20px;
+  margin: 8px 0 0;
+}
+
+.wp-command-sprint__stats dt {
+  font-size: var(--wp-fs-label);
+  color: var(--c-muted);
+}
+
+.wp-command-sprint__stats dd {
+  margin: 0;
+  font-size: var(--wp-fs-heading);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- the two charts ---- */
+.wp-sparkline {
+  display: block;
+  margin-top: 8px;
+}
+
+.wp-sparkline__img {
+  display: block;
+  width: 100%;
+  height: 24px;
+}
+
+.wp-monthbars {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.wp-monthbars__img {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.wp-monthbars__legend {
+  flex: 0 0 auto;
+  margin: 0;
+  font-size: var(--wp-fs-label);
+  color: var(--c-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wp-monthbars figcaption {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 2px;
+  font-size: var(--wp-fs-label);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wp-monthbars figcaption span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wp-monthbars figcaption a {
+  flex: 0 0 auto;
+  font-weight: 400;
+}

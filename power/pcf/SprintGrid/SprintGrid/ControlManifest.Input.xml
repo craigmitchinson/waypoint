@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest>
+  <control namespace="Waypoint" constructor="SprintGrid" version="0.0.1" display-name-key="Waypoint sprint grid" description-key="The sprint planning grid: people down, working days across, one typed cell per person per day." control-type="virtual" >
+    <external-service-usage enabled="false">
+    </external-service-usage>
+    <!-- The whole grid as JSON: days, groups, people, cells. See power/pcf/README.md for the contract. -->
+    <property name="gridJson" display-name-key="Grid JSON" description-key="The sprint grid as JSON: days, groups, people with cells (kind, label, status, tooltip)." of-type="Multiple" usage="input" required="true" />
+    <!-- light or dark, mirrored from the app's own theme variable. -->
+    <property name="theme" display-name-key="Theme" description-key="light or dark." of-type="SingleLine.Text" usage="input" required="false" />
+    <!-- The cell the reader picked, as {"person":"...","date":"YYYY-MM-DD"}. -->
+    <property name="selectedCellJson" display-name-key="Selected cell JSON" description-key="The cell last chosen, as JSON with person and date." of-type="SingleLine.Text" usage="output" required="false" />
+    <resources>
+      <code path="index.ts" order="1"/>
+      <css path="css/SprintGrid.css" order="1" />
+      <platform-library name="React" version="16.14.0" />
+    </resources>
+  </control>
+</manifest>

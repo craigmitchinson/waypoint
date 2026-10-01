@@ -1,0 +1,105 @@
+/* Financials only: the figures cards and the note under each block. Tokens only. */
+/* The content region scrolls on its own so the page head stays put on a fixed canvas. */
+.wp-financials-body {
+  margin-top: 14px;
+}
+
+.wp-financials-top,
+.wp-financials-grid {
+  display: grid;
+  gap: 14px;
+  align-items: start;
+}
+
+.wp-financials-top {
+  grid-template-columns: minmax(260px, 1fr) minmax(0, 2fr);
+}
+
+.wp-financials-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 14px;
+}
+
+.wp-financials-block {
+  min-width: 0;
+}
+
+.wp-financials-block .wp-h2 {
+  margin-top: 0;
+}
+
+.wp-financials-figures dl {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 16px;
+  margin: 0;
+  font-size: var(--wp-fs-label);
+}
+
+.wp-financials-figures dt {
+  color: var(--c-muted);
+}
+
+.wp-financials-figures dd {
+  margin: 0;
+  text-align: right;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.wp-financials-note {
+  margin: 0 0 8px;
+  max-width: 78ch;
+  font-size: var(--wp-fs-label);
+  color: var(--c-muted);
+}
+
+.wp-financials-table tfoot th,
+.wp-financials-table tfoot td {
+  border-top: 1px solid var(--c-line);
+  font-weight: 600;
+}
+
+/* Power Apps preview: the figures list at body size, on Fluent's rhythm. */
+html[data-mode="power"] .wp-financials-body {
+  margin-top: 16px;
+}
+
+html[data-mode="power"] .wp-financials-top,
+html[data-mode="power"] .wp-financials-grid {
+  gap: 16px;
+}
+
+html[data-mode="power"] .wp-financials-grid {
+  margin-top: 16px;
+}
+
+html[data-mode="power"] .wp-financials-figures dl {
+  gap: 10px 24px;
+  font-size: var(--pa-fs-body);
+}
+
+html[data-mode="power"] .wp-financials-figures dt {
+  color: var(--pa-neutral-fg-2);
+}
+
+html[data-mode="power"] .wp-financials-figures dd {
+  font-weight: 600;
+}
+
+html[data-mode="power"] .wp-financials-note {
+  margin: 0 0 12px;
+  font-size: var(--pa-fs-caption);
+}
+
+html[data-mode="power"] .wp-financials-table td,
+html[data-mode="power"] .wp-financials-table th {
+  white-space: nowrap;
+}
+
+html[data-mode="power"] .wp-financials-figures .wp-financials-note {
+  max-width: none;
+  margin: 12px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--pa-neutral-stroke-2);
+}

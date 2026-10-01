@@ -1,0 +1,320 @@
+/* Journey: the reference flow. The list, the stepper, the stage panel and the right rail. Tokens
+   only, and every size comes from the app's own scale. */
+.wp-jr-register {
+  min-height: 0;
+}
+
+.wp-jr-register .wp-nowrap {
+  white-space: nowrap;
+}
+
+.wp-jr-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.wp-jr-parent {
+  margin: 0;
+  font-size: var(--wp-fs-label);
+  color: var(--c-muted);
+}
+
+.wp-jr-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.wp-jr-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.wp-jr-head__title {
+  min-width: 0;
+}
+
+.wp-jr-head__title .wp-h2 {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wp-jr-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: var(--wp-fs-body);
+  padding: 5px 10px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+  background: var(--c-surface);
+  color: inherit;
+  cursor: pointer;
+}
+
+/* The stepper: a mark, a name, and no reliance on colour to say where the item is. */
+.wp-jr-track {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  padding: 0 10px;
+  height: 40px;
+  list-style: none;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+  background: var(--c-surface);
+  font-size: var(--wp-fs-body);
+}
+
+.wp-jr-track__step {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--c-muted);
+  white-space: nowrap;
+}
+
+.wp-jr-track__step.is-done {
+  color: var(--c-ink);
+}
+
+.wp-jr-track__step.is-current {
+  color: var(--c-brand);
+  font-weight: 600;
+}
+
+.wp-jr-track.is-stopped .wp-jr-track__step.is-current {
+  color: var(--c-bad);
+}
+
+.wp-jr-track__mark {
+  font-size: var(--wp-fs-label);
+}
+
+.wp-jr-notice {
+  margin: 0;
+  font-size: var(--wp-fs-label);
+  color: var(--c-muted);
+}
+
+.wp-jr-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 24px;
+  align-items: stretch;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.wp-jr-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.wp-jr-panel {
+  padding-right: 4px;
+}
+
+.wp-jr-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 24px;
+  align-items: start;
+}
+
+.wp-jr-form .wp-field {
+  margin-bottom: 0;
+  min-width: 0;
+}
+
+.wp-jr-form .wp-field input,
+.wp-jr-form .wp-field select,
+.wp-jr-form .wp-field textarea {
+  width: 100%;
+  min-width: 0;
+}
+
+.wp-jr-wide {
+  grid-column: 1 / -1;
+}
+
+.wp-jr-assign {
+  align-self: end;
+  padding-bottom: 2px;
+}
+
+.wp-jr-claim {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+  margin-top: 8px;
+}
+
+.wp-jr-claim .wp-field {
+  margin-bottom: 0;
+}
+
+.wp-jr-claim input,
+.wp-jr-claim select {
+  width: 100%;
+}
+
+.wp-jr-card {
+  padding: 12px;
+}
+
+.wp-jr-card .wp-card-title {
+  margin-bottom: 4px;
+}
+
+.wp-jr-save {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.wp-jr-btn {
+  font: inherit;
+  font-size: var(--wp-fs-body);
+  padding: 5px 10px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+  background: var(--c-surface);
+  color: inherit;
+  cursor: pointer;
+}
+
+.wp-jr-btn[aria-disabled="true"],
+.wp-btn-primary.wp-jr-primary[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.wp-jr-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.wp-jr-primary {
+  margin-top: 6px;
+  width: 100%;
+  justify-content: center;
+}
+
+.wp-jr-gaps {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: var(--wp-fs-label);
+  color: var(--c-muted);
+}
+
+.wp-jr-gap {
+  margin: 6px 0 0;
+  font-size: var(--wp-fs-label);
+  color: var(--c-muted);
+}
+
+.wp-jr-warn {
+  margin: 8px 0 0;
+  font-size: var(--wp-fs-label);
+  color: var(--c-warn);
+}
+
+.wp-jr-terminal {
+  margin: 6px 0 8px;
+  font-size: var(--wp-fs-body);
+}
+
+.wp-jr-stop {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--c-line);
+}
+
+.wp-jr-glance {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+
+.wp-jr-glance div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 28px;
+  font-size: var(--wp-fs-label);
+}
+
+.wp-jr-glance dt {
+  color: var(--c-muted);
+}
+
+.wp-jr-glance dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.wp-jr-activity {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--wp-fs-body);
+}
+
+.wp-jr-activity li {
+  display: grid;
+  grid-template-columns: 90px 190px minmax(0, 1fr) 120px;
+  gap: 12px;
+  align-items: baseline;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--c-line);
+}
+
+.wp-jr-activity__when {
+  font-variant-numeric: tabular-nums;
+  color: var(--c-muted);
+}
+
+.wp-jr-activity__move {
+  font-weight: 500;
+}
+
+html[data-mode="power"] .wp-jr-track {
+  background: var(--pa-neutral-bg-1);
+  border-color: var(--pa-neutral-stroke-2);
+}
+
+html[data-mode="power"] .wp-jr-btn,
+html[data-mode="power"] .wp-jr-back {
+  height: var(--pa-control-height);
+  border-color: var(--pa-neutral-stroke-1);
+  background: var(--pa-neutral-bg-1);
+  border-radius: var(--pa-radius);
+}
+
+html[data-mode="power"] .wp-jr-parent,
+html[data-mode="power"] .wp-jr-gaps,
+html[data-mode="power"] .wp-jr-gap,
+html[data-mode="power"] .wp-jr-notice {
+  font-size: var(--pa-fs-caption);
+  color: var(--pa-neutral-fg-3);
+}

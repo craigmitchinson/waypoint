@@ -1,0 +1,1829 @@
+# Waypoint canvas app: the Work screen, the quarter's register.
+#
+# Valid against pa.schema.yaml (v3.0): a Screens map, each screen with a Properties formula map and a
+# Children sequence whose items are single-key maps of control name to control instance.
+#
+# Work is src/pages/Work.tsx: the lifecycle strip over the top, the filters under it, and every item
+# in the quarter as one row that leads to its own page. Every rule is the engine's, through the named
+# formulas in Formulas.pa.yaml — WorkLifecycle, WorkRegisterRows and the option lists — so nothing
+# here works a number out for itself.
+#
+# The shell is scrCommand's: wkRoot is a vertical GroupContainer the size of the screen, holding the
+# 48px header and a horizontal row of the rail and the body. X and Y appear only inside the gallery
+# template, which is not auto-layout.
+#
+# The rail is the cmpRail component, one instance here with its Active property set to this
+# screen's key. NavItems keeps the one list of sections the rail reads.
+#
+# New feature and New spike open wkNewPanel, the person panel's form pattern
+# (power/RUNBOOK.md, section 4, "Forms") with the fields each kind is shaped with. A component is
+# not made here: it is created from its parent feature on the work item screen.
+
+Screens:
+  scrWork:
+    Properties:
+      Fill: =NeutralCanvas
+
+    Children:
+
+      # ---- the root: one vertical auto-layout container the size of the screen ----
+      - wkRoot:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            LayoutOverflowX: =LayoutOverflow.Hide
+            LayoutOverflowY: =LayoutOverflow.Hide
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =Parent.Height
+            Fill: =NeutralCanvas
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutGap: =0
+          Children:
+
+            # ---- shell: the app header ----
+            - wkHeader:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  LayoutOverflowX: =LayoutOverflow.Hide
+                  LayoutOverflowY: =LayoutOverflow.Hide
+                  FillPortions: =0
+                  Height: =AppHeaderH
+                  Fill: =BrandBg
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                  LayoutGap: =Gap
+                  PaddingLeft: =Pad
+                  PaddingRight: =Pad
+                Children:
+                  - wkHeaderName:
+                      Control: Label@2.5.1
+                      Properties:
+                        Width: =Parent.Width / 3
+                        Height: =AppHeaderH
+                        Text: ="Waypoint"
+                        Size: =TypeSubtitle
+                        FontWeight: =FontWeight.Semibold
+                        Font: =FontUI
+                        VerticalAlign: =VerticalAlign.Middle
+                        Color: =BrandFg
+                        Wrap: =true
+                        Overflow: =Overflow.Hidden
+                        PaddingTop: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        AutoHeight: =true
+                  # ---- shell: the scope selector, one cmpScope instance for every screen ----
+                  - wkHeaderScope:
+                      Control: CanvasComponent
+                      ComponentName: cmpScope
+                      Properties:
+                        Width: =Max(Parent.Width * 0.14, 180)
+                        Height: =ControlHeight
+                        Visible: =IncludeScope
+                  # ---- shell: the header search, one cmpSearch instance for every screen ----
+                  - wkHeaderSearch:
+                      Control: CanvasComponent
+                      ComponentName: cmpSearch
+                      Properties:
+                        Width: =Max(Parent.Width * 0.24, 280)
+                        Height: =ControlHeight
+                  - wkHeaderQuarter:
+                      Control: Label@2.5.1
+                      Properties:
+                        Width: =Parent.Width / 3
+                        Height: =AppHeaderH
+                        Text: =CurrentQuarter.Label & " · capacity planner"
+                        Size: =TypeCaption
+                        Font: =FontUI
+                        Align: =Align.Right
+                        VerticalAlign: =VerticalAlign.Middle
+                        Color: =ColorFade(BrandFg, -0.2)
+                        Wrap: =true
+                        Overflow: =Overflow.Hidden
+                        PaddingTop: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        AutoHeight: =true
+
+            # ---- shell: the rail, and the body beside it ----
+            - wkMain:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  LayoutOverflowX: =LayoutOverflow.Hide
+                  LayoutOverflowY: =LayoutOverflow.Hide
+                  FillPortions: =1
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutGap: =0
+                Children:
+
+                  # ---- shell: the rail, one cmpRail instance for every screen ----
+                  - wkRail:
+                      Control: CanvasComponent
+                      ComponentName: cmpRail
+                      Properties:
+                        LayoutMinWidth: =If(RailCollapsed, RailWidthTight, NavW)
+                        Width: =If(RailCollapsed, RailWidthTight, NavW)
+                        Height: =Parent.Height
+                        Active: ="Work"
+
+                  # ---- shell: the body everything else sits inside ----
+                  - wkBody:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        LayoutOverflowX: =LayoutOverflow.Hide
+                        LayoutOverflowY: =LayoutOverflow.Scroll
+                        FillPortions: =1
+                        Fill: =NeutralBg3
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutGap: =Gap
+                        PaddingLeft: =Pad
+                        PaddingRight: =Pad
+                        PaddingTop: =Pad
+                        PaddingBottom: =Pad
+                      Children:
+
+                        # ---- page head: the eyebrow and one h1 on the left, the new buttons on the right ----
+                        - wkPageHead:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =0
+                              Height: =PageHeadH
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutGap: =Gap
+                            Children:
+                              - wkHeadText:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =1
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutGap: =0
+                                  Children:
+                                    - wkEyebrow:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeKickerLine
+                                          Visible: =!IsCompact
+                                          Text: =CurrentQuarter.Label
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - wkTitle:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeDisplayLine
+                                          Text: ="Work"
+                                          Size: =TypeTitle
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                              # The split button of the mock, as two real buttons: the primary
+                              # action and the one it hides in a menu. Each one opens the panel
+                              # under wkNewPanel with the kind it shapes.
+                              - wkNewFeature:
+                                  Control: ModernButton@1.0.0
+                                  Properties:
+                                    Appearance: =ButtonAppearance.Primary
+                                    BasePaletteColor: =BrandBg
+                                    Color: =BrandFg
+                                    Font: =FontUI
+                                    Size: =TypeBodyPx
+                                    RadiusTopLeft: =CtrlR
+                                    RadiusTopRight: =CtrlR
+                                    RadiusBottomLeft: =CtrlR
+                                    RadiusBottomRight: =CtrlR
+                                    Width: =130
+                                    Height: =ControlHeight
+                                    Text: ="New feature"
+                                    AccessibleLabel: ="New feature"
+                                    OnSelect: |
+                                      =Set(varWorkNewKind, "Feature");
+                                       Set(varWorkSaveError, "");
+                                       Set(varWorkNewTried, false);
+                                       Set(varWorkFormOpen, true);
+                                       // every input starts from its Default, not the last open
+                                       Reset(wkFieldTitle);
+                                       Reset(wkFieldEpic);
+                                       Reset(wkFieldSquad);
+                                       Reset(wkFieldPriority);
+                                       Reset(wkFieldOwner);
+                                       Reset(wkFieldNotes);
+                                       Reset(wkFieldQuestion);
+                                       Reset(wkFieldTimebox);
+                                       Reset(wkFieldClaimType);
+                                       Reset(wkFieldClaimValue)
+                              - wkNewSpike:
+                                  Control: ModernButton@1.0.0
+                                  Properties:
+                                    Appearance: =ButtonAppearance.Secondary
+                                    BasePaletteColor: =NeutralBg3
+                                    Color: =NeutralFg1
+                                    Font: =FontUI
+                                    Size: =TypeBodyPx
+                                    RadiusTopLeft: =CtrlR
+                                    RadiusTopRight: =CtrlR
+                                    RadiusBottomLeft: =CtrlR
+                                    RadiusBottomRight: =CtrlR
+                                    Width: =110
+                                    Height: =ControlHeight
+                                    Text: ="New spike"
+                                    AccessibleLabel: ="New spike"
+                                    OnSelect: |
+                                      =Set(varWorkNewKind, "Spike");
+                                       Set(varWorkSaveError, "");
+                                       Set(varWorkNewTried, false);
+                                       Set(varWorkFormOpen, true);
+                                       // every input starts from its Default, not the last open
+                                       Reset(wkFieldTitle);
+                                       Reset(wkFieldEpic);
+                                       Reset(wkFieldSquad);
+                                       Reset(wkFieldPriority);
+                                       Reset(wkFieldOwner);
+                                       Reset(wkFieldNotes);
+                                       Reset(wkFieldQuestion);
+                                       Reset(wkFieldTimebox);
+                                       Reset(wkFieldClaimType);
+                                       Reset(wkFieldClaimValue)
+
+                        # ---- the lifecycle strip: five stages, each one a filter ----
+                        # Each cell is a button that sets varWorkPhase, and clears it when it is the
+                        # phase already chosen, so the strip doubles as the register's phase filter.
+                        # Primary is the chosen one; the label carries the figures, so the state is
+                        # never colour alone. Closed is the fifth cell: every Validated and Stopped
+                        # item, counted but with no MW, because closed work charges no capacity.
+                        - wkLifecycle:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =0
+                              # Five 240 tiles and four gaps fit the body at 1920 but outrun the
+                              # compact one, so the strip wraps to a second row rather than
+                              # clipping (the bands' pattern).
+                              Height: |
+                                =If(Parent.Width < (240 * 5 + Gap * 4),
+                                    RowHeight * 2 + Gap, RowHeight)
+                              LayoutWrap: =true
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutGap: =Gap
+                            Children:
+                              - wkPhaseShaping:
+                                  Control: ModernButton@1.0.0
+                                  Properties:
+                                    Appearance: |
+                                      =If(varWorkPhase = "Shaping", ButtonAppearance.Primary,
+                                          ButtonAppearance.Subtle)
+                                    BasePaletteColor: =If(varWorkPhase = "Shaping", BrandBg, NeutralBg1)
+                                    Color: =If(varWorkPhase = "Shaping", BrandFg, NeutralFg1)
+                                    Font: =FontUI
+                                    Size: =TypeBodyPx
+                                    RadiusTopLeft: =CardR
+                                    RadiusTopRight: =CardR
+                                    RadiusBottomLeft: =CardR
+                                    RadiusBottomRight: =CardR
+                                    Width: =Max(Parent.Width * 0.12, 240)
+                                    Height: =RowHeight
+                                    Text: |
+                                      =With({ p: LookUp(WorkLifecycle, Name = "Shaping") },
+                                          p.Name & " " & p.Count & " · "
+                                          & Text(p.MW, "[$-en-US]#,##0.0") & " MW")
+                                    AccessibleLabel: |
+                                      =With({ p: LookUp(WorkLifecycle, Name = "Shaping") },
+                                          "Shaping, " & p.Count & " items, "
+                                          & Text(p.MW, "[$-en-US]#,##0.0") & " member weeks"
+                                          & If(varWorkPhase = "Shaping", ", filtering the register", ""))
+                                    OnSelect: =Set(varWorkPhase, If(varWorkPhase = "Shaping", "", "Shaping"))
+                              - wkPhaseAssessment:
+                                  Control: ModernButton@1.0.0
+                                  Properties:
+                                    Appearance: |
+                                      =If(varWorkPhase = "Assessment", ButtonAppearance.Primary,
+                                          ButtonAppearance.Subtle)
+                                    BasePaletteColor: =If(varWorkPhase = "Assessment", BrandBg, NeutralBg1)
+                                    Color: =If(varWorkPhase = "Assessment", BrandFg, NeutralFg1)
+                                    Font: =FontUI
+                                    Size: =TypeBodyPx
+                                    RadiusTopLeft: =CardR
+                                    RadiusTopRight: =CardR
+                                    RadiusBottomLeft: =CardR
+                                    RadiusBottomRight: =CardR
+                                    Width: =Max(Parent.Width * 0.12, 240)
+                                    Height: =RowHeight
+                                    Text: |
+                                      =With({ p: LookUp(WorkLifecycle, Name = "Assessment") },
+                                          p.Name & " " & p.Count & " · "
+                                          & Text(p.MW, "[$-en-US]#,##0.0") & " MW")
+                                    AccessibleLabel: |
+                                      =With({ p: LookUp(WorkLifecycle, Name = "Assessment") },
+                                          "Assessment, " & p.Count & " items, "
+                                          & Text(p.MW, "[$-en-US]#,##0.0") & " member weeks"
+                                          & If(varWorkPhase = "Assessment", ", filtering the register", ""))
+                                    OnSelect: =Set(varWorkPhase, If(varWorkPhase = "Assessment", "", "Assessment"))
+                              - wkPhaseDelivery:
+                                  Control: ModernButton@1.0.0
+                                  Properties:
+                                    Appearance: |
+                                      =If(varWorkPhase = "Delivery", ButtonAppearance.Primary,
+                                          ButtonAppearance.Subtle)
+                                    BasePaletteColor: =If(varWorkPhase = "Delivery", BrandBg, NeutralBg1)
+                                    Color: =If(varWorkPhase = "Delivery", BrandFg, NeutralFg1)
+                                    Font: =FontUI
+                                    Size: =TypeBodyPx
+                                    RadiusTopLeft: =CardR
+                                    RadiusTopRight: =CardR
+                                    RadiusBottomLeft: =CardR
+                                    RadiusBottomRight: =CardR
+                                    Width: =Max(Parent.Width * 0.12, 240)
+                                    Height: =RowHeight
+                                    Text: |
+                                      =With({ p: LookUp(WorkLifecycle, Name = "Delivery") },
+                                          p.Name & " " & p.Count & " · "
+                                          & Text(p.MW, "[$-en-US]#,##0.0") & " MW")
+                                    AccessibleLabel: |
+                                      =With({ p: LookUp(WorkLifecycle, Name = "Delivery") },
+                                          "Delivery, " & p.Count & " items, "
+                                          & Text(p.MW, "[$-en-US]#,##0.0") & " member weeks"
+                                          & If(varWorkPhase = "Delivery", ", filtering the register", ""))
+                                    OnSelect: =Set(varWorkPhase, If(varWorkPhase = "Delivery", "", "Delivery"))
+                              - wkPhaseRelease:
+                                  Control: ModernButton@1.0.0
+                                  Properties:
+                                    Appearance: |
+                                      =If(varWorkPhase = "Release", ButtonAppearance.Primary,
+                                          ButtonAppearance.Subtle)
+                                    BasePaletteColor: =If(varWorkPhase = "Release", BrandBg, NeutralBg1)
+                                    Color: =If(varWorkPhase = "Release", BrandFg, NeutralFg1)
+                                    Font: =FontUI
+                                    Size: =TypeBodyPx
+                                    RadiusTopLeft: =CardR
+                                    RadiusTopRight: =CardR
+                                    RadiusBottomLeft: =CardR
+                                    RadiusBottomRight: =CardR
+                                    Width: =Max(Parent.Width * 0.12, 240)
+                                    Height: =RowHeight
+                                    Text: |
+                                      =With({ p: LookUp(WorkLifecycle, Name = "Release") },
+                                          p.Name & " " & p.Count & " · "
+                                          & Text(p.MW, "[$-en-US]#,##0.0") & " MW")
+                                    AccessibleLabel: |
+                                      =With({ p: LookUp(WorkLifecycle, Name = "Release") },
+                                          "Release, " & p.Count & " items, "
+                                          & Text(p.MW, "[$-en-US]#,##0.0") & " member weeks"
+                                          & If(varWorkPhase = "Release", ", filtering the register", ""))
+                                    OnSelect: =Set(varWorkPhase, If(varWorkPhase = "Release", "", "Release"))
+                              - wkPhaseClosed:
+                                  Control: ModernButton@1.0.0
+                                  Properties:
+                                    Appearance: |
+                                      =If(varWorkPhase = "Closed", ButtonAppearance.Primary,
+                                          ButtonAppearance.Subtle)
+                                    BasePaletteColor: =If(varWorkPhase = "Closed", BrandBg, NeutralBg1)
+                                    Color: =If(varWorkPhase = "Closed", BrandFg, NeutralFg1)
+                                    Font: =FontUI
+                                    Size: =TypeBodyPx
+                                    RadiusTopLeft: =CardR
+                                    RadiusTopRight: =CardR
+                                    RadiusBottomLeft: =CardR
+                                    RadiusBottomRight: =CardR
+                                    Width: =Max(Parent.Width * 0.12, 240)
+                                    Height: =RowHeight
+                                    Text: |
+                                      =With({ p: LookUp(WorkLifecycle, Name = "Closed") },
+                                          p.Name & " " & p.Count)
+                                    AccessibleLabel: |
+                                      =With({ p: LookUp(WorkLifecycle, Name = "Closed") },
+                                          "Closed, " & p.Count & " items, validated or stopped"
+                                          & If(varWorkPhase = "Closed", ", filtering the register", ""))
+                                    OnSelect: =Set(varWorkPhase, If(varWorkPhase = "Closed", "", "Closed"))
+
+                        # ---- the filter row: the kind pivot, four lists and the search box ----
+                        # Every control writes its choice into a variable, and WorkRegisterRows reads
+                        # the variables; nothing filters off a control reference.
+                        - wkFilters:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =0
+                              # The seven children's minimums and their six gaps outrun the body well
+                              # before the compact breakpoint, so the row wraps to a second line
+                              # rather than clipping Search and the unassigned count.
+                              Height: |
+                                =If(Parent.Width < (320 + 180 + 220 + 180 + 220 + 240 + 120 + Gap * 6),
+                                    ControlHeight * 2 + Gap, ControlHeight)
+                              LayoutWrap: =true
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutGap: =Gap
+                            Children:
+                              - wkKinds:
+                                  Control: ModernTabList@1.0.1
+                                  Properties:
+                                    Width: =Max(Parent.Width * 0.16, 320)
+                                    Height: =ControlHeight + 8
+                                    Items: =Table({Value:"All"}, {Value:"Features"}, {Value:"Spikes"}, {Value:"Components"})
+                                    Default: ={Value:"All"}
+                                    Font: =FontUI
+                                    Size: =TypeBodyPx
+                                    Color: =NeutralFg1
+                                    BasePaletteColor: =BrandBg
+                                    AccessibleLabel: ="Filter by kind"
+                                    OnChange: =Set(varWorkKind, wkKinds.Selected.Value)
+                                    FontWeight: =FontWeight.Semibold
+                              - wkSquad:
+                                  Control: ModernDropdown@1.0.2
+                                  Properties:
+                                    Width: =180
+                                    Height: =ControlHeight
+                                    Items: =WorkSquadOptions
+                                    ItemDisplayText: =ThisItem.Value
+                                    Default: ={Value:"All squads"}
+                                    Font: =FontUI
+                                    Size: =TypeBodyPx
+                                    Color: =NeutralFg1
+                                    BasePaletteColor: =BrandBg
+                                    AccessibleLabel: ="Squad"
+                                    OnChange: |
+                                      =Set(varWorkSquad,
+                                           If(wkSquad.Selected.Value = "All squads", "",
+                                              wkSquad.Selected.Value))
+                                    Appearance: =Appearance.Outline
+                                    Fill: =NeutralBg1
+                              - wkPerson:
+                                  Control: ModernDropdown@1.0.2
+                                  Properties:
+                                    Width: =220
+                                    Height: =ControlHeight
+                                    Items: =WorkPersonOptions
+                                    ItemDisplayText: =ThisItem.DisplayLabel
+                                    Default: ={Value:"", DisplayLabel:"All people"}
+                                    Font: =FontUI
+                                    Size: =TypeBodyPx
+                                    Color: =NeutralFg1
+                                    BasePaletteColor: =BrandBg
+                                    AccessibleLabel: ="Person, the assessor or anyone assigned"
+                                    OnChange: =Set(varWorkPerson, wkPerson.Selected.Value)
+                                    Appearance: =Appearance.Outline
+                                    Fill: =NeutralBg1
+                              - wkState:
+                                  Control: ModernDropdown@1.0.2
+                                  Properties:
+                                    Width: =180
+                                    Height: =ControlHeight
+                                    Items: =WorkStateOptions
+                                    ItemDisplayText: =ThisItem.Value
+                                    Default: ={Value:"All states"}
+                                    Font: =FontUI
+                                    Size: =TypeBodyPx
+                                    Color: =NeutralFg1
+                                    BasePaletteColor: =BrandBg
+                                    AccessibleLabel: ="State"
+                                    OnChange: |
+                                      =Set(varWorkState,
+                                           If(wkState.Selected.Value = "All states", "",
+                                              wkState.Selected.Value))
+                                    Appearance: =Appearance.Outline
+                                    Fill: =NeutralBg1
+                              - wkCommitment:
+                                  Control: ModernDropdown@1.0.2
+                                  Properties:
+                                    Width: =Max(Parent.Width * 0.11, 220)
+                                    Height: =ControlHeight
+                                    Items: =WorkCommitmentOptions
+                                    ItemDisplayText: =ThisItem.Value
+                                    Default: ={Value:"Proposed and committed"}
+                                    Font: =FontUI
+                                    Size: =TypeBodyPx
+                                    Color: =NeutralFg1
+                                    BasePaletteColor: =BrandBg
+                                    AccessibleLabel: ="Commitment"
+                                    OnChange: |
+                                      =Set(varWorkCommit,
+                                           If(wkCommitment.Selected.Value = "Proposed and committed", "",
+                                              wkCommitment.Selected.Value))
+                                    Appearance: =Appearance.Outline
+                                    Fill: =NeutralBg1
+                              - wkSearch:
+                                  Control: ModernTextInput@1.1.1
+                                  Properties:
+                                    Width: =Max(Parent.Width * 0.18, 240)
+                                    Height: =ControlHeight
+                                    Default: =""
+                                    Placeholder: ="Search"
+                                    Font: =FontUI
+                                    Size: =TypeBodyPx
+                                    Color: =NeutralFg1
+                                    BasePaletteColor: =BrandBg
+                                    AccessibleLabel: ="Search the register"
+                                    OnChange: =Set(varWorkSearch, wkSearch.Text)
+                                    Appearance: =Appearance.Outline
+                                    Fill: =NeutralBg1
+                              - wkUnassignedCount:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Width: =Max(Parent.Width * 0.09, 120)
+                                    Height: =ControlHeight
+                                    Text: =CmdUnassignedCount & " unassigned"
+                                    Size: =TypeCaption
+                                    Font: =FontUI
+                                    Color: =NeutralFg2
+                                    VerticalAlign: =VerticalAlign.Middle
+                                    Visible: =CmdUnassignedCount > 0
+                                    Tooltip: ="Items without a squad"
+                                    Wrap: =false
+                                    Overflow: =Overflow.Hidden
+                                    FontWeight: =FontWeight.Normal
+
+                        # ---- the register ----
+                        - wkCard:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =1
+                              Fill: =NeutralBg1
+                              BorderColor: =NeutralStroke1
+                              BorderThickness: =1
+                              RadiusTopLeft: =CardR
+                              RadiusTopRight: =CardR
+                              RadiusBottomLeft: =CardR
+                              RadiusBottomRight: =CardR
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              # The grid inside is never narrower than its own column minimums, so the card
+                              # scrolls sideways rather than squeezing a cell (power/RUNBOOK.md, "Tables").
+                              LayoutOverflowX: =LayoutOverflow.Scroll
+                              LayoutJustifyContent: =LayoutJustifyContent.Start
+                              LayoutGap: =8
+                              PaddingLeft: =Pad
+                              PaddingRight: =Pad
+                              PaddingTop: =Pad
+                              PaddingBottom: =Pad
+                            Children:
+                              # The column heads. Title carries the largest named share, not the
+                              # leftover; the ten other columns are the widths in Formulas.pa.yaml,
+                              # which the template rows share, so the two read as one grid.
+                              - wkHeadRow:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    FillPortions: =0
+                                    Width: =Max(Parent.Width, WorkTableMinW)
+                                    Height: =RowHeight
+                                  Children:
+                                    - wkHeadPriority:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * WorkSharePriority, WorkMinPriority) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Priority"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - wkHeadTitle:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =Max(Parent.Width * WorkSharePriority, WorkMinPriority)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * WorkShareTitle, WorkMinTitle) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Title"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - wkHeadType:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * WorkSharePriority, WorkMinPriority)
+                                             + Max(Parent.Width * WorkShareTitle, WorkMinTitle) + 8
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * WorkShareKind, WorkMinKind) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Type"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - wkHeadSquad:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * WorkSharePriority, WorkMinPriority)
+                                             + Max(Parent.Width * WorkShareTitle, WorkMinTitle) + 8
+                                             + Max(Parent.Width * WorkShareKind, WorkMinKind)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * WorkShareSquad, WorkMinSquad) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Squad"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - wkHeadAssessor:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * WorkSharePriority, WorkMinPriority)
+                                             + Max(Parent.Width * WorkShareTitle, WorkMinTitle) + 8
+                                             + Max(Parent.Width * WorkShareKind, WorkMinKind)
+                                             + Max(Parent.Width * WorkShareSquad, WorkMinSquad)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * WorkShareAssessor, WorkMinAssessor) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Assessor"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - wkHeadDelivery:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * WorkSharePriority, WorkMinPriority)
+                                             + Max(Parent.Width * WorkShareTitle, WorkMinTitle) + 8
+                                             + Max(Parent.Width * WorkShareKind, WorkMinKind)
+                                             + Max(Parent.Width * WorkShareSquad, WorkMinSquad)
+                                             + Max(Parent.Width * WorkShareAssessor, WorkMinAssessor)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * WorkShareDelivery, WorkMinDelivery) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Delivery"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - wkHeadState:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * WorkSharePriority, WorkMinPriority)
+                                             + Max(Parent.Width * WorkShareTitle, WorkMinTitle) + 8
+                                             + Max(Parent.Width * WorkShareKind, WorkMinKind)
+                                             + Max(Parent.Width * WorkShareSquad, WorkMinSquad)
+                                             + Max(Parent.Width * WorkShareAssessor, WorkMinAssessor)
+                                             + Max(Parent.Width * WorkShareDelivery, WorkMinDelivery)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * WorkShareState, WorkMinState) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="State"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - wkHeadCommitment:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * WorkSharePriority, WorkMinPriority)
+                                             + Max(Parent.Width * WorkShareTitle, WorkMinTitle) + 8
+                                             + Max(Parent.Width * WorkShareKind, WorkMinKind)
+                                             + Max(Parent.Width * WorkShareSquad, WorkMinSquad)
+                                             + Max(Parent.Width * WorkShareAssessor, WorkMinAssessor)
+                                             + Max(Parent.Width * WorkShareDelivery, WorkMinDelivery)
+                                             + Max(Parent.Width * WorkShareState, WorkMinState)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * WorkShareCommitment, WorkMinCommitment) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Commitment"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - wkHeadMW:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * WorkSharePriority, WorkMinPriority)
+                                             + Max(Parent.Width * WorkShareTitle, WorkMinTitle) + 8
+                                             + Max(Parent.Width * WorkShareKind, WorkMinKind)
+                                             + Max(Parent.Width * WorkShareSquad, WorkMinSquad)
+                                             + Max(Parent.Width * WorkShareAssessor, WorkMinAssessor)
+                                             + Max(Parent.Width * WorkShareDelivery, WorkMinDelivery)
+                                             + Max(Parent.Width * WorkShareState, WorkMinState)
+                                             + Max(Parent.Width * WorkShareCommitment, WorkMinCommitment)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * WorkShareMW, WorkMinMW) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Size · MW"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - wkHeadSprints:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * WorkSharePriority, WorkMinPriority)
+                                             + Max(Parent.Width * WorkShareTitle, WorkMinTitle) + 8
+                                             + Max(Parent.Width * WorkShareKind, WorkMinKind)
+                                             + Max(Parent.Width * WorkShareSquad, WorkMinSquad)
+                                             + Max(Parent.Width * WorkShareAssessor, WorkMinAssessor)
+                                             + Max(Parent.Width * WorkShareDelivery, WorkMinDelivery)
+                                             + Max(Parent.Width * WorkShareState, WorkMinState)
+                                             + Max(Parent.Width * WorkShareCommitment, WorkMinCommitment)
+                                             + Max(Parent.Width * WorkShareMW, WorkMinMW)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * WorkShareSprints, WorkMinSprints) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Sprints"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - wkHeadJira:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * WorkSharePriority, WorkMinPriority)
+                                             + Max(Parent.Width * WorkShareTitle, WorkMinTitle) + 8
+                                             + Max(Parent.Width * WorkShareKind, WorkMinKind)
+                                             + Max(Parent.Width * WorkShareSquad, WorkMinSquad)
+                                             + Max(Parent.Width * WorkShareAssessor, WorkMinAssessor)
+                                             + Max(Parent.Width * WorkShareDelivery, WorkMinDelivery)
+                                             + Max(Parent.Width * WorkShareState, WorkMinState)
+                                             + Max(Parent.Width * WorkShareCommitment, WorkMinCommitment)
+                                             + Max(Parent.Width * WorkShareMW, WorkMinMW)
+                                             + Max(Parent.Width * WorkShareSprints, WorkMinSprints)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * WorkShareJira, WorkMinJira) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Jira key"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                              - wkEmpty:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Width: =Parent.Width
+                                    Height: =TypeBodyLine
+                                    Align: =Align.Left
+                                    Visible: =WorkRegisterCount = 0
+                                    Text: ="No work matches these filters. Clear a filter or shape a new feature."
+                                    Size: =TypeBody
+                                    Font: =FontUI
+                                    Color: =NeutralFg2
+                                    Wrap: =false
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+
+                              - wkRegister:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    TemplatePadding: =0
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Width: =Max(Parent.Width, WorkTableMinW)
+                                    ShowScrollbar: =true
+                                    FillPortions: =1
+                                    Visible: =WorkRegisterCount > 0
+                                    Items: =WorkRegisterRows
+                                    TemplateSize: =WorkRowH
+                                    AccessibleLabel: |
+                                      ="Work register: every item in the quarter, with its type, "
+                                       & "squad, assessor, delivery team, state, commitment, size, "
+                                       & "schedule and Jira key."
+                                  Children:
+                                    # The priority pill, first in the row: Must, Should or Could,
+                                    # and nothing at all while the item has no priority.
+                                    - wkRowPriority:
+                                        Control: Badge@0.0.24
+                                        Properties:
+                                          X: =0
+                                          Y: =(WorkRowH - TypeLabelLine) / 2
+                                          Width: =Min(Max(Len(ThisItem.Priority) * 7 + 20, 56), 200)
+                                          Height: =TypeLabelLine
+                                          Visible: =!IsBlank(ThisItem.Priority)
+                                          Appearance: ='BadgeCanvas.Appearance'.Filled
+                                          Shape: ='BadgeCanvas.Shape'.Rounded
+                                          ThemeColor: |
+                                            =Switch(ThisItem.Priority,
+                                                    "Must", 'BadgeCanvas.ThemeColor'.Danger,
+                                                    "Should", 'BadgeCanvas.ThemeColor'.Warning,
+                                                    'BadgeCanvas.ThemeColor'.Subtle)
+                                          Content: =ThisItem.Priority
+                                          FontSize: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Center
+                                          VerticalAlign: =VerticalAlign.Middle
+                                    # The title is the link: it carries the item to varItem and opens
+                                    # its own page, which is what the register is for. The second
+                                    # line sits under it: the feature a component or a linked spike
+                                    # is part of, then the epic. Both labels, never buttons.
+                                    - wkRowTitle:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =Max(Parent.TemplateWidth * WorkSharePriority, WorkMinPriority)
+                                          Y: =4
+                                          Width: =Max(Parent.TemplateWidth * WorkShareTitle, WorkMinTitle) - 8
+                                          Height: =TypeBodyLine
+                                          Text: =ThisItem.Title
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Underline: =true
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =BrandText
+                                          TabIndex: =0
+                                          Tooltip: =ThisItem.Title
+                                          OnSelect: |
+                                            =Set(varItem, LookUp(colWork, Title = ThisItem.Title));
+                                             Navigate(scrWorkItem, ScreenTransition.None)
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - wkRowEpic:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =Max(Parent.TemplateWidth * WorkSharePriority, WorkMinPriority)
+                                          Y: =4 + TypeBodyLine
+                                          Width: =Max(Parent.TemplateWidth * WorkShareTitle, WorkMinTitle) - 8
+                                          Height: =TypeLabelLine
+                                          Text: =ThisItem.SubtitleText
+                                          Size: =TypeCaption
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                      # What kind of thing the row is, said in the badge rather than by its colour
+                                      # alone: Feature, Spike or Component.
+                                    - wkRowType:
+                                        Control: Badge@0.0.24
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * WorkSharePriority, WorkMinPriority)
+                                             + Max(Parent.TemplateWidth * WorkShareTitle, WorkMinTitle) + 8
+                                          Y: =(WorkRowH - TypeLabelLine) / 2
+                                          Width: =Min(Max(Len(ThisItem.KindText) * 7 + 20, 56), 200)
+                                          Height: =TypeLabelLine
+                                          Appearance: ='BadgeCanvas.Appearance'.Filled
+                                          Shape: ='BadgeCanvas.Shape'.Rounded
+                                          ThemeColor: |
+                                            =Switch(ThisItem.KindText,
+                                                    "Feature", 'BadgeCanvas.ThemeColor'.Brand,
+                                                    "Spike", 'BadgeCanvas.ThemeColor'.Informative,
+                                                    'BadgeCanvas.ThemeColor'.Subtle)
+                                          Content: =ThisItem.KindText
+                                          FontSize: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Center
+                                          VerticalAlign: =VerticalAlign.Middle
+                                    - wkRowSquad:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * WorkSharePriority, WorkMinPriority)
+                                             + Max(Parent.TemplateWidth * WorkShareTitle, WorkMinTitle) + 8
+                                             + Max(Parent.TemplateWidth * WorkShareKind, WorkMinKind)
+                                          Y: =0
+                                          Width: =Max(Parent.TemplateWidth * WorkShareSquad, WorkMinSquad) - 8
+                                          Height: =WorkRowH
+                                          Text: =ThisItem.SquadText
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                      # Who holds the item at each stage. TBC where nobody does yet.
+                                    - wkRowAssessor:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * WorkSharePriority, WorkMinPriority)
+                                             + Max(Parent.TemplateWidth * WorkShareTitle, WorkMinTitle) + 8
+                                             + Max(Parent.TemplateWidth * WorkShareKind, WorkMinKind)
+                                             + Max(Parent.TemplateWidth * WorkShareSquad, WorkMinSquad)
+                                          Y: =0
+                                          Width: =Max(Parent.TemplateWidth * WorkShareAssessor, WorkMinAssessor) - 8
+                                          Height: =WorkRowH
+                                          Text: =ThisItem.AssessorText
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - wkRowDelivery:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * WorkSharePriority, WorkMinPriority)
+                                             + Max(Parent.TemplateWidth * WorkShareTitle, WorkMinTitle) + 8
+                                             + Max(Parent.TemplateWidth * WorkShareKind, WorkMinKind)
+                                             + Max(Parent.TemplateWidth * WorkShareSquad, WorkMinSquad)
+                                             + Max(Parent.TemplateWidth * WorkShareAssessor, WorkMinAssessor)
+                                          Y: =0
+                                          Width: =Max(Parent.TemplateWidth * WorkShareDelivery, WorkMinDelivery) - 8
+                                          Height: =WorkRowH
+                                          Text: =ThisItem.DeliveryText
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - wkRowState:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * WorkSharePriority, WorkMinPriority)
+                                             + Max(Parent.TemplateWidth * WorkShareTitle, WorkMinTitle) + 8
+                                             + Max(Parent.TemplateWidth * WorkShareKind, WorkMinKind)
+                                             + Max(Parent.TemplateWidth * WorkShareSquad, WorkMinSquad)
+                                             + Max(Parent.TemplateWidth * WorkShareAssessor, WorkMinAssessor)
+                                             + Max(Parent.TemplateWidth * WorkShareDelivery, WorkMinDelivery)
+                                          Y: =0
+                                          Width: =Max(Parent.TemplateWidth * WorkShareState, WorkMinState) - 8
+                                          Height: =WorkRowH
+                                          # A closed row shows which end it reached, Validated or
+                                          # Stopped, in place of its underlying work state.
+                                          Text: =Coalesce(ThisItem.ClosedOutcome, ThisItem.StateName)
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - wkRowCommitment:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * WorkSharePriority, WorkMinPriority)
+                                             + Max(Parent.TemplateWidth * WorkShareTitle, WorkMinTitle) + 8
+                                             + Max(Parent.TemplateWidth * WorkShareKind, WorkMinKind)
+                                             + Max(Parent.TemplateWidth * WorkShareSquad, WorkMinSquad)
+                                             + Max(Parent.TemplateWidth * WorkShareAssessor, WorkMinAssessor)
+                                             + Max(Parent.TemplateWidth * WorkShareDelivery, WorkMinDelivery)
+                                             + Max(Parent.TemplateWidth * WorkShareState, WorkMinState)
+                                          Y: =0
+                                          Width: =Max(Parent.TemplateWidth * WorkShareCommitment, WorkMinCommitment) - 8
+                                          Height: =WorkRowH
+                                          Text: =ThisItem.CommitmentText
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - wkRowMW:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * WorkSharePriority, WorkMinPriority)
+                                             + Max(Parent.TemplateWidth * WorkShareTitle, WorkMinTitle) + 8
+                                             + Max(Parent.TemplateWidth * WorkShareKind, WorkMinKind)
+                                             + Max(Parent.TemplateWidth * WorkShareSquad, WorkMinSquad)
+                                             + Max(Parent.TemplateWidth * WorkShareAssessor, WorkMinAssessor)
+                                             + Max(Parent.TemplateWidth * WorkShareDelivery, WorkMinDelivery)
+                                             + Max(Parent.TemplateWidth * WorkShareState, WorkMinState)
+                                             + Max(Parent.TemplateWidth * WorkShareCommitment, WorkMinCommitment)
+                                          Y: =0
+                                          Width: =Max(Parent.TemplateWidth * WorkShareMW, WorkMinMW) - 8
+                                          Height: =WorkRowH
+                                          # One shape for the cell: the size letter where the item is
+                                          # sized, its member weeks where it is not, and an em dash
+                                          # where it has neither.
+                                          Text: |
+                                            =If(!IsBlank(ThisItem.Size.Size), ThisItem.Size.Size,
+                                                IsBlank(ThisItem.WorkMWValue)
+                                                || ThisItem.WorkMWValue = 0, "—",
+                                                Text(ThisItem.WorkMWValue, "[$-en-US]#,##0.0"))
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - wkRowSprints:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * WorkSharePriority, WorkMinPriority)
+                                             + Max(Parent.TemplateWidth * WorkShareTitle, WorkMinTitle) + 8
+                                             + Max(Parent.TemplateWidth * WorkShareKind, WorkMinKind)
+                                             + Max(Parent.TemplateWidth * WorkShareSquad, WorkMinSquad)
+                                             + Max(Parent.TemplateWidth * WorkShareAssessor, WorkMinAssessor)
+                                             + Max(Parent.TemplateWidth * WorkShareDelivery, WorkMinDelivery)
+                                             + Max(Parent.TemplateWidth * WorkShareState, WorkMinState)
+                                             + Max(Parent.TemplateWidth * WorkShareCommitment, WorkMinCommitment)
+                                             + Max(Parent.TemplateWidth * WorkShareMW, WorkMinMW)
+                                          Y: =0
+                                          Width: =Max(Parent.TemplateWidth * WorkShareSprints, WorkMinSprints) - 8
+                                          Height: =WorkRowH
+                                          Text: |
+                                            =If(ThisItem.LastSprintNum < ThisItem.FirstSprintNum, "—",
+                                                "S" & ThisItem.FirstSprintNum & " to S" & ThisItem.LastSprintNum)
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - wkRowJira:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * WorkSharePriority, WorkMinPriority)
+                                             + Max(Parent.TemplateWidth * WorkShareTitle, WorkMinTitle) + 8
+                                             + Max(Parent.TemplateWidth * WorkShareKind, WorkMinKind)
+                                             + Max(Parent.TemplateWidth * WorkShareSquad, WorkMinSquad)
+                                             + Max(Parent.TemplateWidth * WorkShareAssessor, WorkMinAssessor)
+                                             + Max(Parent.TemplateWidth * WorkShareDelivery, WorkMinDelivery)
+                                             + Max(Parent.TemplateWidth * WorkShareState, WorkMinState)
+                                             + Max(Parent.TemplateWidth * WorkShareCommitment, WorkMinCommitment)
+                                             + Max(Parent.TemplateWidth * WorkShareMW, WorkMinMW)
+                                             + Max(Parent.TemplateWidth * WorkShareSprints, WorkMinSprints)
+                                          Y: =0
+                                          Width: =Max(Parent.TemplateWidth * WorkShareJira, WorkMinJira) - 8
+                                          Height: =WorkRowH
+                                          Text: =Coalesce(ThisItem.'Jira key', "—")
+                                          Size: =TypeCaption
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg2
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    # The row is the target: the whole row opens the item's page,
+                                    # as the title does (power/RUNBOOK.md, section 4).
+                                    - wkRowHit:
+                                        Control: Classic/Button@2.2.0
+                                        Properties:
+                                          X: =2
+                                          Y: =2
+                                          Width: =Parent.TemplateWidth - 4
+                                          Height: =WorkRowH - 4
+                                          Text: =""
+                                          Fill: =RGBA(0, 0, 0, 0)
+                                          HoverFill: =RGBA(0, 0, 0, 0)
+                                          PressedFill: =RGBA(0, 0, 0, 0)
+                                          BorderThickness: =0
+                                          FocusedBorderThickness: =2
+                                          TabIndex: =0
+                                          Tooltip: =ThisItem.Title
+                                          FocusedBorderColor: =FocusStroke
+                                          OnSelect: |
+                                            =Set(varItem, LookUp(colWork, Title = ThisItem.Title));
+                                             Navigate(scrWorkItem, ScreenTransition.None)
+
+                              - wkCount:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =TypeLabelLine
+                                    Text: |
+                                      =WorkRegisterCount & " of " & WorkTotalCount
+                                       & If(WorkTotalCount = 1, " item", " items")
+                                    Size: =TypeCaption
+                                    Font: =FontUI
+                                    Color: =NeutralFg2
+                                    Wrap: =false
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    FontWeight: =FontWeight.Normal
+
+      # ---- the new work item form: the scrim, then the panel over the right of the screen ----
+      # The person panel's pattern (power/RUNBOOK.md, section 4, "Forms"), with the fields a
+      # feature or a spike is shaped with. varWorkNewKind says which of the two the panel is on,
+      # and the fields only one kind carries are hidden for the other.
+      - wkScrim:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =Parent.Height
+            Fill: =RGBA(0, 0, 0, 0.4)
+            Visible: =varWorkFormOpen
+          Children:
+            # A container takes no OnSelect (Studio PA2108), so the scrim's own dismiss is a
+            # transparent button over the whole of it.
+            - wkScrimHit:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  X: =2
+                  Y: =2
+                  Width: =Parent.Width - 4
+                  Height: =Parent.Height - 4
+                  Text: =""
+                  Fill: =RGBA(0, 0, 0, 0)
+                  HoverFill: =RGBA(0, 0, 0, 0)
+                  PressedFill: =RGBA(0, 0, 0, 0)
+                  BorderThickness: =0
+                  FocusedBorderThickness: =2
+                  TabIndex: =0
+                  Tooltip: ="Close the new work item form"
+                  FocusedBorderColor: =FocusStroke
+                  OnSelect: =Set(varWorkFormOpen, false)
+      - wkNewPanel:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Width: =Max(Parent.Width * 0.32, 420)
+            Height: =Parent.Height - AppHeaderH
+            X: =Parent.Width - Max(Parent.Width * 0.32, 420)
+            Y: =AppHeaderH
+            Fill: =NeutralBg1
+            BorderColor: =NeutralStroke1
+            BorderThickness: =1
+            Visible: =varWorkFormOpen
+          Children:
+            - wkNewTitle:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =Pad
+                  Width: =Parent.Width - Pad * 2 - ControlHeight - Gap
+                  Height: =TypeDisplayLine
+                  Text: =FormWorkTitle
+                  Size: =TypeSubtitle
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg1
+                  Wrap: =true
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  AutoHeight: =true
+            - wkNewClose:
+                Control: ModernButton@1.0.0
+                Properties:
+                  X: =Parent.Width - Pad - ControlHeight
+                  Y: =Pad
+                  Width: =ControlHeight
+                  Height: =ControlHeight
+                  Appearance: =ButtonAppearance.Subtle
+                  BasePaletteColor: =NeutralBg1
+                  Color: =NeutralFg1
+                  Icon: ="Dismiss"
+                  RadiusTopLeft: =CtrlR
+                  RadiusTopRight: =CtrlR
+                  RadiusBottomLeft: =CtrlR
+                  RadiusBottomRight: =CtrlR
+                  Text: =""
+                  AccessibleLabel: ="Close"
+                  Tooltip: ="Close the new work item form"
+                  Size: =TypeBodyPx
+                  OnSelect: =Set(varWorkFormOpen, false)
+            - wkLblNewTitle:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 0
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: ="Title"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - wkFieldTitle:
+                Control: ModernTextInput@1.1.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 0 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Default: =""
+                  Placeholder: ="What the register will call it"
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="Title"
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            - wkLblNewEpic:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 1
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: ="Epic"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - wkFieldEpic:
+                Control: ModernDropdown@1.0.2
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 1 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Items: =EpicOptions
+                  ItemDisplayText: =ThisItem.Value
+                  Default: ={Value:FormWorkNone}
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="Epic"
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            - wkLblNewSquad:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 2
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: ="Squad"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - wkFieldSquad:
+                Control: ModernDropdown@1.0.2
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 2 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Items: =ItemSquadOptions
+                  ItemDisplayText: =ThisItem.Value
+                  Default: ={Value:FormWorkNone}
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="Squad"
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            - wkLblNewPriority:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 3
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: ="Priority"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - wkFieldPriority:
+                Control: ModernDropdown@1.0.2
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 3 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Items: =ItemPriorityOptions
+                  ItemDisplayText: =ThisItem.Value
+                  Default: ={Value:FormWorkNone}
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="Priority"
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            - wkLblNewOwner:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: ="Product owner"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - wkFieldOwner:
+                Control: ModernDropdown@1.0.2
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 4 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Items: =OwnerOptions
+                  ItemDisplayText: =ThisItem.Value
+                  Default: ={Value:FormWorkNone}
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="Product owner"
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            - wkLblNewNotes:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 5
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: ="Notes"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - wkFieldNotes:
+                Control: ModernTextInput@1.1.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 5 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Default: =""
+                  Placeholder: ="The problem this is here to solve, and the outcome it is after"
+                  Type: =TextInputType.Multiline
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="Notes"
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            - wkLblNewQuestion:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 6
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Visible: =FormWorkIsSpike
+                  Text: ="Question"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - wkFieldQuestion:
+                Control: ModernTextInput@1.1.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 6 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Visible: =FormWorkIsSpike
+                  Default: =""
+                  Placeholder: ="What the spike has to answer"
+                  Type: =TextInputType.Multiline
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="Question"
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            - wkLblNewTimebox:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 7
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Visible: =FormWorkIsSpike
+                  Text: ="Timebox (sprints)"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - wkFieldTimebox:
+                Control: ModernTextInput@1.1.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 7 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Visible: =FormWorkIsSpike
+                  Default: =""
+                  Placeholder: ="1 to 6"
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="Timebox (sprints)"
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            # A feature may carry its first benefit claim from here; a claim is required
+            # before it can be committed, so the form offers it at the earliest moment.
+            - wkLblNewClaimType:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 6
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Visible: =!FormWorkIsSpike
+                  Text: ="Benefit type"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - wkFieldClaimType:
+                Control: ModernDropdown@1.0.2
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 6 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Visible: =!FormWorkIsSpike
+                  Items: |
+                    =Table({ Value: "Cost avoidance" }, { Value: "Cycle-time cut" },
+                           { Value: "Error reduction" }, { Value: "Throughput" },
+                           { Value: "Compliance / risk" }, { Value: "CX / EX uplift" })
+                  ItemDisplayText: =ThisItem.Value
+                  Default: ={Value:FormWorkNone}
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="Benefit type"
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            - wkLblNewClaimValue:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 7
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Visible: =!FormWorkIsSpike
+                  Text: ="Claimed value"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - wkFieldClaimValue:
+                Control: ModernTextInput@1.1.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 7 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Visible: =!FormWorkIsSpike
+                  Default: =""
+                  Placeholder: ="The amount claimed, if it is known yet"
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="Claimed value"
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            # The one place a fault is said: the rules while the form is open, and whatever
+            # Dataverse answered if a save was refused.
+            - wkNewError:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =FormFieldTop + FormFieldStep * 8
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Visible: =varWorkNewTried && wkNewError.Text <> ""
+                  Text: |
+                    =If(!IsBlank(varWorkSaveError), varWorkSaveError,
+                        IsBlank(Trim(wkFieldTitle.Text)), "A title is required.",
+                        FormWorkIsSpike && !IsBlank(Trim(wkFieldTimebox.Text))
+                        && (!IsNumeric(wkFieldTimebox.Text)
+                            || Value(wkFieldTimebox.Text) < 1
+                            || Value(wkFieldTimebox.Text) > 6),
+                        "A timebox is 1 to 6 sprints.",
+                        !FormWorkIsSpike && !IsBlank(Trim(wkFieldClaimValue.Text))
+                        && !IsNumeric(wkFieldClaimValue.Text),
+                        "A claimed value is a number.",
+                        !FormWorkIsSpike && !IsBlank(Trim(wkFieldClaimValue.Text))
+                        && IsBlank(wkFieldClaimType.Selected.Value),
+                        "A claim needs a benefit type.", "")
+                  Size: =TypeCaption
+                  Font: =FontUI
+                  Color: =StatusBad
+                  Wrap: =true
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  AutoHeight: =true
+            - wkNewSave:
+                Control: ModernButton@1.0.0
+                Properties:
+                  X: =Pad
+                  Y: =Parent.Height - ControlHeight - Pad
+                  Width: =(Parent.Width - Pad * 2 - Gap) / 2
+                  Height: =ControlHeight
+                  Appearance: =ButtonAppearance.Primary
+                  BasePaletteColor: =BrandBg
+                  Color: =BrandFg
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  RadiusTopLeft: =CtrlR
+                  RadiusTopRight: =CtrlR
+                  RadiusBottomLeft: =CtrlR
+                  RadiusBottomRight: =CtrlR
+                  Text: ="Create"
+                  AccessibleLabel: =FormWorkTitle
+                  DisplayMode: |
+                    =If(varWorkNewTried && wkNewError.Text <> "",
+                        DisplayMode.Disabled, DisplayMode.Edit)
+                  OnSelect: |
+                    =Set(varWorkNewTried, true);
+                     If(wkNewError.Text = "",
+                     IfError(
+                     Patch('Work items', Defaults('Work items'),
+                           { Title: Trim(wkFieldTitle.Text),
+                             Kind: If(FormWorkIsSpike, 'Kind (Work items)'.Spike,
+                                      'Kind (Work items)'.Feature),
+                             Phase: 'Phase (Work items)'.Shaping,
+                             Source: 'Source (Work items)'.Direct,
+                             State: FormWorkInitialState,
+                             Commitment: 'Commitment (Work items)'.Proposed,
+                             Epic: LookUp(Epics, Epic = wkFieldEpic.Selected.Value),
+                             Squad: LookUp(Squads, 'Squad name' = wkFieldSquad.Selected.Value),
+                             Priority: wkFieldPriority.Selected.Value,
+                             'Product owner': LookUp(People,
+                                                     'Full name' = wkFieldOwner.Selected.Value),
+                             Notes: Trim(wkFieldNotes.Text),
+                             'Spike question': If(FormWorkIsSpike, Trim(wkFieldQuestion.Text), ""),
+                             'Timebox (sprints)':
+                                 If(FormWorkIsSpike && !IsBlank(Trim(wkFieldTimebox.Text)),
+                                    Value(wkFieldTimebox.Text), Blank()) }),
+                     // A refused save says what Dataverse answered and leaves the panel open.
+                     Set(varWorkSaveError, FirstError.Message),
+                     // The collection the screens read is rebuilt from the table, as the work item
+                     // actions do, and the new row is what varItem then carries.
+                     ClearCollect(colWork, 'Work items');
+                     Set(varItem, LookUp('Work items', Title = Trim(wkFieldTitle.Text)));
+                     // A feature's first claim is a row of its own, written against the item that
+                     // was just created, in the benefits column the item screen reads it back from.
+                     If(!FormWorkIsSpike && !IsBlank(Trim(wkFieldClaimValue.Text)),
+                        Patch('Benefit claims', Defaults('Benefit claims'),
+                              { Name: Trim(wkFieldTitle.Text) & " · "
+                                      & Lower(wkFieldClaimType.Selected.Value),
+                                'Work item': varItem,
+                                'Benefit type':
+                                    Switch(wkFieldClaimType.Selected.Value,
+                                           "Cost avoidance",
+                                           'Benefit type (Benefit claims)'.'Cost avoidance',
+                                           "Cycle-time cut",
+                                           'Benefit type (Benefit claims)'.'Cycle-time cut',
+                                           "Error reduction",
+                                           'Benefit type (Benefit claims)'.'Error reduction',
+                                           "Throughput",
+                                           'Benefit type (Benefit claims)'.Throughput,
+                                           "Compliance / risk",
+                                           'Benefit type (Benefit claims)'.'Compliance / risk',
+                                           'Benefit type (Benefit claims)'.'CX / EX uplift'),
+                                'Benefits column':
+                                    Switch(wkFieldClaimType.Selected.Value,
+                                           "Cost avoidance", 'Benefits column (Benefit claims)'.T,
+                                           "Cycle-time cut", 'Benefits column (Benefit claims)'.U,
+                                           "Error reduction", 'Benefits column (Benefit claims)'.V,
+                                           "Throughput", 'Benefits column (Benefit claims)'.W,
+                                           "Compliance / risk", 'Benefits column (Benefit claims)'.X,
+                                           'Benefits column (Benefit claims)'.Y),
+                                'Claimed value': Value(wkFieldClaimValue.Text) });
+                        ClearCollect(colClaims, 'Benefit claims'));
+                     Set(varWorkSaveError, "");
+                     Set(varWorkFormOpen, false);
+                     Notify(Trim(wkFieldTitle.Text) & " created.", NotificationType.Success);
+                     // The item has a page of its own, and creating it is the way in.
+                     Navigate(scrWorkItem, ScreenTransition.None)))
+            - wkNewCancel:
+                Control: ModernButton@1.0.0
+                Properties:
+                  X: =Pad + (Parent.Width - Pad * 2 - Gap) / 2 + Gap
+                  Y: =Parent.Height - ControlHeight - Pad
+                  Width: =(Parent.Width - Pad * 2 - Gap) / 2
+                  Height: =ControlHeight
+                  Appearance: =ButtonAppearance.Subtle
+                  BasePaletteColor: =NeutralBg1
+                  Color: =NeutralFg1
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  RadiusTopLeft: =CtrlR
+                  RadiusTopRight: =CtrlR
+                  RadiusBottomLeft: =CtrlR
+                  RadiusBottomRight: =CtrlR
+                  Text: ="Cancel"
+                  AccessibleLabel: ="Close the new work item form without saving"
+                  OnSelect: =Set(varWorkFormOpen, false)

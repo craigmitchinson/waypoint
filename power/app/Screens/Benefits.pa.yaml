@@ -1,0 +1,1409 @@
+# Waypoint canvas app: the Benefits screen, what the plan claims and what has been recorded.
+#
+# Valid against pa.schema.yaml (v3.0): a Screens map, each screen with a Properties formula map and a
+# Children sequence whose items are single-key maps of control name to control instance.
+#
+# Benefits is src/pages/Benefits.tsx: the band of the year's headline value figures, then the
+# benefits calendar. Every number is the engine's, through the named formulas in Formulas.pa.yaml:
+# BenefitsCalendarRows over BenefitCalendarRows and BenefitCalendarTotals. Nothing here works a
+# number out for itself.
+#
+# The shell is scrTeam's, unchanged: bnRoot is a vertical GroupContainer the size of the screen,
+# holding the 48px header and a horizontal row of the rail and the body. X and Y appear only inside
+# the gallery templates, which are not auto-layout.
+#
+# The calendar is the hero table and the whole of its tab: no chart strip above it. The work item
+# runs down the left with its caption, twelve banded month columns run across, and the FTE the
+# product owner claimed is plugged in from the month the item lands in. The month grid is a gallery
+# of rows whose template carries a horizontal gallery over the twelve months, one Label cell each;
+# the landing month takes a 2px left border from a Rectangle, odd months take a banded Fill, and the
+# current month is named in its own column head. The FTE | £ tab list writes varBenefitsMeasure,
+# which both readings of every cell are written from, so the toggle costs nothing at the control.
+#
+# What is hidden, and why: the record-actual button is Visible: false until the form for a benefit
+# actual exists.
+#
+# The roll-up, actuals and by-benefit-type tabs were removed on 21 Sep 2026; their design lives in
+# power/decisions.md.
+
+Screens:
+  scrBenefits:
+    Properties:
+      Fill: =NeutralCanvas
+
+    Children:
+
+      # ---- the root: one vertical auto-layout container the size of the screen ----
+      - bnRoot:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            LayoutOverflowX: =LayoutOverflow.Hide
+            LayoutOverflowY: =LayoutOverflow.Hide
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =Parent.Height
+            Fill: =NeutralCanvas
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutGap: =0
+          Children:
+
+            # ---- shell: the app header ----
+            - bnHeader:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  LayoutOverflowX: =LayoutOverflow.Hide
+                  LayoutOverflowY: =LayoutOverflow.Hide
+                  FillPortions: =0
+                  Height: =AppHeaderH
+                  Fill: =BrandBg
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                  LayoutGap: =Gap
+                  PaddingLeft: =Pad
+                  PaddingRight: =Pad
+                Children:
+                  - bnHeaderName:
+                      Control: Label@2.5.1
+                      Properties:
+                        Width: =Parent.Width / 3
+                        Height: =AppHeaderH
+                        Text: ="Waypoint"
+                        Size: =TypeSubtitle
+                        FontWeight: =FontWeight.Semibold
+                        Font: =FontUI
+                        VerticalAlign: =VerticalAlign.Middle
+                        Color: =BrandFg
+                        Wrap: =true
+                        Overflow: =Overflow.Hidden
+                        PaddingTop: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        AutoHeight: =true
+                  # ---- shell: the scope selector, one cmpScope instance for every screen ----
+                  - bnHeaderScope:
+                      Control: CanvasComponent
+                      ComponentName: cmpScope
+                      Properties:
+                        Width: =Max(Parent.Width * 0.14, 180)
+                        Height: =ControlHeight
+                        Visible: =IncludeScope
+                  # ---- shell: the header search, one cmpSearch instance for every screen ----
+                  - bnHeaderSearch:
+                      Control: CanvasComponent
+                      ComponentName: cmpSearch
+                      Properties:
+                        Width: =Max(Parent.Width * 0.24, 280)
+                        Height: =ControlHeight
+                  - bnHeaderQuarter:
+                      Control: Label@2.5.1
+                      Properties:
+                        Width: =Parent.Width / 3
+                        Height: =AppHeaderH
+                        Text: =CurrentQuarter.Label & " · capacity planner"
+                        Size: =TypeCaption
+                        Font: =FontUI
+                        Align: =Align.Right
+                        VerticalAlign: =VerticalAlign.Middle
+                        Color: =ColorFade(BrandFg, -0.2)
+                        Wrap: =true
+                        Overflow: =Overflow.Hidden
+                        PaddingTop: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        AutoHeight: =true
+
+            # ---- shell: the rail, and the body beside it ----
+            - bnMain:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  LayoutOverflowX: =LayoutOverflow.Hide
+                  LayoutOverflowY: =LayoutOverflow.Hide
+                  FillPortions: =1
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutGap: =0
+                Children:
+
+                  # ---- shell: the rail, one cmpRail instance for every screen ----
+                  - bnRail:
+                      Control: CanvasComponent
+                      ComponentName: cmpRail
+                      Properties:
+                        LayoutMinWidth: =If(RailCollapsed, RailWidthTight, NavW)
+                        Width: =If(RailCollapsed, RailWidthTight, NavW)
+                        Height: =Parent.Height
+                        Active: ="Benefits"
+
+                  # ---- shell: the body everything else sits inside ----
+                  - bnBody:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        LayoutOverflowX: =LayoutOverflow.Hide
+                        LayoutOverflowY: =LayoutOverflow.Scroll
+                        FillPortions: =1
+                        Fill: =NeutralBg3
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutGap: =Gap
+                        PaddingLeft: =Pad
+                        PaddingRight: =Pad
+                        PaddingTop: =Pad
+                        PaddingBottom: =Pad
+                      Children:
+
+                        # ---- page head: the eyebrow and one h1 on the left, the add button right ----
+                        - bnPageHead:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =0
+                              Height: =PageHeadH
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutGap: =Gap
+                            Children:
+                              - bnHeadText:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =1
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutGap: =0
+                                  Children:
+                                    - bnEyebrow:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeKickerLine
+                                          Visible: =!IsCompact
+                                          Text: =CurrentQuarter.Label
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - bnTitle:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeDisplayLine
+                                          Text: ="Benefits"
+                                          Size: =TypeTitle
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+
+                        # ---- the brand band: the year's headline value figures ----
+                        - bnBand:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =0
+                              Height: |
+                                =If(App.Width < (5 * (180 + Gap) + BandKickerW), BandH * 2, BandH)
+                              LayoutWrap: =true
+                              Fill: =BrandBg
+                              RadiusTopLeft: =CardR
+                              RadiusTopRight: =CardR
+                              RadiusBottomLeft: =CardR
+                              RadiusBottomRight: =CardR
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutGap: =Gap
+                              PaddingLeft: =Pad
+                              PaddingRight: =Pad
+                              PaddingTop: =10
+                              PaddingBottom: =10
+                            Children:
+                              - bnBandKicker:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Width: =BandKickerW
+                                    Height: =TypeKickerLine * 2
+                                    Text: ="Benefits this year"
+                                    Size: =TypeCaption
+                                    FontWeight: =FontWeight.Normal
+                                    Font: =FontUI
+                                    Color: =ColorFade(BrandFg, -0.2)
+                                    Wrap: =true
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    AutoHeight: =true
+                              - bnStatInYear:
+                                  Control: CanvasComponent
+                                  ComponentName: cmpStat
+                                  Properties:
+                                    Width: =Max((Parent.Width - Pad * 2 - BandKickerW - Gap * 5) / 5, 180)
+                                    LayoutMinWidth: =180
+                                    Height: =BandH - 20
+                                    OnBrand: =true
+                                    Label: ="Value in-year"
+                                    Value: ="£" & Text(GbpInYear, "[$-en-US]#,##0")
+                                    Sub: ="Claims pro-rated by landing month"
+                              - bnStatRecorded:
+                                  Control: CanvasComponent
+                                  ComponentName: cmpStat
+                                  Properties:
+                                    Width: =Max((Parent.Width - Pad * 2 - BandKickerW - Gap * 5) / 5, 180)
+                                    LayoutMinWidth: =180
+                                    Height: =BandH - 20
+                                    OnBrand: =true
+                                    Label: ="Value recorded"
+                                    Value: ="£" & Text(RecordedTotal, "[$-en-US]#,##0")
+                                    Color: =ToneNeutral
+                                    Sub: ="Actuals against the claims that have landed"
+                              - bnStatGap:
+                                  Control: CanvasComponent
+                                  ComponentName: cmpStat
+                                  Properties:
+                                    Width: =Max((Parent.Width - Pad * 2 - BandKickerW - Gap * 5) / 5, 180)
+                                    LayoutMinWidth: =180
+                                    Height: =BandH - 20
+                                    OnBrand: =true
+                                    Label: ="Gap"
+                                    Value: ="£" & Text(BenefitsGap, "[$-en-US]#,##0")
+                                    Color: =BenefitGapTone
+                                    Sub: ="In-year value still to be recorded"
+                              - bnStatFte:
+                                  Control: CanvasComponent
+                                  ComponentName: cmpStat
+                                  Properties:
+                                    Width: =Max((Parent.Width - Pad * 2 - BandKickerW - Gap * 5) / 5, 180)
+                                    LayoutMinWidth: =180
+                                    Height: =BandH - 20
+                                    OnBrand: =true
+                                    Label: ="FTE released"
+                                    Value: |
+                                      =Text(BenefitsFteRecorded, "[$-en-US]#,##0.0") & " of "
+                                       & Text(BenefitsFteInPlan, "[$-en-US]#,##0.0")
+                                    Sub: |
+                                      ="Recorded against claimed: the primary benefit"
+                                    Color: |
+                                      =With({ t: LookUp(NumberTones, Metric = "benefitGap"),
+                                              v: If(Coalesce(BenefitsFteInPlan, 0) = 0, 0,
+                                                    Coalesce(Max(0, BenefitsFteInPlan - BenefitsFteRecorded), 0)
+                                                      / BenefitsFteInPlan) },
+                                          If(v = 0, ToneGood,
+                                             If(t.HigherIsWorse,
+                                                If(v >= t.BadAt, ToneBad, If(v >= t.WarnAt, ToneWarn, ToneNeutral)),
+                                                If(v <= t.BadAt, ToneBad, If(v <= t.WarnAt, ToneWarn, ToneNeutral)))))
+                              - bnStatReliability:
+                                  Control: CanvasComponent
+                                  ComponentName: cmpStat
+                                  Properties:
+                                    Width: =Max((Parent.Width - Pad * 2 - BandKickerW - Gap * 5) / 5, 180)
+                                    LayoutMinWidth: =180
+                                    Height: =BandH - 20
+                                    OnBrand: =true
+                                    Label: ="Reliability"
+                                    Value: =Round(BenefitsReliability * 100, 0) & "%"
+                                    # Reliability is not in NumberTones: it is a percentage read
+                                    # on its own scale, under 60 bad and under 80 warn.
+                                    Color: |
+                                      =If(BenefitsReliability < 0.60, ToneBad,
+                                          If(BenefitsReliability < 0.80, ToneWarn, ToneGood))
+                                    Sub: ="Delivered member weeks over the member weeks in plan"
+
+                        # ---- awaiting validation: the released features that still owe an
+                        # actual (power/design-work-flow.md, section 8). It reads the one queue
+                        # formula Command's attention line reads, sizes itself to its rows and is
+                        # not there at all when nothing is waiting, so the calendar keeps the rest
+                        # of the body.
+                        - bnAwaitCard:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              LayoutOverflowX: =LayoutOverflow.Scroll
+                              FillPortions: =0
+                              Visible: =AwaitingValidationCount > 0
+                              Height: |
+                                =Pad * 2 + TypeHeadingLine + RowHeight + BnAwaitListH + 8 * 2
+                              Fill: =NeutralBg1
+                              BorderColor: =NeutralStroke1
+                              BorderThickness: =1
+                              RadiusTopLeft: =CardR
+                              RadiusTopRight: =CardR
+                              RadiusBottomLeft: =CardR
+                              RadiusBottomRight: =CardR
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutJustifyContent: =LayoutJustifyContent.Start
+                              LayoutGap: =8
+                              PaddingLeft: =Pad
+                              PaddingRight: =Pad
+                              PaddingTop: =Pad
+                              PaddingBottom: =Pad
+                            Children:
+                              - bnAwaitTitle:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =TypeHeadingLine
+                                    Text: ="Awaiting validation · " & AwaitingValidationCount
+                                    Size: =TypeSubtitle
+                                    FontWeight: =FontWeight.Semibold
+                                    Font: =FontUI
+                                    Color: =NeutralFg1
+                                    Wrap: =false
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                              - bnAwaitHead:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    FillPortions: =0
+                                    Width: =Max(Parent.Width - Pad * 2, BnAwaitMinW)
+                                    Height: =RowHeight
+                                  Children:
+                                    - bnAwHeadTitle:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: |
+                                            =Max(Parent.Width * BnAwaitShareTitle, BnAwaitMinTitle) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Work item"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - bnAwHeadOwner:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * BnAwaitShareTitle, BnAwaitMinTitle)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: |
+                                            =Max(Parent.Width * BnAwaitShareOwner, BnAwaitMinOwner) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Product owner"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - bnAwHeadReleased:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * BnAwaitShareTitle, BnAwaitMinTitle)
+                                             + Max(Parent.Width * BnAwaitShareOwner, BnAwaitMinOwner)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: |
+                                            =Max(Parent.Width * BnAwaitShareReleased, BnAwaitMinReleased) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Released"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - bnAwHeadMissing:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * BnAwaitShareTitle, BnAwaitMinTitle)
+                                             + Max(Parent.Width * BnAwaitShareOwner, BnAwaitMinOwner)
+                                             + Max(Parent.Width * BnAwaitShareReleased, BnAwaitMinReleased)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: |
+                                            =Max(Parent.Width * BnAwaitShareMissing, BnAwaitMinMissing) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Claims missing"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                              # One row per item, oldest release first, the whole row the hit
+                              # target that opens it.
+                              - bnAwaitList:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    TemplatePadding: =0
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Width: =Max(Parent.Width - Pad * 2, BnAwaitMinW)
+                                    ShowScrollbar: =true
+                                    Height: =BnAwaitListH
+                                    Items: =AwaitingValidationRows
+                                    TemplateSize: =BnAwaitRowH
+                                    AccessibleLabel: |
+                                      ="Awaiting validation: released features that still owe an "
+                                       & "actual against a benefit claim, longest wait first."
+                                  Children:
+                                    - bnAwRowTitle:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =(BnAwaitRowH - TypeBodyLine) / 2
+                                          Width: |
+                                            =Max(Parent.TemplateWidth * BnAwaitShareTitle, BnAwaitMinTitle) - 8
+                                          Height: =TypeBodyLine
+                                          Text: =ThisItem.Title
+                                          Size: =TypeBody
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - bnAwRowOwner:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * BnAwaitShareTitle, BnAwaitMinTitle)
+                                          Y: =(BnAwaitRowH - TypeBodyLine) / 2
+                                          Width: |
+                                            =Max(Parent.TemplateWidth * BnAwaitShareOwner, BnAwaitMinOwner) - 8
+                                          Height: =TypeBodyLine
+                                          Text: =ThisItem.Owner
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - bnAwRowReleased:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * BnAwaitShareTitle, BnAwaitMinTitle)
+                                             + Max(Parent.TemplateWidth * BnAwaitShareOwner, BnAwaitMinOwner)
+                                          Y: =(BnAwaitRowH - TypeBodyLine) / 2
+                                          Width: |
+                                            =Max(Parent.TemplateWidth * BnAwaitShareReleased, BnAwaitMinReleased) - 8
+                                          Height: =TypeBodyLine
+                                          Text: |
+                                            =Text(ThisItem.Released, "[$-en-US]dd mmm yyyy")
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - bnAwRowMissing:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * BnAwaitShareTitle, BnAwaitMinTitle)
+                                             + Max(Parent.TemplateWidth * BnAwaitShareOwner, BnAwaitMinOwner)
+                                             + Max(Parent.TemplateWidth * BnAwaitShareReleased, BnAwaitMinReleased)
+                                          Y: =(BnAwaitRowH - TypeBodyLine) / 2
+                                          Width: |
+                                            =Max(Parent.TemplateWidth * BnAwaitShareMissing, BnAwaitMinMissing) - 8
+                                          Height: =TypeBodyLine
+                                          Text: =ThisItem.Missing
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - bnAwHit:
+                                        Control: Classic/Button@2.2.0
+                                        Properties:
+                                          X: =2
+                                          Y: =2
+                                          Width: =Parent.TemplateWidth - 4
+                                          Height: =BnAwaitRowH - 4
+                                          Text: =""
+                                          Fill: =RGBA(0, 0, 0, 0)
+                                          HoverFill: =RGBA(0, 0, 0, 0)
+                                          PressedFill: =RGBA(0, 0, 0, 0)
+                                          BorderThickness: =0
+                                          FocusedBorderThickness: =2
+                                          TabIndex: =0
+                                          FocusedBorderColor: =FocusStroke
+                                          Tooltip: |
+                                            ="Open " & ThisItem.Title & ", " & ThisItem.Missing
+                                             & " claims still to validate"
+                                          OnSelect: |
+                                            =Set(varItem, LookUp(colWork, Title = ThisItem.Title));
+                                             Navigate(scrWorkItem, ScreenTransition.None)
+
+                        # ---- the card the calendar fills, straight under the band ----
+                        - bnCard:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              # The card is sized to what is in it, not stretched to the body's
+                              # floor: its own padding, the header row, the head row, the totals
+                              # row and the three 8px gaps between the four visible children, then
+                              # the gallery's own height (the empty line when there are no rows).
+                              FillPortions: =0
+                              Height: |
+                                =Pad * 2 + (ControlHeight + 8) + RowHeight * 2 + 8 * 3
+                                 + If(CountRows(BenefitsCalendarRows) = 0, TypeBodyLine,
+                                      BenefitsCalRowH * Min(CountRows(BenefitsCalendarRows), 10))
+                              Fill: =NeutralBg1
+                              BorderColor: =NeutralStroke1
+                              BorderThickness: =1
+                              RadiusTopLeft: =CardR
+                              RadiusTopRight: =CardR
+                              RadiusBottomLeft: =CardR
+                              RadiusBottomRight: =CardR
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              # The grid inside is never narrower than its own column minimums, so the card
+                              # scrolls sideways rather than squeezing a cell (power/RUNBOOK.md, "Tables").
+                              LayoutOverflowX: =LayoutOverflow.Scroll
+                              LayoutJustifyContent: =LayoutJustifyContent.Start
+                              LayoutGap: =8
+                              PaddingLeft: =Pad
+                              PaddingRight: =Pad
+                              PaddingTop: =Pad
+                              PaddingBottom: =Pad
+                            Children:
+
+                              # ---- the card's own header row: the FTE | pounds toggle and the
+                              # year-end reading. The tab list is gone (power/decisions.md,
+                              # decision 9 of 20 September 2026 evening), so the measure toggle
+                              # writes varBenefitsMeasure and nothing else changes the view.
+                              - bnCardHead:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =0
+                                    Width: =Max(Parent.Width - Pad * 2, BnCalMinW)
+                                    Height: =ControlHeight + 8
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutGap: =Gap
+                                  Children:
+                                    - bnMeasure:
+                                        Control: ModernTabList@1.0.1
+                                        Properties:
+                                          Width: =160
+                                          Height: =ControlHeight + 8
+                                          Items: =Table({Value:"FTE"}, {Value:"£"})
+                                          Default: ={Value:"FTE"}
+                                          Font: =FontUI
+                                          Size: =TypeBodyPx
+                                          Color: =NeutralFg1
+                                          BasePaletteColor: =BrandBg
+                                          AccessibleLabel: ="What the month cells show"
+                                          OnChange: =Set(varBenefitsMeasure, bnMeasure.Selected.Value)
+                                          FontWeight: =FontWeight.Semibold
+                                    # The year-end reading and the count of what is in the table,
+                                    # on one line at the right of the header row.
+                                    - bnSummary:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Width: =Parent.Width - bnMeasure.Width - Gap
+                                          Height: =TypeLabelLine
+                                          Text: |
+                                            =BenefitsCalendarYearEnd & " · " & BenefitsCountLine
+                                          Size: =TypeCaption
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =false
+
+                              # ---- the calendar: the whole of its tab, no chart above it ----
+                              # The head row: the work item column grows, the twelve months are the
+                              # fixed band, and the three in-year columns close it. The current month
+                              # is named in its own head, not coloured alone.
+                              - bnCalHead:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    FillPortions: =0
+                                    Width: =Max(Parent.Width - Pad * 2, BnCalMinW)
+                                    Height: =RowHeight
+                                  Children:
+                                    - bnCalHeadName:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * BnCalShareTitle, BnCalMinTitle) - 8
+                                          Height: =TypeLabelLine
+                                          Text: =BenefitsCalendarTitle
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - bnCalHeadMonths:
+                                        Control: Gallery@2.15.0
+                                        Variant: Horizontal
+                                        Properties:
+                                          TemplatePadding: =0
+                                          BorderColor: =RGBA(0, 0, 0, 0)
+                                          ShowScrollbar: =false
+                                          X: =Max(Parent.Width * BnCalShareTitle, BnCalMinTitle)
+                                          Y: =0
+                                          Width: =Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) * 12
+                                          Height: =RowHeight
+                                          TemplateSize: =Max(Parent.Width * BnCalShareMonth, BnCalMinMonth)
+                                          Items: =BenefitsCalendarHead
+                                          AccessibleLabel: ="The twelve months of the benefit year"
+                                        Children:
+                                          - bnCalHeadMonth:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =6
+                                                Y: =0
+                                                Width: =Parent.TemplateWidth - 12
+                                                Height: =RowHeight
+                                                Text: =ThisItem.Name
+                                                Size: =TypeCaption
+                                                FontWeight: |
+                                                  =If(ThisItem.Now, FontWeight.Semibold, FontWeight.Normal)
+                                                Font: =FontUI
+                                                Align: =Align.Center
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Fill: =If(ThisItem.Band, NeutralBg2, NeutralBg1)
+                                                Color: =If(ThisItem.Now, AccentFg, NeutralFg2)
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                    - bnCalHeadFte:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * BnCalShareTitle, BnCalMinTitle)
+                                             + Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) * 12
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * BnCalShareFte, BnCalMinFte) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="FTE in-year"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - bnCalHeadGbp:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * BnCalShareTitle, BnCalMinTitle)
+                                             + Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) * 12
+                                             + Max(Parent.Width * BnCalShareFte, BnCalMinFte)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * BnCalShareGbp, BnCalMinGbp) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="£ in-year"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - bnCalHeadState:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * BnCalShareTitle, BnCalMinTitle)
+                                             + Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) * 12
+                                             + Max(Parent.Width * BnCalShareFte, BnCalMinFte)
+                                             + Max(Parent.Width * BnCalShareGbp, BnCalMinGbp)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * BnCalShareState, BnCalMinState) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="State"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+
+                              # The grid itself: one row per work item, a horizontal gallery of twelve
+                              # month cells inside each row's template. A cell carries both readings
+                              # already written, so the FTE | £ toggle only changes which is printed
+                              # and the other stays in the cell's accessible label.
+                              - bnCalendarEmpty:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Width: =Parent.Width - Pad * 2
+                                    Height: =TypeBodyLine
+                                    Align: =Align.Left
+                                    Visible: =CountRows(BenefitsCalendarRows) = 0
+                                    Text: ="No work items carry a benefit yet."
+                                    Size: =TypeBody
+                                    Font: =FontUI
+                                    Color: =NeutralFg2
+                                    Wrap: =false
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+
+                              - bnCalendar:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    TemplatePadding: =0
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Width: =Max(Parent.Width - Pad * 2, BnCalMinW)
+                                    ShowScrollbar: =true
+                                    # Ten rows is every whole row that fits the card at 1080:
+                                    # 1080 less the header, the body's padding, the page head, the
+                                    # band and their gaps leaves 782 for the card, and the card's
+                                    # own 166 of chrome leaves 616 for the gallery, 10 x 58 with
+                                    # 36 to spare. Beyond ten the gallery scrolls.
+                                    Height: |
+                                      =BenefitsCalRowH * Min(CountRows(BenefitsCalendarRows), 10)
+                                    Visible: =CountRows(BenefitsCalendarRows) > 0
+                                    Items: =BenefitsCalendarRows
+                                    TemplateSize: =BenefitsCalRowH
+                                    AccessibleLabel: |
+                                      ="Benefits calendar: one row per work item in the plan, with the "
+                                       & "FTE live in each month from the month it lands."
+                                  Children:
+                                    - bnCalRowTitle:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =2
+                                          Width: |
+                                            =Max(Parent.TemplateWidth * BnCalShareTitle, BnCalMinTitle) - 8
+                                          Height: =TypeBodyLine
+                                          Text: =ThisItem.Title
+                                          Size: =TypeBody
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - bnCalRowCaption:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =2 + TypeBodyLine
+                                          Width: |
+                                            =Max(Parent.TemplateWidth * BnCalShareTitle, BnCalMinTitle) - 8
+                                          Height: =TypeLabelLine
+                                          Text: =ThisItem.Caption
+                                          Size: =TypeCaption
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - bnCalMonths:
+                                        Control: Gallery@2.15.0
+                                        Variant: Horizontal
+                                        Properties:
+                                          TemplatePadding: =0
+                                          BorderColor: =RGBA(0, 0, 0, 0)
+                                          ShowScrollbar: =false
+                                          X: =Max(Parent.TemplateWidth * BnCalShareTitle, BnCalMinTitle)
+                                          Y: =0
+                                          Width: |
+                                            =Max(Parent.TemplateWidth * BnCalShareMonth, BnCalMinMonth) * 12
+                                          Height: =BenefitsCalRowH
+                                          TemplateSize: |
+                                            =Max(Parent.TemplateWidth * BnCalShareMonth, BnCalMinMonth)
+                                          Items: =ThisItem.Cells
+                                          AccessibleLabel: ="The FTE live in each month"
+                                        Children:
+                                          - bnCalCellBand:
+                                              Control: Rectangle@2.3.0
+                                              Properties:
+                                                X: =0
+                                                Y: =0
+                                                Width: =Parent.TemplateWidth
+                                                Height: =BenefitsCalRowH
+                                                BorderColor: =RGBA(0, 0, 0, 0)
+                                                Fill: =If(ThisItem.Band, NeutralBg2, NeutralBg1)
+                                          # The landing month's own edge: a 2px rule down the left of
+                                          # the first month the claim pays in.
+                                          - bnCalCellLand:
+                                              Control: Rectangle@2.3.0
+                                              Properties:
+                                                X: =0
+                                                Y: =0
+                                                Width: =2
+                                                Height: =BenefitsCalRowH
+                                                BorderColor: =RGBA(0, 0, 0, 0)
+                                                Visible: =ThisItem.Lands
+                                                Fill: =BrandBg
+                                          - bnCalCellText:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                X: =6
+                                                Y: =0
+                                                Width: =Parent.TemplateWidth - 12
+                                                Height: =BenefitsCalRowH
+                                                Text: =ThisItem.CellText
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                Align: =Align.Center
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =If(ThisItem.Lands, BrandText, NeutralFg1)
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                    - bnCalRowFte:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * BnCalShareTitle, BnCalMinTitle)
+                                             + Max(Parent.TemplateWidth * BnCalShareMonth, BnCalMinMonth) * 12
+                                          Y: =0
+                                          Width: =Max(Parent.TemplateWidth * BnCalShareFte, BnCalMinFte) - 8
+                                          Height: =BenefitsCalRowH
+                                          Text: =Text(ThisItem.FteInYear, "[$-en-US]#,##0.00")
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - bnCalRowGbp:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * BnCalShareTitle, BnCalMinTitle)
+                                             + Max(Parent.TemplateWidth * BnCalShareMonth, BnCalMinMonth) * 12
+                                             + Max(Parent.TemplateWidth * BnCalShareFte, BnCalMinFte)
+                                          Y: =0
+                                          Width: =Max(Parent.TemplateWidth * BnCalShareGbp, BnCalMinGbp) - 8
+                                          Height: =BenefitsCalRowH
+                                          Text: ="£" & Text(ThisItem.GbpInYear, "[$-en-US]#,##0")
+                                          Size: =TypeBody
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg1
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - bnCalRowState:
+                                        Control: Badge@0.0.24
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * BnCalShareTitle, BnCalMinTitle)
+                                             + Max(Parent.TemplateWidth * BnCalShareMonth, BnCalMinMonth) * 12
+                                             + Max(Parent.TemplateWidth * BnCalShareFte, BnCalMinFte)
+                                             + Max(Parent.TemplateWidth * BnCalShareGbp, BnCalMinGbp)
+                                          Y: =(BenefitsCalRowH - TypeLabelLine) / 2
+                                          Width: |
+                                            =With({t: If(ThisItem.Stopped, "Stopped", ThisItem.State)}, Min(Max(Len(t) * 7 + 20, 56), 200))
+                                          Height: =TypeLabelLine
+                                          Appearance: ='BadgeCanvas.Appearance'.Filled
+                                          ThemeColor: |
+                                            =Switch(If(ThisItem.Stopped, "Stopped", ThisItem.State),
+                                                "Ready",           'BadgeCanvas.ThemeColor'.Brand,
+                                                "In development",  'BadgeCanvas.ThemeColor'.Informative,
+                                                "In validation",   'BadgeCanvas.ThemeColor'.Warning,
+                                                "Released",        'BadgeCanvas.ThemeColor'.Success,
+                                                "Done",            'BadgeCanvas.ThemeColor'.Success,
+                                                "Deferred",        'BadgeCanvas.ThemeColor'.Subtle,
+                                                "Cancelled",       'BadgeCanvas.ThemeColor'.Subtle,
+                                                'BadgeCanvas.ThemeColor'.Subtle)
+                                          Shape: ='BadgeCanvas.Shape'.Rounded
+                                          Content: =If(ThisItem.Stopped, "Stopped", ThisItem.State)
+                                          FontSize: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Center
+                                          VerticalAlign: =VerticalAlign.Middle
+
+                              # The totals at the foot of the calendar: one fixed row of ModernText
+                              # under the gallery, on the same twelve fixed month widths, then the
+                              # year-end reading the plan is judged against.
+                              - bnCalFoot:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    FillPortions: =0
+                                    Width: =Max(Parent.Width - Pad * 2, BnCalMinW)
+                                    Height: =RowHeight
+                                  Children:
+                                    - bnCalFootLabel:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =0
+                                          Width: =Max(Parent.Width * BnCalShareTitle, BnCalMinTitle) - 8
+                                          Height: =RowHeight
+                                          Text: =BenefitsCalendarFooterLabel & ", the whole plan"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg2
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - bnCalFootM1:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =Max(Parent.Width * BnCalShareTitle, BnCalMinTitle)
+                                          Y: =0
+                                          Width: =Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) - 6
+                                          Height: =RowHeight
+                                          Text: |
+                                            =If(BenefitsMeasure = "FTE",
+                                                Text(LookUp(BenefitsCalendarFooter, Num = 1).FteLive, "[$-en-US]#,##0.0"),
+                                                "£" & Text(LookUp(BenefitsCalendarFooter, Num = 1).Gbp, "[$-en-US]#,##0"))
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Fill: =If(Mod(1, 2) = 1, NeutralBg2, NeutralBg1)
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - bnCalFootM2:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * BnCalShareTitle, BnCalMinTitle)
+                                             + Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) * 1
+                                          Y: =0
+                                          Width: =Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) - 6
+                                          Height: =RowHeight
+                                          Text: |
+                                            =If(BenefitsMeasure = "FTE",
+                                                Text(LookUp(BenefitsCalendarFooter, Num = 2).FteLive, "[$-en-US]#,##0.0"),
+                                                "£" & Text(LookUp(BenefitsCalendarFooter, Num = 2).Gbp, "[$-en-US]#,##0"))
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Fill: =If(Mod(2, 2) = 1, NeutralBg2, NeutralBg1)
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - bnCalFootM3:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * BnCalShareTitle, BnCalMinTitle)
+                                             + Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) * 2
+                                          Y: =0
+                                          Width: =Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) - 6
+                                          Height: =RowHeight
+                                          Text: |
+                                            =If(BenefitsMeasure = "FTE",
+                                                Text(LookUp(BenefitsCalendarFooter, Num = 3).FteLive, "[$-en-US]#,##0.0"),
+                                                "£" & Text(LookUp(BenefitsCalendarFooter, Num = 3).Gbp, "[$-en-US]#,##0"))
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Fill: =If(Mod(3, 2) = 1, NeutralBg2, NeutralBg1)
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - bnCalFootM4:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * BnCalShareTitle, BnCalMinTitle)
+                                             + Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) * 3
+                                          Y: =0
+                                          Width: =Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) - 6
+                                          Height: =RowHeight
+                                          Text: |
+                                            =If(BenefitsMeasure = "FTE",
+                                                Text(LookUp(BenefitsCalendarFooter, Num = 4).FteLive, "[$-en-US]#,##0.0"),
+                                                "£" & Text(LookUp(BenefitsCalendarFooter, Num = 4).Gbp, "[$-en-US]#,##0"))
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Fill: =If(Mod(4, 2) = 1, NeutralBg2, NeutralBg1)
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - bnCalFootM5:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * BnCalShareTitle, BnCalMinTitle)
+                                             + Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) * 4
+                                          Y: =0
+                                          Width: =Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) - 6
+                                          Height: =RowHeight
+                                          Text: |
+                                            =If(BenefitsMeasure = "FTE",
+                                                Text(LookUp(BenefitsCalendarFooter, Num = 5).FteLive, "[$-en-US]#,##0.0"),
+                                                "£" & Text(LookUp(BenefitsCalendarFooter, Num = 5).Gbp, "[$-en-US]#,##0"))
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Fill: =If(Mod(5, 2) = 1, NeutralBg2, NeutralBg1)
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - bnCalFootM6:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * BnCalShareTitle, BnCalMinTitle)
+                                             + Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) * 5
+                                          Y: =0
+                                          Width: =Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) - 6
+                                          Height: =RowHeight
+                                          Text: |
+                                            =If(BenefitsMeasure = "FTE",
+                                                Text(LookUp(BenefitsCalendarFooter, Num = 6).FteLive, "[$-en-US]#,##0.0"),
+                                                "£" & Text(LookUp(BenefitsCalendarFooter, Num = 6).Gbp, "[$-en-US]#,##0"))
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Fill: =If(Mod(6, 2) = 1, NeutralBg2, NeutralBg1)
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - bnCalFootM7:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * BnCalShareTitle, BnCalMinTitle)
+                                             + Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) * 6
+                                          Y: =0
+                                          Width: =Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) - 6
+                                          Height: =RowHeight
+                                          Text: |
+                                            =If(BenefitsMeasure = "FTE",
+                                                Text(LookUp(BenefitsCalendarFooter, Num = 7).FteLive, "[$-en-US]#,##0.0"),
+                                                "£" & Text(LookUp(BenefitsCalendarFooter, Num = 7).Gbp, "[$-en-US]#,##0"))
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Fill: =If(Mod(7, 2) = 1, NeutralBg2, NeutralBg1)
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - bnCalFootM8:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * BnCalShareTitle, BnCalMinTitle)
+                                             + Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) * 7
+                                          Y: =0
+                                          Width: =Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) - 6
+                                          Height: =RowHeight
+                                          Text: |
+                                            =If(BenefitsMeasure = "FTE",
+                                                Text(LookUp(BenefitsCalendarFooter, Num = 8).FteLive, "[$-en-US]#,##0.0"),
+                                                "£" & Text(LookUp(BenefitsCalendarFooter, Num = 8).Gbp, "[$-en-US]#,##0"))
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Fill: =If(Mod(8, 2) = 1, NeutralBg2, NeutralBg1)
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - bnCalFootM9:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * BnCalShareTitle, BnCalMinTitle)
+                                             + Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) * 8
+                                          Y: =0
+                                          Width: =Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) - 6
+                                          Height: =RowHeight
+                                          Text: |
+                                            =If(BenefitsMeasure = "FTE",
+                                                Text(LookUp(BenefitsCalendarFooter, Num = 9).FteLive, "[$-en-US]#,##0.0"),
+                                                "£" & Text(LookUp(BenefitsCalendarFooter, Num = 9).Gbp, "[$-en-US]#,##0"))
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Fill: =If(Mod(9, 2) = 1, NeutralBg2, NeutralBg1)
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - bnCalFootM10:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * BnCalShareTitle, BnCalMinTitle)
+                                             + Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) * 9
+                                          Y: =0
+                                          Width: =Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) - 6
+                                          Height: =RowHeight
+                                          Text: |
+                                            =If(BenefitsMeasure = "FTE",
+                                                Text(LookUp(BenefitsCalendarFooter, Num = 10).FteLive, "[$-en-US]#,##0.0"),
+                                                "£" & Text(LookUp(BenefitsCalendarFooter, Num = 10).Gbp, "[$-en-US]#,##0"))
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Fill: =If(Mod(10, 2) = 1, NeutralBg2, NeutralBg1)
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - bnCalFootM11:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * BnCalShareTitle, BnCalMinTitle)
+                                             + Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) * 10
+                                          Y: =0
+                                          Width: =Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) - 6
+                                          Height: =RowHeight
+                                          Text: |
+                                            =If(BenefitsMeasure = "FTE",
+                                                Text(LookUp(BenefitsCalendarFooter, Num = 11).FteLive, "[$-en-US]#,##0.0"),
+                                                "£" & Text(LookUp(BenefitsCalendarFooter, Num = 11).Gbp, "[$-en-US]#,##0"))
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Fill: =If(Mod(11, 2) = 1, NeutralBg2, NeutralBg1)
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - bnCalFootM12:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * BnCalShareTitle, BnCalMinTitle)
+                                             + Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) * 11
+                                          Y: =0
+                                          Width: =Max(Parent.Width * BnCalShareMonth, BnCalMinMonth) - 6
+                                          Height: =RowHeight
+                                          Text: |
+                                            =If(BenefitsMeasure = "FTE",
+                                                Text(LookUp(BenefitsCalendarFooter, Num = 12).FteLive, "[$-en-US]#,##0.0"),
+                                                "£" & Text(LookUp(BenefitsCalendarFooter, Num = 12).Gbp, "[$-en-US]#,##0"))
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Fill: =If(Mod(12, 2) = 1, NeutralBg2, NeutralBg1)
+                                          Color: =NeutralFg1
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - bnCalFootYearEnd:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =0
+                                          Width: =Max(Parent.Width * BnCalShareTitle, BnCalMinTitle) - 8
+                                          Height: =RowHeight
+                                          Text: ="At year end"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Right
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Color: =NeutralFg2
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+

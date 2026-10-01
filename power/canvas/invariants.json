@@ -1,0 +1,34 @@
+{
+  "note": "Baselines for scripts/preflight.mjs. Counts that grow with the build are raised with --update-baseline; the rest are fixed settings and never move without a runbook change.",
+  "namedFormulas": 929,
+  "dataSources": 106,
+  "rowLimit": 2000,
+  "scaleToFit": false,
+  "maintainAspectRatio": false,
+  "lockOrientation": false,
+  "expectedScreens": [
+    "scrBenefits",
+    "scrCommand",
+    "scrFinancials",
+    "scrImport",
+    "scrQuarterClose",
+    "scrSettings",
+    "scrTeam",
+    "scrTimeline",
+    "scrWork",
+    "scrWorkItem"
+  ],
+  "controlcount": {
+    "scrWorkItem": 271,
+    "scrSettings": 168,
+    "scrTeam": 141,
+    "scrFinancials": 139,
+    "scrTimeline": 127,
+    "scrQuarterClose": 114,
+    "scrFrontDoor": 113,
+    "scrCommand": 102,
+    "scrWork": 86,
+    "scrBenefits": 70,
+    "scrImport": 38
+  }
+}

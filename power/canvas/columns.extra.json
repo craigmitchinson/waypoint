@@ -1,0 +1,44 @@
+{
+  "note": "Tables customizations.xml does not carry: system tables the app reads via lookups or Add data. Same entry shape as build-column-catalogue.mjs produces, merged in verbatim.",
+  "tables": [
+    {
+      "display": "Environment Variable Definitions",
+      "singular": "Environment Variable Definition",
+      "logical": "environmentvariabledefinition",
+      "primaryName": "Schema Name",
+      "columns": [
+        { "display": "Schema Name", "logical": "schemaname", "type": "text", "primaryName": true },
+        { "display": "Default Value", "logical": "defaultvalue", "type": "text" },
+        { "display": "Display Name", "logical": "displayname", "type": "text" },
+        { "display": "Type", "logical": "type", "type": "picklist" }
+      ]
+    },
+    {
+      "display": "Environment Variable Values",
+      "singular": "Environment Variable Value",
+      "logical": "environmentvariablevalue",
+      "primaryName": "Schema Name",
+      "columns": [
+        { "display": "Value", "logical": "value", "type": "text" },
+        {
+          "display": "Environment Variable Definition",
+          "logical": "environmentvariabledefinitionid",
+          "type": "lookup",
+          "target": "environmentvariabledefinition"
+        },
+        { "display": "Schema Name", "logical": "schemaname", "type": "text", "primaryName": true }
+      ]
+    },
+    {
+      "display": "Users",
+      "singular": "User",
+      "logical": "systemuser",
+      "primaryName": "Full Name",
+      "columns": [
+        { "display": "Full Name", "logical": "fullname", "type": "text", "primaryName": true },
+        { "display": "Primary Email", "logical": "internalemailaddress", "type": "text" },
+        { "display": "User Name", "logical": "domainname", "type": "text" }
+      ]
+    }
+  ]
+}

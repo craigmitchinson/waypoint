@@ -1,0 +1,2502 @@
+{
+ "roster": [
+  [
+   "Tom Reynolds",
+   "Engineering Lead",
+   "F",
+   "Team level",
+   "England",
+   "Permanent",
+   true,
+   "Software engineering",
+   "AI engineering"
+  ],
+  [
+   "Grace Whitfield",
+   "Lead Product Owner",
+   "F",
+   "Team level",
+   "Wales",
+   "Permanent",
+   true,
+   "Power Platform",
+   ""
+  ],
+  [
+   "Oliver Hayes",
+   "Team Product Owner",
+   "E",
+   "Team level",
+   "England",
+   "Permanent",
+   true,
+   "Power Platform",
+   ""
+  ],
+  [
+   "Amara Okafor",
+   "Lead Integrator",
+   "F",
+   "Team level",
+   "India",
+   "Permanent",
+   true,
+   "Power Platform",
+   "Blue Prism"
+  ],
+  [
+   "Jack Morgan",
+   "Integrator",
+   "E",
+   "Team level",
+   "India",
+   "Permanent",
+   false,
+   "Power Platform",
+   "Blue Prism"
+  ],
+  [
+   "Sarah Mitchell",
+   "Senior Technical Application Specialist",
+   "E",
+   "Service",
+   "England",
+   "Permanent",
+   true,
+   "Blue Prism",
+   "Power Platform"
+  ],
+  [
+   "Vacancy 1",
+   "Senior AI Engineer",
+   "D",
+   "Service",
+   "England",
+   "Open vacancy",
+   false,
+   "AI engineering",
+   "Software engineering"
+  ],
+  [
+   "Vacancy 2",
+   "AI Engineer",
+   "D",
+   "Service",
+   "India",
+   "Open vacancy",
+   false,
+   "AI engineering",
+   ""
+  ],
+  [
+   "Vacancy 3",
+   "AI Engineer",
+   "D",
+   "Service",
+   "India",
+   "Open vacancy",
+   false,
+   "AI engineering",
+   ""
+  ],
+  [
+   "Deepa Iyer",
+   "Technical Application Specialist",
+   "D",
+   "Service",
+   "India",
+   "NPW",
+   false,
+   "Blue Prism",
+   "Power Platform"
+  ],
+  [
+   "Priya Shah",
+   "Technical Application Specialist",
+   "C",
+   "Service",
+   "England",
+   "NPW",
+   false,
+   "Blue Prism",
+   ""
+  ],
+  [
+   "James Okafor",
+   "Technical Application Specialist",
+   "D",
+   "Service",
+   "India",
+   "NPW",
+   false,
+   "Blue Prism",
+   "Software engineering"
+  ],
+  [
+   "Marcus Rae",
+   "Technical Application Specialist",
+   "C",
+   "Service",
+   "India",
+   "NPW",
+   false,
+   "Power Platform",
+   "Blue Prism"
+  ],
+  [
+   "Helena Vos",
+   "Technical Application Specialist",
+   "C",
+   "Service",
+   "India",
+   "NPW",
+   false,
+   "Blue Prism",
+   ""
+  ],
+  [
+   "Vacancy 4",
+   "Senior AI Engineer",
+   "E",
+   "Service",
+   "India",
+   "Open vacancy",
+   false,
+   "AI engineering",
+   "Software engineering"
+  ],
+  [
+   "Ben Lawson",
+   "Senior Technical Application Specialist",
+   "E",
+   "Squad 1",
+   "England",
+   "Permanent",
+   true,
+   "Blue Prism",
+   "Software engineering"
+  ],
+  [
+   "Vacancy 5",
+   "Senior AI Engineer",
+   "E",
+   "Squad 1",
+   "India",
+   "Open vacancy",
+   false,
+   "AI engineering",
+   "Software engineering"
+  ],
+  [
+   "Vikram Reddy",
+   "Software Engineer",
+   "D",
+   "Squad 1",
+   "England",
+   "Permanent",
+   false,
+   "Software engineering",
+   "Power Platform"
+  ],
+  [
+   "Faisal Rahman",
+   "Technical Application Specialist",
+   "D",
+   "Squad 1",
+   "England",
+   "Permanent",
+   false,
+   "Blue Prism",
+   "Power Platform"
+  ],
+  [
+   "Lena Brooks",
+   "Technical Application Specialist",
+   "D",
+   "Squad 1",
+   "India",
+   "Permanent",
+   false,
+   "Power Platform",
+   "Blue Prism"
+  ],
+  [
+   "Ravi Patel",
+   "Senior Technical Application Specialist",
+   "E",
+   "Squad 2",
+   "England",
+   "Permanent",
+   true,
+   "Blue Prism",
+   "AI engineering"
+  ],
+  [
+   "Vacancy 6",
+   "Senior AI Engineer",
+   "E",
+   "Squad 2",
+   "India",
+   "Open vacancy",
+   false,
+   "AI engineering",
+   "Software engineering"
+  ],
+  [
+   "Vacancy 7",
+   "Senior AI Engineer",
+   "D",
+   "Squad 2",
+   "England",
+   "Open vacancy",
+   false,
+   "AI engineering",
+   "Software engineering"
+  ],
+  [
+   "Sophie Laurent",
+   "Technical Application Specialist",
+   "D",
+   "Squad 2",
+   "India",
+   "Permanent",
+   false,
+   "Blue Prism",
+   "AI engineering"
+  ],
+  [
+   "Vacancy 8",
+   "AI Engineer",
+   "D",
+   "Squad 2",
+   "India",
+   "Open vacancy",
+   false,
+   "AI engineering",
+   ""
+  ],
+  [
+   "Sam Reeves",
+   "Senior Technical Application Specialist",
+   "E",
+   "Squad 3",
+   "England",
+   "Permanent",
+   true,
+   "Blue Prism",
+   "AI engineering"
+  ],
+  [
+   "Theo Marshall",
+   "Senior Technical Application Specialist",
+   "E",
+   "Squad 3",
+   "England",
+   "Permanent",
+   false,
+   "Power Platform",
+   "Blue Prism"
+  ],
+  [
+   "Maya Singh",
+   "Senior Technical Application Specialist",
+   "E",
+   "Squad 3",
+   "India",
+   "Permanent",
+   false,
+   "Blue Prism",
+   "AI engineering"
+  ],
+  [
+   "Zara Ahmed",
+   "Senior Technical Application Specialist",
+   "E",
+   "Squad 3",
+   "England",
+   "Permanent",
+   false,
+   "Software engineering",
+   "Blue Prism"
+  ],
+  [
+   "Rohan Desai",
+   "Technical Application Specialist",
+   "D",
+   "Squad 3",
+   "India",
+   "Permanent",
+   false,
+   "Blue Prism",
+   "Software engineering"
+  ],
+  [
+   "Eloise Bennett",
+   "Senior Technical Application Specialist",
+   "E",
+   "Squad 4",
+   "England",
+   "Permanent",
+   true,
+   "Software engineering",
+   "Blue Prism"
+  ],
+  [
+   "Kwame Boateng",
+   "Senior Technical Application Specialist",
+   "E",
+   "Squad 4",
+   "India",
+   "Permanent",
+   false,
+   "Blue Prism",
+   "Power Platform"
+  ],
+  [
+   "Niamh Carter",
+   "Technical Application Specialist",
+   "D",
+   "Squad 4",
+   "England",
+   "Permanent",
+   false,
+   "Blue Prism",
+   "Software engineering"
+  ],
+  [
+   "Cara Donnelly",
+   "Technical Application Specialist",
+   "D",
+   "Squad 4",
+   "India",
+   "Permanent",
+   false,
+   "Power Platform",
+   "Blue Prism"
+  ],
+  [
+   "Imogen Clarke",
+   "Technical Application Specialist",
+   "D",
+   "Squad 4",
+   "India",
+   "Permanent",
+   false,
+   "Blue Prism",
+   ""
+  ]
+ ],
+ "tweaks": {
+  "Lena Brooks": {
+   "N": 4
+  },
+  "Deepa Iyer": {
+   "Q": 0.2
+  },
+  "Tom Reynolds": {
+   "Q": 0.5
+  }
+ },
+ "seed_squads": [
+  [
+   "Service",
+   "Sarah Mitchell",
+   "incidents · problems · LRM · hypercare",
+   "teal"
+  ],
+  [
+   "Squad 1",
+   "Ben Lawson",
+   "discretionary delivery",
+   "cobalt"
+  ],
+  [
+   "Squad 2",
+   "Ravi Patel",
+   "discretionary delivery",
+   "crimson"
+  ],
+  [
+   "Squad 3",
+   "Sam Reeves",
+   "discretionary delivery",
+   "amber"
+  ],
+  [
+   "Squad 4",
+   "Eloise Bennett",
+   "discretionary delivery",
+   "green"
+  ],
+  [
+   "Team level",
+   "Tom Reynolds",
+   "engineering lead, product owners, integrators",
+   "steel"
+  ]
+ ],
+ "seed_abs": [
+  [
+   "Sarah Mitchell",
+   "Leave",
+   "2026-10-19",
+   "2026-10-23",
+   "Half term"
+  ],
+  [
+   "James Okafor",
+   "Training",
+   "2026-10-07",
+   "2026-10-08",
+   "ITIL 4 Foundation"
+  ],
+  [
+   "Priya Shah",
+   "Leave",
+   "2026-12-21",
+   "2026-12-31",
+   "Christmas"
+  ],
+  [
+   "Marcus Rae",
+   "Leave",
+   "2026-10-12",
+   "2026-10-16",
+   ""
+  ],
+  [
+   "Helena Vos",
+   "Sickness",
+   "2026-11-03",
+   "2026-11-04",
+   ""
+  ],
+  [
+   "Deepa Iyer",
+   "Leave",
+   "2026-11-09",
+   "2026-11-13",
+   "Diwali week"
+  ],
+  [
+   "Imogen Clarke",
+   "Leave",
+   "2026-12-24",
+   "2026-12-31",
+   "Christmas"
+  ],
+  [
+   "Ben Lawson",
+   "Training",
+   "2026-11-16",
+   "2026-11-18",
+   "Blue Prism developer"
+  ],
+  [
+   "Vikram Reddy",
+   "Leave",
+   "2026-11-09",
+   "2026-11-11",
+   "Diwali"
+  ],
+  [
+   "Niamh Carter",
+   "Leave",
+   "2026-10-26",
+   "2026-10-30",
+   ""
+  ],
+  [
+   "Ravi Patel",
+   "Leave",
+   "2026-12-21",
+   "2026-12-24",
+   ""
+  ],
+  [
+   "Cara Donnelly",
+   "Training",
+   "2026-10-14",
+   "2026-10-14",
+   "Security awareness"
+  ],
+  [
+   "Sam Reeves",
+   "Leave",
+   "2026-11-23",
+   "2026-11-27",
+   ""
+  ],
+  [
+   "Kwame Boateng",
+   "Leave",
+   "2026-12-28",
+   "2026-12-31",
+   ""
+  ],
+  [
+   "Eloise Bennett",
+   "Sickness",
+   "2026-10-05",
+   "2026-10-06",
+   ""
+  ],
+  [
+   "Rohan Desai",
+   "Leave",
+   "2026-11-09",
+   "2026-11-13",
+   "Diwali week"
+  ],
+  [
+   "Zara Ahmed",
+   "Leave",
+   "2026-12-14",
+   "2026-12-18",
+   ""
+  ],
+  [
+   "Ben Lawson",
+   "Leave",
+   "2026-08-03",
+   "2026-08-14",
+   "Summer"
+  ],
+  [
+   "Sophie Laurent",
+   "Leave",
+   "2026-05-25",
+   "2026-05-29",
+   ""
+  ],
+  [
+   "Sam Reeves",
+   "Leave",
+   "2026-02-16",
+   "2026-02-20",
+   ""
+  ],
+  [
+   "Faisal Rahman",
+   "Leave",
+   "2026-04-06",
+   "2026-04-10",
+   "Easter"
+  ]
+ ],
+ "seed_asg": [
+  [
+   "Ben Lawson",
+   "3-way match and posting engine",
+   "Work",
+   "2026-01-12",
+   "2026-04-24",
+   "3-way match"
+  ],
+  [
+   "Vikram Reddy",
+   "Invoice capture and OCR: handwritten route to exception queue",
+   "Work",
+   "2026-02-02",
+   "2026-06-26",
+   "Invoice OCR"
+  ],
+  [
+   "Faisal Rahman",
+   "Exception queue UI",
+   "Work",
+   "2026-03-02",
+   "2026-05-29",
+   "Exception UI"
+  ],
+  [
+   "Lena Brooks",
+   "Exception queue UI",
+   "Work",
+   "2026-03-02",
+   "2026-05-29",
+   "Exception UI"
+  ],
+  [
+   "Ravi Patel",
+   "Statement matching rules v2",
+   "Work",
+   "2026-01-19",
+   "2026-05-08",
+   "Matching rules"
+  ],
+  [
+   "Sophie Laurent",
+   "Identity and document checks",
+   "Work",
+   "2026-04-06",
+   "2026-11-27",
+   "ID checks"
+  ],
+  [
+   "Ravi Patel",
+   "Identity and document checks",
+   "Work",
+   "2026-06-01",
+   "2026-10-30",
+   "ID checks"
+  ],
+  [
+   "Sophie Laurent",
+   "Blue Prism developer",
+   "Training",
+   "2026-03-09",
+   "2026-03-20",
+   "BP developer"
+  ],
+  [
+   "Sam Reeves",
+   "Risk-based KYC routing",
+   "Work",
+   "2026-05-04",
+   "2026-12-18",
+   "KYC routing"
+  ],
+  [
+   "Theo Marshall",
+   "ID provider integration",
+   "Work",
+   "2026-02-16",
+   "2026-04-30",
+   "ID provider"
+  ],
+  [
+   "Zara Ahmed",
+   "ID provider integration",
+   "Work",
+   "2026-02-16",
+   "2026-04-30",
+   "ID provider"
+  ],
+  [
+   "Maya Singh",
+   "Consent preference centre",
+   "Work",
+   "2026-08-03",
+   "2026-11-25",
+   "Consent centre"
+  ],
+  [
+   "Eloise Bennett",
+   "Notifications platform: milestone alerts",
+   "Work",
+   "2026-07-06",
+   "2026-11-27",
+   "Notifications"
+  ],
+  [
+   "Vacancy 5",
+   "New starter induction",
+   "Other",
+   "2026-11-02",
+   "2026-11-13",
+   "Induction"
+  ],
+  [
+   "Priya Shah",
+   "Incident and request volume (BAU)",
+   "BAU",
+   "2026-01-05",
+   "2026-12-31",
+   "BAU rota"
+  ],
+  [
+   "Helena Vos",
+   "Incident and request volume (BAU)",
+   "BAU",
+   "2026-01-05",
+   "2026-12-31",
+   "BAU rota"
+  ],
+  [
+   "Deepa Iyer",
+   "Incident and request volume (BAU)",
+   "BAU",
+   "2026-01-05",
+   "2026-12-31",
+   "BAU rota"
+  ],
+  [
+   "Marcus Rae",
+   "Incident and request volume (BAU)",
+   "BAU",
+   "2026-01-05",
+   "2026-06-26",
+   "BAU rota"
+  ],
+  [
+   "James Okafor",
+   "Incident and request volume (BAU)",
+   "BAU",
+   "2026-06-29",
+   "2026-12-31",
+   "BAU rota"
+  ],
+  [
+   "Tom Reynolds",
+   "Engineering leadership and roadmap",
+   "Other",
+   "2026-01-05",
+   "2026-12-18",
+   "Eng lead"
+  ],
+  [
+   "Grace Whitfield",
+   "Product leadership",
+   "Other",
+   "2026-01-05",
+   "2026-12-18",
+   "L-PO"
+  ],
+  [
+   "Oliver Hayes",
+   "Product ownership: onboarding",
+   "Other",
+   "2026-01-05",
+   "2026-12-18",
+   "PO onboarding"
+  ],
+  [
+   "Amara Okafor",
+   "Integration leadership",
+   "Other",
+   "2026-01-05",
+   "2026-12-18",
+   "L-INT"
+  ],
+  [
+   "Jack Morgan",
+   "Integration: Orion and finance ops",
+   "Support",
+   "2026-01-05",
+   "2026-12-18",
+   "Integration"
+  ]
+ ],
+ "seed_work": [
+  [
+   "Invoice capture and OCR: handwritten route to exception queue",
+   "Finance ops automation",
+   "Squad 1",
+   "Blue Prism",
+   "M",
+   "Must",
+   "In development",
+   "High",
+   1,
+   2,
+   "Ben Lawson",
+   "FIN-201",
+   1.5,
+   "Oct",
+   "D"
+  ],
+  [
+   "3-way match and posting engine",
+   "Finance ops automation",
+   "Squad 1",
+   "Software engineering",
+   "XL",
+   "Must",
+   "Ready",
+   "Medium",
+   2,
+   6,
+   "Vikram Reddy",
+   "FIN-214",
+   2.0,
+   "Dec",
+   "D"
+  ],
+  [
+   "Exception queue UI",
+   "Finance ops automation",
+   "Squad 1",
+   "Power Platform",
+   "L",
+   "Should",
+   "Ready",
+   "Medium",
+   3,
+   5,
+   "Faisal Rahman",
+   "FIN-220",
+   0.5,
+   "Nov",
+   "D"
+  ],
+  [
+   "Multi-bank feed normaliser: long tail formats",
+   "Reconciliation",
+   "Squad 2",
+   "Software engineering",
+   "L",
+   "Should",
+   "Ready",
+   "Low",
+   4,
+   7,
+   "",
+   "REC-88",
+   1.0,
+   "Dec",
+   "D"
+  ],
+  [
+   "Statement matching rules v2",
+   "Reconciliation",
+   "Squad 2",
+   "Blue Prism",
+   "M",
+   "Must",
+   "Ready",
+   "High",
+   1,
+   3,
+   "Ravi Patel",
+   "REC-90",
+   1.0,
+   "Oct",
+   "Ops mix"
+  ],
+  [
+   "Identity and document checks",
+   "Customer onboarding",
+   "Squad 2",
+   "Blue Prism",
+   "L",
+   "Must",
+   "In development",
+   "High",
+   1,
+   4,
+   "Sophie Laurent",
+   "ONB-110",
+   2.5,
+   "Nov",
+   "Contractor day rate"
+  ],
+  [
+   "Risk-based KYC routing",
+   "Customer onboarding",
+   "Squad 3",
+   "AI engineering",
+   "XL",
+   "Must",
+   "Ready",
+   "Medium",
+   2,
+   7,
+   "Sam Reeves",
+   "ONB-131",
+   1.5,
+   "Dec",
+   "Contractor day rate"
+  ],
+  [
+   "ID provider integration",
+   "Customer onboarding",
+   "Squad 3",
+   "Software engineering",
+   "M",
+   "Must",
+   "Ready",
+   "High",
+   1,
+   2,
+   "Zara Ahmed",
+   "ONB-118",
+   0.5,
+   "Oct",
+   "Contractor day rate"
+  ],
+  [
+   "Consent preference centre",
+   "Customer onboarding",
+   "Squad 3",
+   "Power Platform",
+   "L",
+   "Should",
+   "In discovery",
+   "Low",
+   5,
+   7,
+   "",
+   "ONB-140",
+   null,
+   null,
+   null
+  ],
+  [
+   "Notifications platform: milestone alerts",
+   "Proactive comms",
+   "Squad 4",
+   "Software engineering",
+   "L",
+   "Must",
+   "Ready",
+   "High",
+   1,
+   4,
+   "Eloise Bennett",
+   "MSG-61",
+   1.0,
+   "Nov",
+   "C"
+  ],
+  [
+   "Real-time status page",
+   "Proactive comms",
+   "Squad 4",
+   "Power Platform",
+   "M",
+   "Should",
+   "Released",
+   "Medium",
+   3,
+   5,
+   "Kwame Boateng",
+   "MSG-64",
+   0.5,
+   "Nov",
+   "C"
+  ],
+  [
+   "Nudge engine: action-needed alerts",
+   "Proactive comms",
+   "Squad 4",
+   "AI engineering",
+   "M",
+   "Could",
+   "Ready",
+   "Low",
+   5,
+   7,
+   "",
+   "MSG-70",
+   0.5,
+   "Dec",
+   "C"
+  ],
+  [
+   "CI pipeline overhaul",
+   "Platform",
+   "Squad 4",
+   "Software engineering",
+   "S",
+   "Should",
+   "Ready",
+   "High",
+   1,
+   1,
+   "Niamh Carter",
+   "TOOL-55",
+   null,
+   null,
+   null
+  ],
+  [
+   "Hypercare: Orion go-live",
+   "Service",
+   "Service",
+   "Blue Prism",
+   "L",
+   "Must",
+   "In development",
+   "High",
+   1,
+   3,
+   "Sarah Mitchell",
+   "SVC-412",
+   null,
+   "Nov",
+   null
+  ],
+  [
+   "Problem management: slow queries",
+   "Service",
+   "Service",
+   "Power Platform",
+   "M",
+   "Must",
+   "Done",
+   "Medium",
+   1,
+   4,
+   "Helena Vos",
+   "PRB0124",
+   null,
+   null,
+   null
+  ],
+  [
+   "Incident and request volume (BAU)",
+   "Service",
+   "Service",
+   "Blue Prism",
+   "",
+   "Must",
+   "Ready",
+   "High",
+   1,
+   7,
+   "",
+   "",
+   null,
+   null,
+   null
+  ],
+  [
+   "LRM: Q4 change freeze support",
+   "Service",
+   "Service",
+   "Power Platform",
+   "L",
+   "Should",
+   "Ready",
+   "Medium",
+   6,
+   7,
+   "James Okafor",
+   "SVC-430",
+   null,
+   null,
+   null
+  ],
+  [
+   "Payments SDK v3 migration",
+   "Payments",
+   "Squad 1",
+   "Software engineering",
+   "L",
+   "Could",
+   "Identified",
+   "Low",
+   6,
+   7,
+   "",
+   "PAY-300",
+   null,
+   null,
+   null
+  ],
+  [
+   "Data warehouse access for analytics",
+   "Data",
+   "",
+   "Power Platform",
+   "M",
+   "Should",
+   "Ready",
+   "Medium",
+   4,
+   5,
+   "",
+   "DAT-12",
+   null,
+   null,
+   null
+  ],
+  [
+   "Supplier portal integration",
+   "Finance ops automation",
+   "Squad 1",
+   "Power Platform",
+   "XL",
+   "Must",
+   "Ready",
+   "Medium",
+   3,
+   7,
+   "Ben Lawson",
+   "FIN-230",
+   1.0,
+   "Dec",
+   "D"
+  ],
+  [
+   "Invoice approval workflow rebuild",
+   "Finance ops automation",
+   "Squad 1",
+   "Power Platform",
+   "L",
+   "Should",
+   "Ready",
+   "Low",
+   5,
+   7,
+   "Faisal Rahman",
+   "FIN-241",
+   1.0,
+   "Dec",
+   "D"
+  ],
+  [
+   "Onboarding analytics dashboard",
+   "Customer onboarding",
+   "Squad 3",
+   "Power Platform",
+   "L",
+   "Should",
+   "Ready",
+   "Medium",
+   4,
+   7,
+   "Theo Marshall",
+   "ONB-150",
+   null,
+   null,
+   null
+  ],
+  [
+   "Sanctions screening uplift",
+   "Customer onboarding",
+   "Squad 3",
+   "AI engineering",
+   "XL",
+   "Must",
+   "Ready",
+   "Medium",
+   3,
+   7,
+   "Rohan Desai",
+   "ONB-152",
+   1.0,
+   "Dec",
+   "Contractor day rate"
+  ],
+  [
+   "Bank feed monitoring and alerts",
+   "Reconciliation",
+   "Squad 2",
+   "Blue Prism",
+   "M",
+   "Should",
+   "Ready",
+   "High",
+   5,
+   6,
+   "Sophie Laurent",
+   "REC-95",
+   null,
+   null,
+   null
+  ],
+  [
+   "3-way match: assessment",
+   "Finance ops automation",
+   "Squad 1",
+   "Software engineering",
+   "S",
+   "Must",
+   "Ready",
+   "Medium",
+   2,
+   2,
+   "Vikram Reddy",
+   "FIN-214",
+   null,
+   null,
+   null
+  ],
+  [
+   "3-way match: delivery phase 1",
+   "Finance ops automation",
+   "Squad 1",
+   "Software engineering",
+   "",
+   "Must",
+   "Ready",
+   "Medium",
+   3,
+   5,
+   "Vikram Reddy",
+   "FIN-214",
+   null,
+   "Nov",
+   null
+  ],
+  [
+   "3-way match: release",
+   "Finance ops automation",
+   "Squad 1",
+   "Software engineering",
+   "S",
+   "Must",
+   "Ready",
+   "Medium",
+   6,
+   6,
+   "Vikram Reddy",
+   "FIN-214",
+   null,
+   "Dec",
+   null
+  ],
+  [
+   "Payments orchestration: discovery spike",
+   "Platform",
+   "Squad 4",
+   "Software engineering",
+   "M",
+   "Should",
+   "In discovery",
+   "Medium",
+   1,
+   2,
+   "",
+   "",
+   null,
+   null,
+   null
+  ]
+ ],
+ "seed_res": [
+  [
+   "Squad 4",
+   "Q4 2026",
+   "Discovery",
+   4,
+   "Payments orchestration: discovery before the detail is known"
+  ],
+  [
+   "Service",
+   "Q4 2026",
+   "BAU",
+   56,
+   "Incident and request rota for the quarter"
+  ],
+  [
+   "Service",
+   "Q4 2026",
+   "Service",
+   8,
+   "Hypercare and service transition, nothing raised yet"
+  ],
+  [
+   "Squad 1",
+   "Q1 2027",
+   "Shaping and refinement",
+   5,
+   "Shaping next quarter's finance ops work"
+  ],
+  [
+   "Team",
+   "Q4 2026",
+   "Planning",
+   6,
+   "Quarter planning and shaping, held across the squads"
+  ]
+ ],
+ "seed_hist": [
+  [
+   "Q1 2026",
+   238.0,
+   121.0,
+   104.0,
+   5.5,
+   88000,
+   "First quarter on Waypoint"
+  ],
+  [
+   "Q2 2026",
+   244.5,
+   139.0,
+   118.0,
+   7.0,
+   142000,
+   "Orion discovery"
+  ],
+  [
+   "Q3 2026",
+   240.0,
+   148.0,
+   126.0,
+   9.5,
+   205000,
+   "Self-serve onboarding live"
+  ]
+ ],
+ "seed_arc": [
+  [
+   "Q2 2026",
+   "WK-A01",
+   "Payment retry scheduler",
+   "Payments",
+   "Squad 1",
+   "In development",
+   "Ben Lawson",
+   "On track",
+   "S",
+   1.0,
+   1.0,
+   0
+  ],
+  [
+   "Q3 2026",
+   "WK-A01",
+   "Payment retry scheduler",
+   "Payments",
+   "Squad 1",
+   "Done",
+   "Ben Lawson",
+   "Done late",
+   "S",
+   1.0,
+   1.0,
+   1.5
+  ],
+  [
+   "Q3 2026",
+   "WK-A02",
+   "Statement export tidy-up",
+   "Reconciliation",
+   "Squad 2",
+   "Done",
+   "Ravi Patel",
+   "Done on time",
+   "S",
+   1.0,
+   1.0,
+   1.0
+  ],
+  [
+   "Q3 2026",
+   "WK-A03",
+   "Supplier master data clean",
+   "Finance ops automation",
+   "Squad 1",
+   "Done",
+   "Faisal Rahman",
+   "Done late",
+   "M",
+   2.0,
+   2.0,
+   3.0
+  ],
+  [
+   "Q3 2026",
+   "WK-A04",
+   "Duplicate invoice detector",
+   "Finance ops automation",
+   "Squad 1",
+   "Done",
+   "Vikram Reddy",
+   "Done on time",
+   "M",
+   2.0,
+   2.0,
+   2.0
+  ],
+  [
+   "Q3 2026",
+   "WK-A05",
+   "Onboarding document store",
+   "Customer onboarding",
+   "Squad 3",
+   "Done",
+   "Zara Ahmed",
+   "Done late",
+   "L",
+   4.0,
+   4.0,
+   5.0
+  ],
+  [
+   "Q3 2026",
+   "WK-A06",
+   "Case management migration",
+   "Service",
+   "Service",
+   "Done",
+   "Sarah Mitchell",
+   "Done late",
+   "L",
+   4.0,
+   5.0,
+   6.0
+  ]
+ ],
+ "seed_act": [
+  [
+   "Invoice capture and OCR: handwritten route to exception queue",
+   "Error reduction",
+   30,
+   "2026-09-01",
+   "fewer keying errors"
+  ],
+  [
+   "3-way match and posting engine",
+   "Throughput",
+   2,
+   "2026-09-01",
+   "invoices per hour"
+  ],
+  [
+   "Statement matching rules v2",
+   "FTE released",
+   1.0,
+   "2026-11-15",
+   "role released in full"
+  ],
+  [
+   "Identity and document checks",
+   "Error reduction",
+   20,
+   "2026-09-01",
+   ""
+  ],
+  [
+   "Risk-based KYC routing",
+   "Cycle-time cut",
+   40,
+   "2026-09-01",
+   "onboarding lead time"
+  ],
+  [
+   "Notifications platform: milestone alerts",
+   "CX / EX uplift",
+   "+8 NPS",
+   "2026-09-01",
+   "fewer where-is-it calls"
+  ],
+  [
+   "Sanctions screening uplift",
+   "Compliance / risk",
+   "In progress",
+   "2026-09-01",
+   ""
+  ],
+  [
+   "Hypercare: Orion go-live",
+   "Compliance / risk",
+   "Zero so far",
+   "2026-09-01",
+   ""
+  ]
+ ],
+ "BH": [
+  [
+   "England",
+   "2026-01-01",
+   "New Year's Day"
+  ],
+  [
+   "England",
+   "2026-04-03",
+   "Good Friday"
+  ],
+  [
+   "England",
+   "2026-04-06",
+   "Easter Monday"
+  ],
+  [
+   "England",
+   "2026-05-04",
+   "Early May bank holiday"
+  ],
+  [
+   "England",
+   "2026-05-25",
+   "Spring bank holiday"
+  ],
+  [
+   "England",
+   "2026-08-31",
+   "Summer bank holiday"
+  ],
+  [
+   "England",
+   "2026-12-25",
+   "Christmas Day"
+  ],
+  [
+   "England",
+   "2026-12-28",
+   "Boxing Day (substitute)"
+  ],
+  [
+   "England",
+   "2027-01-01",
+   "New Year's Day"
+  ],
+  [
+   "England",
+   "2027-03-26",
+   "Good Friday"
+  ],
+  [
+   "England",
+   "2027-03-29",
+   "Easter Monday"
+  ],
+  [
+   "England",
+   "2027-05-03",
+   "Early May bank holiday"
+  ],
+  [
+   "England",
+   "2027-05-31",
+   "Spring bank holiday"
+  ],
+  [
+   "England",
+   "2027-08-30",
+   "Summer bank holiday"
+  ],
+  [
+   "England",
+   "2027-12-27",
+   "Christmas Day (substitute)"
+  ],
+  [
+   "England",
+   "2027-12-28",
+   "Boxing Day"
+  ],
+  [
+   "England",
+   "2028-01-03",
+   "New Year's Day (substitute)"
+  ],
+  [
+   "England",
+   "2028-04-14",
+   "Good Friday"
+  ],
+  [
+   "England",
+   "2028-04-17",
+   "Easter Monday"
+  ],
+  [
+   "England",
+   "2028-05-01",
+   "Early May bank holiday"
+  ],
+  [
+   "England",
+   "2028-05-29",
+   "Spring bank holiday"
+  ],
+  [
+   "England",
+   "2028-08-28",
+   "Summer bank holiday"
+  ],
+  [
+   "England",
+   "2028-12-25",
+   "Christmas Day"
+  ],
+  [
+   "England",
+   "2028-12-26",
+   "Boxing Day"
+  ],
+  [
+   "Scotland",
+   "2026-01-01",
+   "New Year's Day"
+  ],
+  [
+   "Scotland",
+   "2026-04-03",
+   "Good Friday"
+  ],
+  [
+   "Scotland",
+   "2026-04-06",
+   "Easter Monday"
+  ],
+  [
+   "Scotland",
+   "2026-05-04",
+   "Early May bank holiday"
+  ],
+  [
+   "Scotland",
+   "2026-05-25",
+   "Spring bank holiday"
+  ],
+  [
+   "Scotland",
+   "2026-08-31",
+   "Summer bank holiday"
+  ],
+  [
+   "Scotland",
+   "2026-12-25",
+   "Christmas Day"
+  ],
+  [
+   "Scotland",
+   "2026-12-28",
+   "Boxing Day (substitute)"
+  ],
+  [
+   "Scotland",
+   "2027-01-01",
+   "New Year's Day"
+  ],
+  [
+   "Scotland",
+   "2027-03-26",
+   "Good Friday"
+  ],
+  [
+   "Scotland",
+   "2027-03-29",
+   "Easter Monday"
+  ],
+  [
+   "Scotland",
+   "2027-05-03",
+   "Early May bank holiday"
+  ],
+  [
+   "Scotland",
+   "2027-05-31",
+   "Spring bank holiday"
+  ],
+  [
+   "Scotland",
+   "2027-08-30",
+   "Summer bank holiday"
+  ],
+  [
+   "Scotland",
+   "2027-12-27",
+   "Christmas Day (substitute)"
+  ],
+  [
+   "Scotland",
+   "2027-12-28",
+   "Boxing Day"
+  ],
+  [
+   "Scotland",
+   "2028-01-03",
+   "New Year's Day (substitute)"
+  ],
+  [
+   "Scotland",
+   "2028-04-14",
+   "Good Friday"
+  ],
+  [
+   "Scotland",
+   "2028-04-17",
+   "Easter Monday"
+  ],
+  [
+   "Scotland",
+   "2028-05-01",
+   "Early May bank holiday"
+  ],
+  [
+   "Scotland",
+   "2028-05-29",
+   "Spring bank holiday"
+  ],
+  [
+   "Scotland",
+   "2028-08-28",
+   "Summer bank holiday"
+  ],
+  [
+   "Scotland",
+   "2028-12-25",
+   "Christmas Day"
+  ],
+  [
+   "Scotland",
+   "2028-12-26",
+   "Boxing Day"
+  ],
+  [
+   "Scotland",
+   "2026-01-02",
+   "2nd January"
+  ],
+  [
+   "Scotland",
+   "2027-01-04",
+   "2nd January (substitute)"
+  ],
+  [
+   "Scotland",
+   "2028-01-04",
+   "2nd January (substitute)"
+  ],
+  [
+   "India",
+   "2026-01-26",
+   "Republic Day"
+  ],
+  [
+   "India",
+   "2026-03-04",
+   "Holi ~"
+  ],
+  [
+   "India",
+   "2026-08-15",
+   "Independence Day"
+  ],
+  [
+   "India",
+   "2026-10-02",
+   "Gandhi Jayanti"
+  ],
+  [
+   "India",
+   "2026-11-08",
+   "Diwali ~"
+  ],
+  [
+   "India",
+   "2027-01-26",
+   "Republic Day"
+  ],
+  [
+   "India",
+   "2027-03-22",
+   "Holi ~"
+  ],
+  [
+   "India",
+   "2027-08-15",
+   "Independence Day"
+  ],
+  [
+   "India",
+   "2027-10-02",
+   "Gandhi Jayanti"
+  ],
+  [
+   "India",
+   "2027-10-29",
+   "Diwali ~"
+  ],
+  [
+   "India",
+   "2028-01-26",
+   "Republic Day"
+  ],
+  [
+   "India",
+   "2028-03-11",
+   "Holi ~"
+  ],
+  [
+   "India",
+   "2028-08-15",
+   "Independence Day"
+  ],
+  [
+   "India",
+   "2028-10-02",
+   "Gandhi Jayanti"
+  ],
+  [
+   "India",
+   "2028-10-17",
+   "Diwali ~"
+  ]
+ ],
+ "overrides": {
+  "Incident and request volume (BAU)": 32,
+  "3-way match: delivery phase 1": 6
+ },
+ "STATE_ROWS": [
+  [
+   "Identified",
+   "Identified",
+   "None",
+   "hypothesis only"
+  ],
+  [
+   "In discovery",
+   "In discovery",
+   "Reserved",
+   "hypothesis"
+  ],
+  [
+   "Ready",
+   "Ready for development",
+   "Reserved",
+   "claimed"
+  ],
+  [
+   "In development",
+   "In development",
+   "Consumed",
+   "claimed"
+  ],
+  [
+   "Released",
+   "Ready for release, Deployed, Live",
+   "Historical",
+   "claimed, landing date set"
+  ],
+  [
+   "In validation",
+   "In validation",
+   "Historical",
+   "recorded actuals expected"
+  ],
+  [
+   "Done",
+   "Done",
+   "Historical",
+   "recorded"
+  ],
+  [
+   "Deferred",
+   "On hold",
+   "Hold",
+   "paused"
+  ],
+  [
+   "Cancelled",
+   "Cancelled",
+   "Removed",
+   "removed"
+  ]
+ ],
+ "SIZE_MW": {
+  "XS": 0.5,
+  "S": 1,
+  "M": 2,
+  "L": 4,
+  "XL": 8,
+  "XXL": 13
+ },
+ "cmp_rows": [
+  [
+   "Net capacity (MW)",
+   "0.0",
+   "hi",
+   "SUM(Sq_NetMW)",
+   "<function <lambda> at 0x0000021CED300720>"
+  ],
+  [
+   "In-plan MW",
+   "0.0",
+   "hi",
+   "SUMIFS(W_MW,W_InPlan,\"Yes\")",
+   "<function <lambda> at 0x0000021CED3007C0>"
+  ],
+  [
+   "Delivered MW",
+   "0.0",
+   "hi",
+   "SUMIFS(W_MW,W_Impact,\"Historical\")",
+   "<function <lambda> at 0x0000021CED300860>"
+  ],
+  [
+   "Predictability",
+   "0%",
+   "hi",
+   "IF(SUMIFS(W_MW,W_InPlan,\"Yes\")=0,0,SUMIFS(W_MW,W_Impact,\"Historical\")/SUMIFS(W_MW,W_InPlan,\"Yes\"))",
+   "<function <lambda> at 0x0000021CED300900>"
+  ],
+  [
+   "Plan load",
+   "0%",
+   "load",
+   "IF(SUM(Sq_NetMW)=0,0,SUMIFS(W_MW,W_InPlan,\"Yes\")/SUM(Sq_NetMW))",
+   "<function <lambda> at 0x0000021CED3009A0>"
+  ],
+  [
+   "Reserved MW",
+   "0.0",
+   "lo",
+   "SUMIFS(Res_MW,Res_Quarter,QLabel)",
+   "<function <lambda> at 0x0000021CED300A40>",
+   [
+    "more",
+    "less"
+   ]
+  ],
+  [
+   "FTE in-year",
+   "0.00",
+   "hi",
+   "SUMIFS(W_Realised,W_InPlan,\"Yes\")",
+   "<function <lambda> at 0x0000021CED300AE0>"
+  ],
+  [
+   "£ in-year",
+   "£#,##0",
+   "hi",
+   "SUMIFS(W_Value,W_InPlan,\"Yes\")",
+   "<function <lambda> at 0x0000021CED300B80>"
+  ],
+  [
+   "£ recorded",
+   "£#,##0",
+   "hi",
+   "SUMIFS(W_RecValue,W_InPlan,\"Yes\")",
+   null
+  ],
+  [
+   "Return on TCO",
+   "0.00\"x\"",
+   "hi",
+   "IC_ROI",
+   "<function <lambda> at 0x0000021CED300C20>"
+  ],
+  [
+   "On-time %",
+   "0%",
+   "hi",
+   "IF(SUMPRODUCT((W_ChildCount=0)*(W_Delivery<>\"\")*(W_DoneSprint<>\"\")*(W_DoneSprint>=FirstSprint)*(W_DoneSprint<=FirstSprint+Sprints-1))=0,\"\",SUMPRODUCT((W_ChildCount=0)*(W_Delivery<>\"\")*(W_DoneSprint<>\"\")*(W_DoneSprint>=FirstSprint)*(W_DoneSprint<=FirstSprint+Sprints-1)*(W_DoneSprint<=W_SprTo))/SUMPRODUCT((W_ChildCount=0)*(W_Delivery<>\"\")*(W_DoneSprint<>\"\")*(W_DoneSprint>=FirstSprint)*(W_DoneSprint<=FirstSprint+Sprints-1)))",
+   "<function <lambda> at 0x0000021CED300CC0>"
+  ],
+  [
+   "Late items",
+   "0",
+   "lo",
+   "COUNTIFS(W_Delivery,\"Late\",W_ChildCount,0)",
+   "<function <lambda> at 0x0000021CED300D60>"
+  ],
+  [
+   "Carry-over MW",
+   "0.0",
+   "lo",
+   "SUMPRODUCT((W_InPlan=\"Yes\")*(W_ChildCount=0)*(W_DoneSprint=\"\")*(W_SprTo>=FirstSprint)*(W_SprTo<=FirstSprint+Sprints-1)*W_MW)",
+   "<function <lambda> at 0x0000021CED300E00>"
+  ],
+  [
+   "Cycle time (sprints)",
+   "0.0",
+   "lo",
+   "IF(SUMPRODUCT((W_ChildCount=0)*(W_Delivery<>\"\")*(W_DoneSprint<>\"\")*(W_DoneSprint>=FirstSprint)*(W_DoneSprint<=FirstSprint+Sprints-1)*(W_StartTyped<>\"\"))=0,\"\",SUMPRODUCT((W_ChildCount=0)*(W_Delivery<>\"\")*(W_DoneSprint<>\"\")*(W_DoneSprint>=FirstSprint)*(W_DoneSprint<=FirstSprint+Sprints-1)*(W_StartTyped<>\"\")*(W_DoneSprint-W_SprFrom))/SUMPRODUCT((W_ChildCount=0)*(W_Delivery<>\"\")*(W_DoneSprint<>\"\")*(W_DoneSprint>=FirstSprint)*(W_DoneSprint<=FirstSprint+Sprints-1)*(W_StartTyped<>\"\")))",
+   "<function <lambda> at 0x0000021CED300EA0>"
+  ],
+  [
+   "Estimate accuracy",
+   "0.00\"x\"",
+   "acc",
+   "IF(SUMIFS(W_OrigMW,W_Impact,\"Historical\",W_OrigMW,\">0\",W_ActualMW,\">0\",W_ChildCount,0,W_ArchivedIn,\"\")=0,\"\",SUMIFS(W_ActualMW,W_Impact,\"Historical\",W_OrigMW,\">0\",W_ActualMW,\">0\",W_ChildCount,0,W_ArchivedIn,\"\")/SUMIFS(W_OrigMW,W_Impact,\"Historical\",W_OrigMW,\">0\",W_ActualMW,\">0\",W_ChildCount,0,W_ArchivedIn,\"\"))",
+   "<function <lambda> at 0x0000021CED300F40>"
+  ],
+  [
+   "Scope: items in plan",
+   "0",
+   "hi",
+   "COUNTIFS(W_Title,\"<>\",W_InPlan,\"Yes\")",
+   "<function <lambda> at 0x0000021CED300FE0>",
+   [
+    "more",
+    "fewer"
+   ]
+  ],
+  [
+   "Scope: features",
+   "0",
+   "hi",
+   "COUNTIFS(W_InPlan,\"Yes\",W_Kind,\"Feature\")",
+   "<function <lambda> at 0x0000021CED301080>",
+   [
+    "more",
+    "fewer"
+   ]
+  ],
+  [
+   "Scope: components",
+   "0",
+   "hi",
+   "COUNTIFS(W_InPlan,\"Yes\",W_Parent,\"<>\")",
+   "<function <lambda> at 0x0000021CED301120>",
+   [
+    "more",
+    "fewer"
+   ]
+  ],
+  [
+   "Scope: spikes",
+   "0",
+   "hi",
+   "COUNTIFS(W_InPlan,\"Yes\",W_Kind,\"Spike\")",
+   "<function <lambda> at 0x0000021CED3011C0>",
+   [
+    "more",
+    "fewer"
+   ]
+  ],
+  [
+   "Squads over capacity",
+   "0",
+   "lo",
+   "COUNTIF(Sq_RAG,\"Red\")",
+   null
+  ]
+ ],
+ "SEED_PROPOSED": [
+  "Data warehouse access for analytics",
+  "Multi-bank feed normaliser: long tail formats",
+  "Nudge engine: action-needed alerts"
+ ],
+ "SEED_PARENT": {
+  "3-way match: assessment": "3-way match and posting engine",
+  "3-way match: delivery phase 1": "3-way match and posting engine",
+  "3-way match: release": "3-way match and posting engine"
+ },
+ "SEED_KIND": {
+  "3-way match: assessment": "Component",
+  "3-way match: delivery phase 1": "Component",
+  "3-way match: release": "Component",
+  "Payments orchestration: discovery spike": "Spike"
+ },
+ "SEED_PHASE": {
+  "3-way match: assessment": "Assessment",
+  "3-way match: delivery phase 1": "Delivery",
+  "3-way match: release": "Release"
+ },
+ "SEED_SPAN": {
+  "Risk-based KYC routing": [
+   21,
+   29
+  ],
+  "Supplier portal integration": [
+   22,
+   28
+  ],
+  "Sanctions screening uplift": [
+   22,
+   30
+  ],
+  "Payments SDK v3 migration": [
+   27,
+   30
+  ],
+  "Data warehouse access for analytics": [
+   16,
+   17
+  ],
+  "CI pipeline overhaul": [
+   20,
+   20
+  ],
+  "Statement matching rules v2": [
+   18,
+   22
+  ],
+  "Real-time status page": [
+   19,
+   25
+  ],
+  "Problem management: slow queries": [
+   16,
+   19
+  ]
+ },
+ "SEED_DONE": {
+  "Real-time status page": 20,
+  "Problem management: slow queries": 20
+ },
+ "SEED_ACTUAL": {
+  "Real-time status page": 3.0,
+  "Problem management: slow queries": 1.5
+ },
+ "SEED_ASG2": {
+  "Bank feed monitoring and alerts": "Ravi Patel"
+ },
+ "SEED_LAND_YEAR": {
+  "Supplier portal integration": 2027,
+  "Invoice approval workflow rebuild": 2027
+ },
+ "SEED_BEN": {
+  "Invoice capture and OCR: handwritten route to exception queue": {
+   "V": 35
+  },
+  "3-way match and posting engine": {
+   "W": 4
+  },
+  "Statement matching rules v2": {
+   "T": 0.3
+  },
+  "Identity and document checks": {
+   "V": 28
+  },
+  "Risk-based KYC routing": {
+   "U": 55
+  },
+  "Notifications platform: milestone alerts": {
+   "Y": "+12 NPS"
+  },
+  "Real-time status page": {
+   "U": 20
+  },
+  "Sanctions screening uplift": {
+   "X": "Audit finding closed"
+  },
+  "Supplier portal integration": {
+   "T": 0.4
+  },
+  "Hypercare: Orion go-live": {
+   "X": "Zero P1 in hypercare"
+  }
+ },
+ "SEED_PO": {
+  "Finance ops automation": "Oliver Hayes",
+  "Reconciliation": "Oliver Hayes",
+  "Customer onboarding": "Grace Whitfield",
+  "Proactive comms": "Grace Whitfield",
+  "Platform": "Oliver Hayes",
+  "Service": "Grace Whitfield",
+  "Payments": "Oliver Hayes",
+  "Data": "Oliver Hayes"
+ },
+ "SEED_DEP": {
+  "Exception queue UI": "Invoice capture and OCR: handwritten route to exception queue",
+  "ID provider integration": "Identity and document checks",
+  "Nudge engine: action-needed alerts": "Notifications platform: milestone alerts"
+ },
+ "SEED_BLENDS": [
+  [
+   "Ops mix",
+   {
+    "C": 3,
+    "D": 10
+   }
+  ]
+ ],
+ "ROLES": [
+  [
+   "Product owner",
+   "what the business is asking for",
+   [
+    [
+     "Add a feature or a spike with the Product button on Work.",
+     "Work"
+    ],
+    [
+     "Set what it will release and the month it lands, on the same form.",
+     "Work"
+    ],
+    [
+     "Move its commitment to Committed once the squad has agreed it.",
+     "Work"
+    ],
+    [
+     "Record what it really delivered on Benefits when the benefit lands.",
+     "Benefits"
+    ],
+    [
+     "Read Benefits and Compare before the review, so the story is the numbers.",
+     "Compare"
+    ]
+   ]
+  ],
+  [
+   "Squad lead",
+   "what it takes and who does it",
+   [
+    [
+     "Assess and size the item with the Engineering button on Work.",
+     "Work"
+    ],
+    [
+     "Break anything large into components, one row each under the feature.",
+     "Work"
+    ],
+    [
+     "Allocate people with Suggest, which names the first person free.",
+     "People"
+    ],
+    [
+     "Watch the Capacity check on Work and the states on the Timeline.",
+     "Timeline"
+    ],
+    [
+     "Close the quarter from the Dashboard when the last sprint is done.",
+     "Dashboard"
+    ]
+   ]
+  ],
+  [
+   "Leader",
+   "where the quarter stands",
+   [
+    [
+     "Read the Dashboard tiles for capacity, value and delivery.",
+     "Dashboard"
+    ],
+    [
+     "Read the Scorecard for every measure against its target.",
+     "Scorecard"
+    ],
+    [
+     "Read Financials for the cost of ownership and the return on it.",
+     "Financials"
+    ],
+    [
+     "Read Outlook for the next two quarters, and Reservations for capacity held back.",
+     "Reservations"
+    ],
+    [
+     "Read Compare to see what moved between two quarters.",
+     "Compare"
+    ]
+   ]
+  ]
+ ],
+ "SKILLS": [
+  "Blue Prism",
+  "Power Platform",
+  "Software engineering",
+  "AI engineering"
+ ],
+ "settings": {
+  "values": {
+   "5": "Q4 2026",
+   "6": "=DATE(VALUE(RIGHT(C5,4)),(VALUE(MID(C5,2,1))-1)*3+1,1)",
+   "7": "=EOMONTH(C6,2)",
+   "8": "=NETWORKDAYS(C6,C7)",
+   "9": "2026-01-05",
+   "10": 14,
+   "11": "=INT((C6-C9)/C10)+1",
+   "12": "=MIN(8,INT((C7-C9)/C10)+1-C11+1)",
+   "13": 0.3,
+   "14": 0.4,
+   "15": "Yes",
+   "16": 0.85,
+   "17": 1.0,
+   "18": 5,
+   "19": 2026,
+   "20": 1.8,
+   "21": 200000,
+   "22": "Priority",
+   "23": "CCS · Intelligent Process Automation",
+   "24": "Craig",
+   "25": 2026,
+   "26": 0.6,
+   "27": 0.8,
+   "28": "=INT((TODAY()-C9)/C10)+1",
+   "29": "https://jiraalign.example.com/",
+   "30": "https://jira.example.com/browse/"
+  },
+  "labels": {
+   "5": "Quarter (pick from the list)",
+   "6": "Quarter start",
+   "7": "Quarter end",
+   "8": "Working days in quarter (Mon-Fri)",
+   "9": "Sprint 1 started on (Monday)",
+   "10": "Sprint length (calendar days)",
+   "11": "First sprint touching the quarter",
+   "12": "Sprints touching the quarter (max 8)",
+   "13": "Default non-productive modifier",
+   "14": "Lead non-productive modifier",
+   "15": "Deduct logged absences and bank holidays?",
+   "16": "Amber utilisation from",
+   "17": "Red utilisation from",
+   "18": "Days in one member week (MW)",
+   "19": "Benefit year (Calendar and targets)",
+   "20": "Target FTE released, in-year",
+   "21": "Target £ benefit (year)",
+   "22": "Running total on Work follows",
+   "23": "Team / organisation",
+   "24": "Prepared by",
+   "25": "Timeline year",
+   "26": "Low confidence counts at",
+   "27": "Medium confidence counts at",
+   "28": "Current sprint (today)",
+   "29": "Jira Align base URL (outcomes and epics: the id or key is appended)",
+   "30": "Jira base URL (features: the key is appended)"
+  },
+  "grades": [
+   [
+    "A",
+    28000
+   ],
+   [
+    "B",
+    34000
+   ],
+   [
+    "C",
+    42000
+   ],
+   [
+    "D",
+    55000
+   ],
+   [
+    "Offshore",
+    18000
+   ],
+   [
+    "Contractor day rate",
+    40000
+   ],
+   [
+    null,
+    null
+   ],
+   [
+    null,
+    null
+   ]
+  ],
+  "blends": [
+   [
+    "Ops mix",
+    null,
+    null,
+    3,
+    10,
+    null,
+    null,
+    null,
+    null
+   ],
+   [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ],
+   [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ],
+   [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ],
+   [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ],
+   [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ],
+   [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ],
+   [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  ],
+  "sizes": [
+   [
+    "XS",
+    0.5
+   ],
+   [
+    "S",
+    1
+   ],
+   [
+    "M",
+    2
+   ],
+   [
+    "L",
+    4
+   ],
+   [
+    "XL",
+    8
+   ],
+   [
+    "XXL",
+    13
+   ],
+   [
+    null,
+    null
+   ],
+   [
+    null,
+    null
+   ]
+  ]
+ },
+ "constants": {
+  "W_TOP": 5,
+  "W_N": 200,
+  "P_TOP": 5,
+  "P_N": 60,
+  "SQ_TOP": 5,
+  "SQ_N": 12,
+  "RS_TOP": 5,
+  "H_TOP": 5,
+  "HD_TOP": 23,
+  "CB_TOP": 5,
+  "CM_TOP": 6,
+  "NWK": 53,
+  "WK0": 6,
+  "TC_FD0": 335,
+  "FIRST_SPRINT": 20,
+  "SPRINTS": 7,
+  "CUR_SPRINT": 19,
+  "DONE_ANCHOR": 20,
+  "VERSION": "4.1"
+ },
+ "_origin": {
+  "source": "flightdeck/waypoint-generator seed (parts 1-5)",
+  "generated": "2026-09-17"
+ }
+}

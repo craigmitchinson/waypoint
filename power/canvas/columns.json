@@ -1,0 +1,4057 @@
+{
+  "source": "power/solution/src/customizations.xml",
+  "generated": "2026-09-22T16:27:34.874Z",
+  "note": "Display names are the names Power Fx uses. A name with a space takes single quotes.",
+  "tables": [
+    {
+      "display": "Environment Variable Definitions",
+      "singular": "Environment Variable Definition",
+      "logical": "environmentvariabledefinition",
+      "primaryName": "Schema Name",
+      "columns": [
+        {
+          "display": "Schema Name",
+          "logical": "schemaname",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Default Value",
+          "logical": "defaultvalue",
+          "type": "text"
+        },
+        {
+          "display": "Display Name",
+          "logical": "displayname",
+          "type": "text"
+        },
+        {
+          "display": "Type",
+          "logical": "type",
+          "type": "picklist"
+        }
+      ]
+    },
+    {
+      "display": "Environment Variable Values",
+      "singular": "Environment Variable Value",
+      "logical": "environmentvariablevalue",
+      "primaryName": "Schema Name",
+      "columns": [
+        {
+          "display": "Value",
+          "logical": "value",
+          "type": "text"
+        },
+        {
+          "display": "Environment Variable Definition",
+          "logical": "environmentvariabledefinitionid",
+          "type": "lookup",
+          "target": "environmentvariabledefinition"
+        },
+        {
+          "display": "Schema Name",
+          "logical": "schemaname",
+          "type": "text",
+          "primaryName": true
+        }
+      ]
+    },
+    {
+      "display": "Users",
+      "singular": "User",
+      "logical": "systemuser",
+      "primaryName": "Full Name",
+      "columns": [
+        {
+          "display": "Full Name",
+          "logical": "fullname",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Primary Email",
+          "logical": "internalemailaddress",
+          "type": "text"
+        },
+        {
+          "display": "User Name",
+          "logical": "domainname",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "display": "Absences",
+      "singular": "Absence",
+      "logical": "wp_absence",
+      "primaryName": "Name",
+      "columns": [
+        {
+          "display": "Absence id",
+          "logical": "wp_absenceid",
+          "type": "guid"
+        },
+        {
+          "display": "Name",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Person",
+          "logical": "wp_personid",
+          "type": "lookup",
+          "target": "wp_person"
+        },
+        {
+          "display": "Absence type",
+          "logical": "wp_typeid",
+          "type": "lookup",
+          "target": "wp_listvalue"
+        },
+        {
+          "display": "From",
+          "logical": "wp_from",
+          "type": "datetime"
+        },
+        {
+          "display": "To",
+          "logical": "wp_to",
+          "type": "datetime"
+        },
+        {
+          "display": "Note",
+          "logical": "wp_note",
+          "type": "memo"
+        },
+        {
+          "display": "Source key",
+          "logical": "wp_sourcekey",
+          "type": "text"
+        },
+        {
+          "display": "Import run",
+          "logical": "wp_importrunid",
+          "type": "lookup",
+          "target": "wp_importrun"
+        },
+        {
+          "display": "Team",
+          "logical": "wp_teamid",
+          "type": "lookup",
+          "target": "wp_team"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_absence_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_absence_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Activity log",
+      "singular": "Activity log",
+      "logical": "wp_activitylog",
+      "primaryName": "Label",
+      "columns": [
+        {
+          "display": "Activity log id",
+          "logical": "wp_activitylogid",
+          "type": "guid"
+        },
+        {
+          "display": "Label",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Summary",
+          "logical": "wp_summary",
+          "type": "text"
+        },
+        {
+          "display": "Action",
+          "logical": "wp_action",
+          "type": "picklist",
+          "optionSet": "wp_activitylog_wp_action",
+          "options": [
+            {
+              "value": 100000000,
+              "label": "Create"
+            },
+            {
+              "value": 100000001,
+              "label": "Update"
+            },
+            {
+              "value": 100000002,
+              "label": "Delete"
+            },
+            {
+              "value": 100000003,
+              "label": "Import"
+            },
+            {
+              "value": 100000004,
+              "label": "Quarter close"
+            },
+            {
+              "value": 100000005,
+              "label": "Stage action"
+            }
+          ]
+        },
+        {
+          "display": "Table",
+          "logical": "wp_tablename",
+          "type": "text"
+        },
+        {
+          "display": "Record",
+          "logical": "wp_recordid",
+          "type": "text"
+        },
+        {
+          "display": "Record name",
+          "logical": "wp_recordname",
+          "type": "text"
+        },
+        {
+          "display": "By",
+          "logical": "wp_byuserid",
+          "type": "lookup",
+          "target": "systemuser"
+        },
+        {
+          "display": "At",
+          "logical": "wp_at",
+          "type": "datetime"
+        },
+        {
+          "display": "Before",
+          "logical": "wp_before",
+          "type": "memo"
+        },
+        {
+          "display": "After",
+          "logical": "wp_after",
+          "type": "memo"
+        },
+        {
+          "display": "Quarter",
+          "logical": "wp_quarterid",
+          "type": "lookup",
+          "target": "wp_quarter"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_activitylog_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_activitylog_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Archive",
+      "singular": "Archive row",
+      "logical": "wp_archiverow",
+      "primaryName": "Title",
+      "columns": [
+        {
+          "display": "Archive row id",
+          "logical": "wp_archiverowid",
+          "type": "guid"
+        },
+        {
+          "display": "Title",
+          "logical": "wp_title",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Quarter",
+          "logical": "wp_quarterid",
+          "type": "lookup",
+          "target": "wp_quarter"
+        },
+        {
+          "display": "Row kind",
+          "logical": "wp_kind",
+          "type": "picklist",
+          "optionSet": "wp_archiverow_wp_kind",
+          "options": [
+            {
+              "value": 100000000,
+              "label": "Work"
+            },
+            {
+              "value": 100000001,
+              "label": "Reservation"
+            }
+          ]
+        },
+        {
+          "display": "Work item",
+          "logical": "wp_itemid",
+          "type": "lookup",
+          "target": "wp_workitem"
+        },
+        {
+          "display": "Jira key",
+          "logical": "wp_jira",
+          "type": "text"
+        },
+        {
+          "display": "Epic",
+          "logical": "wp_epic",
+          "type": "text"
+        },
+        {
+          "display": "Squad",
+          "logical": "wp_squad",
+          "type": "text"
+        },
+        {
+          "display": "State",
+          "logical": "wp_state",
+          "type": "text"
+        },
+        {
+          "display": "Assignee",
+          "logical": "wp_assignee",
+          "type": "text"
+        },
+        {
+          "display": "Close status",
+          "logical": "wp_status",
+          "type": "text"
+        },
+        {
+          "display": "Size",
+          "logical": "wp_size",
+          "type": "text"
+        },
+        {
+          "display": "Original MW",
+          "logical": "wp_original",
+          "type": "decimal"
+        },
+        {
+          "display": "Latest MW",
+          "logical": "wp_latest",
+          "type": "decimal"
+        },
+        {
+          "display": "Actual MW",
+          "logical": "wp_actual",
+          "type": "decimal"
+        },
+        {
+          "display": "Held MW",
+          "logical": "wp_heldmw",
+          "type": "decimal"
+        },
+        {
+          "display": "Drawn MW",
+          "logical": "wp_drawnmw",
+          "type": "decimal"
+        },
+        {
+          "display": "Free MW",
+          "logical": "wp_freemw",
+          "type": "decimal"
+        },
+        {
+          "display": "Team",
+          "logical": "wp_teamid",
+          "type": "lookup",
+          "target": "wp_team"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_archiverow_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_archiverow_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Assignees",
+      "singular": "Assignee",
+      "logical": "wp_assignee",
+      "primaryName": "Name",
+      "columns": [
+        {
+          "display": "Assignee id",
+          "logical": "wp_assigneeid",
+          "type": "guid"
+        },
+        {
+          "display": "Name",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Work item",
+          "logical": "wp_workitemid",
+          "type": "lookup",
+          "target": "wp_workitem"
+        },
+        {
+          "display": "Person",
+          "logical": "wp_personid",
+          "type": "lookup",
+          "target": "wp_person"
+        },
+        {
+          "display": "Slot",
+          "logical": "wp_slot",
+          "type": "int"
+        },
+        {
+          "display": "Team",
+          "logical": "wp_teamid",
+          "type": "lookup",
+          "target": "wp_team"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_assignee_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_assignee_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Assignments",
+      "singular": "Assignment",
+      "logical": "wp_assignment",
+      "primaryName": "Label",
+      "columns": [
+        {
+          "display": "Assignment id",
+          "logical": "wp_assignmentid",
+          "type": "guid"
+        },
+        {
+          "display": "Label",
+          "logical": "wp_label",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Person",
+          "logical": "wp_personid",
+          "type": "lookup",
+          "target": "wp_person"
+        },
+        {
+          "display": "Work item",
+          "logical": "wp_workitemid",
+          "type": "lookup",
+          "target": "wp_workitem"
+        },
+        {
+          "display": "Booking type",
+          "logical": "wp_typeid",
+          "type": "lookup",
+          "target": "wp_listvalue"
+        },
+        {
+          "display": "From",
+          "logical": "wp_from",
+          "type": "datetime"
+        },
+        {
+          "display": "To",
+          "logical": "wp_to",
+          "type": "datetime"
+        },
+        {
+          "display": "Team",
+          "logical": "wp_teamid",
+          "type": "lookup",
+          "target": "wp_team"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_assignment_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_assignment_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Bank holidays",
+      "singular": "Bank holiday",
+      "logical": "wp_bankholiday",
+      "primaryName": "Holiday",
+      "columns": [
+        {
+          "display": "Bank holiday id",
+          "logical": "wp_bankholidayid",
+          "type": "guid"
+        },
+        {
+          "display": "Holiday",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Region",
+          "logical": "wp_regionid",
+          "type": "lookup",
+          "target": "wp_listvalue"
+        },
+        {
+          "display": "Date",
+          "logical": "wp_date",
+          "type": "datetime"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_bankholiday_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_bankholiday_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Benefit actuals",
+      "singular": "Benefit actual",
+      "logical": "wp_benefitactual",
+      "primaryName": "Name",
+      "columns": [
+        {
+          "display": "Benefit actual id",
+          "logical": "wp_benefitactualid",
+          "type": "guid"
+        },
+        {
+          "display": "Name",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Work item",
+          "logical": "wp_workitemid",
+          "type": "lookup",
+          "target": "wp_workitem"
+        },
+        {
+          "display": "Benefit type",
+          "logical": "wp_benefittype",
+          "type": "picklist",
+          "optionSet": "wp_benefitactual_wp_benefittype",
+          "options": [
+            {
+              "value": 100000000,
+              "label": "FTE released"
+            },
+            {
+              "value": 100000001,
+              "label": "Cost avoidance"
+            },
+            {
+              "value": 100000002,
+              "label": "Cycle-time cut"
+            },
+            {
+              "value": 100000003,
+              "label": "Error reduction"
+            },
+            {
+              "value": 100000004,
+              "label": "Throughput"
+            },
+            {
+              "value": 100000005,
+              "label": "Compliance / risk"
+            },
+            {
+              "value": 100000006,
+              "label": "CX / EX uplift"
+            }
+          ]
+        },
+        {
+          "display": "Claim",
+          "logical": "wp_claimid",
+          "type": "lookup",
+          "target": "wp_benefitclaim"
+        },
+        {
+          "display": "Actual value",
+          "logical": "wp_value",
+          "type": "decimal"
+        },
+        {
+          "display": "When",
+          "logical": "wp_when",
+          "type": "datetime"
+        },
+        {
+          "display": "Note",
+          "logical": "wp_note",
+          "type": "memo"
+        },
+        {
+          "display": "Team",
+          "logical": "wp_teamid",
+          "type": "lookup",
+          "target": "wp_team"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_benefitactual_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_benefitactual_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Benefit claims",
+      "singular": "Benefit claim",
+      "logical": "wp_benefitclaim",
+      "primaryName": "Name",
+      "columns": [
+        {
+          "display": "Benefit claim id",
+          "logical": "wp_benefitclaimid",
+          "type": "guid"
+        },
+        {
+          "display": "Name",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Work item",
+          "logical": "wp_workitemid",
+          "type": "lookup",
+          "target": "wp_workitem"
+        },
+        {
+          "display": "Benefit type",
+          "logical": "wp_benefittype",
+          "type": "picklist",
+          "optionSet": "wp_benefitclaim_wp_benefittype",
+          "options": [
+            {
+              "value": 100000000,
+              "label": "FTE released"
+            },
+            {
+              "value": 100000001,
+              "label": "Cost avoidance"
+            },
+            {
+              "value": 100000002,
+              "label": "Cycle-time cut"
+            },
+            {
+              "value": 100000003,
+              "label": "Error reduction"
+            },
+            {
+              "value": 100000004,
+              "label": "Throughput"
+            },
+            {
+              "value": 100000005,
+              "label": "Compliance / risk"
+            },
+            {
+              "value": 100000006,
+              "label": "CX / EX uplift"
+            }
+          ]
+        },
+        {
+          "display": "Benefits column",
+          "logical": "wp_claimcolumn",
+          "type": "picklist",
+          "optionSet": "wp_benefitclaim_wp_claimcolumn",
+          "options": [
+            {
+              "value": 100000000,
+              "label": "T"
+            },
+            {
+              "value": 100000001,
+              "label": "U"
+            },
+            {
+              "value": 100000002,
+              "label": "V"
+            },
+            {
+              "value": 100000003,
+              "label": "W"
+            },
+            {
+              "value": 100000004,
+              "label": "X"
+            },
+            {
+              "value": 100000005,
+              "label": "Y"
+            }
+          ]
+        },
+        {
+          "display": "Claimed value",
+          "logical": "wp_value",
+          "type": "decimal"
+        },
+        {
+          "display": "Note",
+          "logical": "wp_note",
+          "type": "memo"
+        },
+        {
+          "display": "Team",
+          "logical": "wp_teamid",
+          "type": "lookup",
+          "target": "wp_team"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_benefitclaim_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_benefitclaim_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Cost lines",
+      "singular": "Cost line",
+      "logical": "wp_costline",
+      "primaryName": "Item",
+      "columns": [
+        {
+          "display": "Cost line id",
+          "logical": "wp_costlineid",
+          "type": "guid"
+        },
+        {
+          "display": "Item",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Cost table",
+          "logical": "wp_costtable",
+          "type": "picklist",
+          "optionSet": "wp_costline_wp_costtable",
+          "options": [
+            {
+              "value": 100000000,
+              "label": "Licences and subscriptions"
+            },
+            {
+              "value": 100000001,
+              "label": "Infrastructure and other"
+            }
+          ]
+        },
+        {
+          "display": "Funding",
+          "logical": "wp_fundingline",
+          "type": "picklist",
+          "optionSet": "wp_costline_wp_fundingline",
+          "options": [
+            {
+              "value": 100000000,
+              "label": "Investment"
+            },
+            {
+              "value": 100000001,
+              "label": "Non-investment"
+            }
+          ]
+        },
+        {
+          "display": "Annual cost",
+          "logical": "wp_annual",
+          "type": "money"
+        },
+        {
+          "display": "Team",
+          "logical": "wp_teamid",
+          "type": "lookup",
+          "target": "wp_team"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_costline_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_costline_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Epics",
+      "singular": "Epic",
+      "logical": "wp_epic",
+      "primaryName": "Epic",
+      "columns": [
+        {
+          "display": "Epic id",
+          "logical": "wp_epicid",
+          "type": "guid"
+        },
+        {
+          "display": "Epic",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Outcome",
+          "logical": "wp_outcomeid",
+          "type": "lookup",
+          "target": "wp_outcome"
+        },
+        {
+          "display": "Team",
+          "logical": "wp_teamid",
+          "type": "lookup",
+          "target": "wp_team"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_epic_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_epic_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Grade blends",
+      "singular": "Grade blend",
+      "logical": "wp_gradeblend",
+      "primaryName": "Blend name",
+      "columns": [
+        {
+          "display": "Grade blend id",
+          "logical": "wp_gradeblendid",
+          "type": "guid"
+        },
+        {
+          "display": "Blend name",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Team",
+          "logical": "wp_teamid",
+          "type": "lookup",
+          "target": "wp_team"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_gradeblend_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_gradeblend_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Grade blend lines",
+      "singular": "Grade blend line",
+      "logical": "wp_gradeblendline",
+      "primaryName": "Name",
+      "columns": [
+        {
+          "display": "Grade blend line id",
+          "logical": "wp_gradeblendlineid",
+          "type": "guid"
+        },
+        {
+          "display": "Name",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Blend",
+          "logical": "wp_gradeblendid",
+          "type": "lookup",
+          "target": "wp_gradeblend"
+        },
+        {
+          "display": "Business grade",
+          "logical": "wp_graderateid",
+          "type": "lookup",
+          "target": "wp_graderate"
+        },
+        {
+          "display": "Heads",
+          "logical": "wp_count",
+          "type": "int"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_gradeblendline_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_gradeblendline_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Business grades",
+      "singular": "Business grade",
+      "logical": "wp_graderate",
+      "primaryName": "Business grade",
+      "columns": [
+        {
+          "display": "Business grade id",
+          "logical": "wp_graderateid",
+          "type": "guid"
+        },
+        {
+          "display": "Business grade",
+          "logical": "wp_grade",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "GBP per FTE",
+          "logical": "wp_rate",
+          "type": "money"
+        },
+        {
+          "display": "Team",
+          "logical": "wp_teamid",
+          "type": "lookup",
+          "target": "wp_team"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_graderate_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_graderate_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Import profiles",
+      "singular": "Import profile",
+      "logical": "wp_importprofile",
+      "primaryName": "Name",
+      "columns": [
+        {
+          "display": "Import profile id",
+          "logical": "wp_importprofileid",
+          "type": "guid"
+        },
+        {
+          "display": "Name",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Source",
+          "logical": "wp_source",
+          "type": "picklist",
+          "optionSet": "wp_importprofile_wp_source",
+          "options": [
+            {
+              "value": 100000000,
+              "label": "Workday"
+            },
+            {
+              "value": 100000001,
+              "label": "Jira"
+            }
+          ]
+        },
+        {
+          "display": "Column mapping",
+          "logical": "wp_columns",
+          "type": "memo"
+        },
+        {
+          "display": "Value maps",
+          "logical": "wp_valuemaps",
+          "type": "memo"
+        },
+        {
+          "display": "Saved at",
+          "logical": "wp_savedat",
+          "type": "datetime"
+        },
+        {
+          "display": "Date format",
+          "logical": "wp_dateformat",
+          "type": "text"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_importprofile_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_importprofile_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Import runs",
+      "singular": "Import run",
+      "logical": "wp_importrun",
+      "primaryName": "Name",
+      "columns": [
+        {
+          "display": "Import run id",
+          "logical": "wp_importrunid",
+          "type": "guid"
+        },
+        {
+          "display": "Name",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Source",
+          "logical": "wp_source",
+          "type": "picklist",
+          "optionSet": "wp_importrun_wp_source",
+          "options": [
+            {
+              "value": 100000000,
+              "label": "Workday"
+            },
+            {
+              "value": 100000001,
+              "label": "Jira"
+            }
+          ]
+        },
+        {
+          "display": "Profile used",
+          "logical": "wp_profileid",
+          "type": "lookup",
+          "target": "wp_importprofile"
+        },
+        {
+          "display": "Rows read",
+          "logical": "wp_rowsread",
+          "type": "int"
+        },
+        {
+          "display": "Rows applied",
+          "logical": "wp_rowsapplied",
+          "type": "int"
+        },
+        {
+          "display": "Rows skipped",
+          "logical": "wp_rowsskipped",
+          "type": "int"
+        },
+        {
+          "display": "Log",
+          "logical": "wp_log",
+          "type": "memo"
+        },
+        {
+          "display": "Run by",
+          "logical": "wp_byuserid",
+          "type": "lookup",
+          "target": "systemuser"
+        },
+        {
+          "display": "Run at",
+          "logical": "wp_at",
+          "type": "datetime"
+        },
+        {
+          "display": "Team",
+          "logical": "wp_teamid",
+          "type": "lookup",
+          "target": "wp_team"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_importrun_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_importrun_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Labs",
+      "singular": "Lab",
+      "logical": "wp_lab",
+      "primaryName": "Lab",
+      "columns": [
+        {
+          "display": "Lab id",
+          "logical": "wp_labid",
+          "type": "guid"
+        },
+        {
+          "display": "Lab",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Platform",
+          "logical": "wp_platformid",
+          "type": "lookup",
+          "target": "wp_platform"
+        },
+        {
+          "display": "Lead",
+          "logical": "wp_leadid",
+          "type": "lookup",
+          "target": "wp_person"
+        },
+        {
+          "display": "Description",
+          "logical": "wp_description",
+          "type": "memo"
+        },
+        {
+          "display": "Order",
+          "logical": "wp_sequence",
+          "type": "int"
+        },
+        {
+          "display": "Active",
+          "logical": "wp_active",
+          "type": "bool"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_lab_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_lab_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "List values",
+      "singular": "List value",
+      "logical": "wp_listvalue",
+      "primaryName": "Value",
+      "columns": [
+        {
+          "display": "List value id",
+          "logical": "wp_listvalueid",
+          "type": "guid"
+        },
+        {
+          "display": "Value",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "List",
+          "logical": "wp_list",
+          "type": "picklist",
+          "optionSet": "wp_listvalue_wp_list",
+          "options": [
+            {
+              "value": 100000000,
+              "label": "Skill"
+            },
+            {
+              "value": 100000001,
+              "label": "Region"
+            },
+            {
+              "value": 100000002,
+              "label": "Absence type"
+            },
+            {
+              "value": 100000003,
+              "label": "Reservation category"
+            },
+            {
+              "value": 100000004,
+              "label": "Role"
+            }
+          ]
+        },
+        {
+          "display": "Grade",
+          "logical": "wp_grade",
+          "type": "text"
+        },
+        {
+          "display": "Order",
+          "logical": "wp_sequence",
+          "type": "int"
+        },
+        {
+          "display": "Team",
+          "logical": "wp_teamid",
+          "type": "lookup",
+          "target": "wp_team"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_listvalue_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_listvalue_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Outcomes",
+      "singular": "Outcome",
+      "logical": "wp_outcome",
+      "primaryName": "Outcome",
+      "columns": [
+        {
+          "display": "Outcome id",
+          "logical": "wp_outcomeid",
+          "type": "guid"
+        },
+        {
+          "display": "Outcome",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Jira Align key",
+          "logical": "wp_jiraalignkey",
+          "type": "text"
+        },
+        {
+          "display": "Team",
+          "logical": "wp_teamid",
+          "type": "lookup",
+          "target": "wp_team"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_outcome_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_outcome_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "People",
+      "singular": "Person",
+      "logical": "wp_person",
+      "primaryName": "Full name",
+      "columns": [
+        {
+          "display": "Person id",
+          "logical": "wp_personid",
+          "type": "guid"
+        },
+        {
+          "display": "Full name",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Role",
+          "logical": "wp_role",
+          "type": "text"
+        },
+        {
+          "display": "Team grade",
+          "logical": "wp_grade",
+          "type": "picklist",
+          "optionSet": "wp_person_wp_grade",
+          "options": [
+            {
+              "value": 100000000,
+              "label": "C"
+            },
+            {
+              "value": 100000001,
+              "label": "D"
+            },
+            {
+              "value": 100000002,
+              "label": "E"
+            },
+            {
+              "value": 100000003,
+              "label": "F"
+            }
+          ]
+        },
+        {
+          "display": "Squad",
+          "logical": "wp_squadid",
+          "type": "lookup",
+          "target": "wp_squad"
+        },
+        {
+          "display": "Region",
+          "logical": "wp_regionid",
+          "type": "lookup",
+          "target": "wp_listvalue"
+        },
+        {
+          "display": "Employment",
+          "logical": "wp_employment",
+          "type": "picklist",
+          "optionSet": "wp_person_wp_employment",
+          "options": [
+            {
+              "value": 100000000,
+              "label": "Permanent"
+            },
+            {
+              "value": 100000001,
+              "label": "NPW"
+            },
+            {
+              "value": 100000002,
+              "label": "Open vacancy"
+            }
+          ]
+        },
+        {
+          "display": "Lead",
+          "logical": "wp_lead",
+          "type": "bool"
+        },
+        {
+          "display": "Skills",
+          "logical": "wp_skills",
+          "type": "memo"
+        },
+        {
+          "display": "Core ID",
+          "logical": "wp_coreid",
+          "type": "text"
+        },
+        {
+          "display": "File ID",
+          "logical": "wp_fileid",
+          "type": "text"
+        },
+        {
+          "display": "Email",
+          "logical": "wp_email",
+          "type": "text"
+        },
+        {
+          "display": "Jira account ID",
+          "logical": "wp_jiraaccountid",
+          "type": "text"
+        },
+        {
+          "display": "Days per week",
+          "logical": "wp_daysperweek",
+          "type": "decimal"
+        },
+        {
+          "display": "Modifier override",
+          "logical": "wp_modifieroverride",
+          "type": "decimal"
+        },
+        {
+          "display": "Start date",
+          "logical": "wp_startdate",
+          "type": "datetime"
+        },
+        {
+          "display": "End date",
+          "logical": "wp_enddate",
+          "type": "datetime"
+        },
+        {
+          "display": "User",
+          "logical": "wp_systemuserid",
+          "type": "lookup",
+          "target": "systemuser"
+        },
+        {
+          "display": "Team",
+          "logical": "wp_teamid",
+          "type": "lookup",
+          "target": "wp_team"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_person_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_person_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Platforms",
+      "singular": "Platform",
+      "logical": "wp_platform",
+      "primaryName": "Platform",
+      "columns": [
+        {
+          "display": "Platform id",
+          "logical": "wp_platformid",
+          "type": "guid"
+        },
+        {
+          "display": "Platform",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Code",
+          "logical": "wp_code",
+          "type": "text"
+        },
+        {
+          "display": "Description",
+          "logical": "wp_description",
+          "type": "memo"
+        },
+        {
+          "display": "Platform owner",
+          "logical": "wp_ownerid",
+          "type": "lookup",
+          "target": "wp_person"
+        },
+        {
+          "display": "Order",
+          "logical": "wp_sequence",
+          "type": "int"
+        },
+        {
+          "display": "Active",
+          "logical": "wp_active",
+          "type": "bool"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_platform_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_platform_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Quarters",
+      "singular": "Quarter",
+      "logical": "wp_quarter",
+      "primaryName": "Label",
+      "columns": [
+        {
+          "display": "Quarter id",
+          "logical": "wp_quarterid",
+          "type": "guid"
+        },
+        {
+          "display": "Label",
+          "logical": "wp_label",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Sequence",
+          "logical": "wp_sequence",
+          "type": "int"
+        },
+        {
+          "display": "Quarter start",
+          "logical": "wp_startdate",
+          "type": "datetime"
+        },
+        {
+          "display": "Quarter end",
+          "logical": "wp_enddate",
+          "type": "datetime"
+        },
+        {
+          "display": "Sprint 1 started",
+          "logical": "wp_epoch",
+          "type": "datetime"
+        },
+        {
+          "display": "Sprint length (days)",
+          "logical": "wp_sprintdays",
+          "type": "int"
+        },
+        {
+          "display": "Benefit year",
+          "logical": "wp_benefityear",
+          "type": "int"
+        },
+        {
+          "display": "Timeline year",
+          "logical": "wp_timelineyear",
+          "type": "int"
+        },
+        {
+          "display": "Timeline weeks",
+          "logical": "wp_weeks",
+          "type": "int"
+        },
+        {
+          "display": "Target FTE released",
+          "logical": "wp_ftetarget",
+          "type": "decimal"
+        },
+        {
+          "display": "Target benefit",
+          "logical": "wp_gbptarget",
+          "type": "money"
+        },
+        {
+          "display": "Current quarter",
+          "logical": "wp_iscurrent",
+          "type": "bool"
+        },
+        {
+          "display": "Closed on",
+          "logical": "wp_closedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Team",
+          "logical": "wp_teamid",
+          "type": "lookup",
+          "target": "wp_team"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_quarter_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_quarter_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Quarter snapshots",
+      "singular": "Quarter snapshot",
+      "logical": "wp_quartersnapshot",
+      "primaryName": "Name",
+      "columns": [
+        {
+          "display": "Quarter snapshot id",
+          "logical": "wp_quartersnapshotid",
+          "type": "guid"
+        },
+        {
+          "display": "Name",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Quarter",
+          "logical": "wp_quarterid",
+          "type": "lookup",
+          "target": "wp_quarter"
+        },
+        {
+          "display": "Net capacity (MW)",
+          "logical": "wp_netmw",
+          "type": "decimal"
+        },
+        {
+          "display": "In-plan MW",
+          "logical": "wp_inplanmw",
+          "type": "decimal"
+        },
+        {
+          "display": "Delivered MW",
+          "logical": "wp_deliveredmw",
+          "type": "decimal"
+        },
+        {
+          "display": "FTE released",
+          "logical": "wp_fte",
+          "type": "decimal"
+        },
+        {
+          "display": "Benefit in-year",
+          "logical": "wp_gbp",
+          "type": "money"
+        },
+        {
+          "display": "Note",
+          "logical": "wp_note",
+          "type": "memo"
+        },
+        {
+          "display": "Taken on",
+          "logical": "wp_takenon",
+          "type": "datetime"
+        },
+        {
+          "display": "Team",
+          "logical": "wp_teamid",
+          "type": "lookup",
+          "target": "wp_team"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_quartersnapshot_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_quartersnapshot_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Requests",
+      "singular": "Request",
+      "logical": "wp_request",
+      "primaryName": "Title",
+      "columns": [
+        {
+          "display": "Request id",
+          "logical": "wp_requestid",
+          "type": "guid"
+        },
+        {
+          "display": "Title",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Requester",
+          "logical": "wp_requesterid",
+          "type": "lookup",
+          "target": "systemuser"
+        },
+        {
+          "display": "Requester name",
+          "logical": "wp_requestername",
+          "type": "text"
+        },
+        {
+          "display": "Requester email",
+          "logical": "wp_requesteremail",
+          "type": "text"
+        },
+        {
+          "display": "Business area",
+          "logical": "wp_businessarea",
+          "type": "text"
+        },
+        {
+          "display": "Sponsor",
+          "logical": "wp_sponsor",
+          "type": "text"
+        },
+        {
+          "display": "Sponsor email",
+          "logical": "wp_sponsoremail",
+          "type": "text"
+        },
+        {
+          "display": "Lab",
+          "logical": "wp_labid",
+          "type": "lookup",
+          "target": "wp_lab"
+        },
+        {
+          "display": "Team",
+          "logical": "wp_teamid",
+          "type": "lookup",
+          "target": "wp_team"
+        },
+        {
+          "display": "Product line",
+          "logical": "wp_productline",
+          "type": "picklist",
+          "optionSet": "wp_request_wp_productline",
+          "options": [
+            {
+              "value": 100000000,
+              "label": "Blue Prism"
+            },
+            {
+              "value": 100000001,
+              "label": "Power Automate"
+            },
+            {
+              "value": 100000002,
+              "label": "Power Apps"
+            },
+            {
+              "value": 100000003,
+              "label": "Copilot Studio"
+            },
+            {
+              "value": 100000004,
+              "label": "Other"
+            }
+          ]
+        },
+        {
+          "display": "Other product line",
+          "logical": "wp_productlineother",
+          "type": "text"
+        },
+        {
+          "display": "The problem",
+          "logical": "wp_problem",
+          "type": "memo"
+        },
+        {
+          "display": "What good looks like",
+          "logical": "wp_desiredoutcome",
+          "type": "memo"
+        },
+        {
+          "display": "Who benefits",
+          "logical": "wp_whobenefits",
+          "type": "memo"
+        },
+        {
+          "display": "People affected",
+          "logical": "wp_peopleaffected",
+          "type": "int"
+        },
+        {
+          "display": "Process today",
+          "logical": "wp_currentprocess",
+          "type": "memo"
+        },
+        {
+          "display": "Runs per period",
+          "logical": "wp_volume",
+          "type": "int"
+        },
+        {
+          "display": "Frequency",
+          "logical": "wp_frequency",
+          "type": "picklist",
+          "optionSet": "wp_request_wp_frequency",
+          "options": [
+            {
+              "value": 100000000,
+              "label": "Daily"
+            },
+            {
+              "value": 100000001,
+              "label": "Weekly"
+            },
+            {
+              "value": 100000002,
+              "label": "Monthly"
+            },
+            {
+              "value": 100000003,
+              "label": "Quarterly"
+            },
+            {
+              "value": 100000004,
+              "label": "Annually"
+            },
+            {
+              "value": 100000005,
+              "label": "Ad hoc"
+            }
+          ]
+        },
+        {
+          "display": "Minutes per run",
+          "logical": "wp_handlingminutes",
+          "type": "int"
+        },
+        {
+          "display": "Systems touched",
+          "logical": "wp_systems",
+          "type": "memo"
+        },
+        {
+          "display": "Data sensitivity",
+          "logical": "wp_datasensitivity",
+          "type": "picklist",
+          "optionSet": "wp_request_wp_datasensitivity",
+          "options": [
+            {
+              "value": 100000000,
+              "label": "None personal"
+            },
+            {
+              "value": 100000001,
+              "label": "Personal"
+            },
+            {
+              "value": 100000002,
+              "label": "Special category"
+            },
+            {
+              "value": 100000003,
+              "label": "Financial"
+            }
+          ]
+        },
+        {
+          "display": "Urgency",
+          "logical": "wp_urgency",
+          "type": "picklist",
+          "optionSet": "wp_request_wp_urgency",
+          "options": [
+            {
+              "value": 100000000,
+              "label": "No fixed date"
+            },
+            {
+              "value": 100000001,
+              "label": "Next quarter"
+            },
+            {
+              "value": 100000002,
+              "label": "This quarter"
+            },
+            {
+              "value": 100000003,
+              "label": "Immediate"
+            }
+          ]
+        },
+        {
+          "display": "Live by",
+          "logical": "wp_deadline",
+          "type": "datetime"
+        },
+        {
+          "display": "What happens if it slips",
+          "logical": "wp_deadlinereason",
+          "type": "memo"
+        },
+        {
+          "display": "Benefit type",
+          "logical": "wp_benefittype",
+          "type": "picklist",
+          "optionSet": "wp_request_wp_benefittype",
+          "options": [
+            {
+              "value": 100000000,
+              "label": "FTE released"
+            },
+            {
+              "value": 100000001,
+              "label": "Cost avoidance"
+            },
+            {
+              "value": 100000002,
+              "label": "Cycle-time cut"
+            },
+            {
+              "value": 100000003,
+              "label": "Error reduction"
+            },
+            {
+              "value": 100000004,
+              "label": "Throughput"
+            },
+            {
+              "value": 100000005,
+              "label": "Compliance / risk"
+            },
+            {
+              "value": 100000006,
+              "label": "CX / EX uplift"
+            }
+          ]
+        },
+        {
+          "display": "Benefit size",
+          "logical": "wp_benefitsize",
+          "type": "text"
+        },
+        {
+          "display": "Constraints",
+          "logical": "wp_constraints",
+          "type": "memo"
+        },
+        {
+          "display": "Link",
+          "logical": "wp_attachments",
+          "type": "text"
+        },
+        {
+          "display": "Request status",
+          "logical": "wp_status",
+          "type": "picklist",
+          "optionSet": "wp_request_wp_status",
+          "options": [
+            {
+              "value": 100000000,
+              "label": "New"
+            },
+            {
+              "value": 100000001,
+              "label": "Screened"
+            },
+            {
+              "value": 100000002,
+              "label": "Promoted"
+            },
+            {
+              "value": 100000003,
+              "label": "Declined"
+            }
+          ]
+        },
+        {
+          "display": "Screening notes",
+          "logical": "wp_screeningnotes",
+          "type": "memo"
+        },
+        {
+          "display": "Screened by",
+          "logical": "wp_screenedbyid",
+          "type": "lookup",
+          "target": "wp_person"
+        },
+        {
+          "display": "Screened on",
+          "logical": "wp_screenedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Promoted to",
+          "logical": "wp_promotedtoid",
+          "type": "lookup",
+          "target": "wp_workitem"
+        },
+        {
+          "display": "Decline category",
+          "logical": "wp_declinecategory",
+          "type": "text"
+        },
+        {
+          "display": "Decline reason",
+          "logical": "wp_declinereason",
+          "type": "memo"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_request_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_request_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Reservations",
+      "singular": "Reservation",
+      "logical": "wp_reservation",
+      "primaryName": "Name",
+      "columns": [
+        {
+          "display": "Reservation id",
+          "logical": "wp_reservationid",
+          "type": "guid"
+        },
+        {
+          "display": "Name",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Squad",
+          "logical": "wp_squadid",
+          "type": "lookup",
+          "target": "wp_squad"
+        },
+        {
+          "display": "Held across the team",
+          "logical": "wp_isteam",
+          "type": "bool"
+        },
+        {
+          "display": "Quarter",
+          "logical": "wp_quarterid",
+          "type": "lookup",
+          "target": "wp_quarter"
+        },
+        {
+          "display": "Category",
+          "logical": "wp_categoryid",
+          "type": "lookup",
+          "target": "wp_listvalue"
+        },
+        {
+          "display": "MW reserved",
+          "logical": "wp_mw",
+          "type": "decimal"
+        },
+        {
+          "display": "Note",
+          "logical": "wp_note",
+          "type": "memo"
+        },
+        {
+          "display": "Team",
+          "logical": "wp_teamid",
+          "type": "lookup",
+          "target": "wp_team"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_reservation_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_reservation_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Settings",
+      "singular": "Setting",
+      "logical": "wp_setting",
+      "primaryName": "Name",
+      "columns": [
+        {
+          "display": "Setting id",
+          "logical": "wp_settingid",
+          "type": "guid"
+        },
+        {
+          "display": "Name",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Default modifier",
+          "logical": "wp_defaultmodifier",
+          "type": "decimal"
+        },
+        {
+          "display": "Lead modifier",
+          "logical": "wp_leadmodifier",
+          "type": "decimal"
+        },
+        {
+          "display": "Deduct absences",
+          "logical": "wp_logabsences",
+          "type": "bool"
+        },
+        {
+          "display": "Days in a member week",
+          "logical": "wp_mwdays",
+          "type": "decimal"
+        },
+        {
+          "display": "Amber utilisation from",
+          "logical": "wp_utilisationwarn",
+          "type": "decimal"
+        },
+        {
+          "display": "Red utilisation from",
+          "logical": "wp_utilisationbad",
+          "type": "decimal"
+        },
+        {
+          "display": "Low confidence at",
+          "logical": "wp_reliabilitywarn",
+          "type": "decimal"
+        },
+        {
+          "display": "Medium confidence at",
+          "logical": "wp_reliabilitybad",
+          "type": "decimal"
+        },
+        {
+          "display": "Running total follows",
+          "logical": "wp_rankby",
+          "type": "text"
+        },
+        {
+          "display": "Team / organisation",
+          "logical": "wp_organisation",
+          "type": "text"
+        },
+        {
+          "display": "Prepared by",
+          "logical": "wp_owner",
+          "type": "text"
+        },
+        {
+          "display": "Jira Align base URL",
+          "logical": "wp_jiraalignbase",
+          "type": "text"
+        },
+        {
+          "display": "Jira base URL",
+          "logical": "wp_jirabase",
+          "type": "text"
+        },
+        {
+          "display": "Baseline value in-year",
+          "logical": "wp_estatebaseline",
+          "type": "money"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_setting_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_setting_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Size bands",
+      "singular": "Size band",
+      "logical": "wp_size",
+      "primaryName": "Size",
+      "columns": [
+        {
+          "display": "Size band id",
+          "logical": "wp_sizeid",
+          "type": "guid"
+        },
+        {
+          "display": "Size",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Member weeks",
+          "logical": "wp_mw",
+          "type": "decimal"
+        },
+        {
+          "display": "Order",
+          "logical": "wp_sequence",
+          "type": "int"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_size_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_size_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Squads",
+      "singular": "Squad",
+      "logical": "wp_squad",
+      "primaryName": "Squad name",
+      "columns": [
+        {
+          "display": "Squad id",
+          "logical": "wp_squadid",
+          "type": "guid"
+        },
+        {
+          "display": "Squad name",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Lead",
+          "logical": "wp_leadid",
+          "type": "lookup",
+          "target": "wp_person"
+        },
+        {
+          "display": "Remit",
+          "logical": "wp_remit",
+          "type": "memo"
+        },
+        {
+          "display": "Palette colour",
+          "logical": "wp_colour",
+          "type": "text"
+        },
+        {
+          "display": "Team",
+          "logical": "wp_teamid",
+          "type": "lookup",
+          "target": "wp_team"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_squad_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_squad_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Teams",
+      "singular": "Team",
+      "logical": "wp_team",
+      "primaryName": "Team",
+      "columns": [
+        {
+          "display": "Team id",
+          "logical": "wp_teamid",
+          "type": "guid"
+        },
+        {
+          "display": "Team",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Lab",
+          "logical": "wp_labid",
+          "type": "lookup",
+          "target": "wp_lab"
+        },
+        {
+          "display": "Lead",
+          "logical": "wp_leadid",
+          "type": "lookup",
+          "target": "wp_person"
+        },
+        {
+          "display": "Description",
+          "logical": "wp_description",
+          "type": "memo"
+        },
+        {
+          "display": "Product lines",
+          "logical": "wp_productlines",
+          "type": "memo"
+        },
+        {
+          "display": "Order",
+          "logical": "wp_sequence",
+          "type": "int"
+        },
+        {
+          "display": "Active",
+          "logical": "wp_active",
+          "type": "bool"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_team_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_team_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Team grade costs",
+      "singular": "Team grade cost",
+      "logical": "wp_teamgradecost",
+      "primaryName": "Team grade",
+      "columns": [
+        {
+          "display": "Team grade cost id",
+          "logical": "wp_teamgradecostid",
+          "type": "guid"
+        },
+        {
+          "display": "Team grade",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Annual cost",
+          "logical": "wp_annualcost",
+          "type": "money"
+        },
+        {
+          "display": "Team",
+          "logical": "wp_teamid",
+          "type": "lookup",
+          "target": "wp_team"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_teamgradecost_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_teamgradecost_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Work items",
+      "singular": "Work item",
+      "logical": "wp_workitem",
+      "primaryName": "Title",
+      "columns": [
+        {
+          "display": "Work item id",
+          "logical": "wp_workitemid",
+          "type": "guid"
+        },
+        {
+          "display": "Title",
+          "logical": "wp_title",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Kind",
+          "logical": "wp_kind",
+          "type": "picklist",
+          "optionSet": "wp_workitem_wp_kind",
+          "options": [
+            {
+              "value": 100000000,
+              "label": "Feature"
+            },
+            {
+              "value": 100000001,
+              "label": "Spike"
+            },
+            {
+              "value": 100000002,
+              "label": "Component"
+            }
+          ]
+        },
+        {
+          "display": "Phase",
+          "logical": "wp_phase",
+          "type": "picklist",
+          "optionSet": "wp_workitem_wp_phase",
+          "options": [
+            {
+              "value": 100000000,
+              "label": "Shaping"
+            },
+            {
+              "value": 100000001,
+              "label": "Assessment"
+            },
+            {
+              "value": 100000002,
+              "label": "Delivery"
+            },
+            {
+              "value": 100000003,
+              "label": "Release"
+            },
+            {
+              "value": 100000004,
+              "label": "Validated"
+            },
+            {
+              "value": 100000005,
+              "label": "Stopped"
+            }
+          ]
+        },
+        {
+          "display": "Source",
+          "logical": "wp_source",
+          "type": "picklist",
+          "optionSet": "wp_workitem_wp_source",
+          "options": [
+            {
+              "value": 100000000,
+              "label": "Front door"
+            },
+            {
+              "value": 100000001,
+              "label": "Direct"
+            },
+            {
+              "value": 100000002,
+              "label": "Jira"
+            }
+          ]
+        },
+        {
+          "display": "State",
+          "logical": "wp_stateid",
+          "type": "lookup",
+          "target": "wp_workstate"
+        },
+        {
+          "display": "Part of",
+          "logical": "wp_parentid",
+          "type": "lookup",
+          "target": "wp_workitem"
+        },
+        {
+          "display": "Epic",
+          "logical": "wp_epicid",
+          "type": "lookup",
+          "target": "wp_epic"
+        },
+        {
+          "display": "Squad",
+          "logical": "wp_squadid",
+          "type": "lookup",
+          "target": "wp_squad"
+        },
+        {
+          "display": "Skill",
+          "logical": "wp_skillid",
+          "type": "lookup",
+          "target": "wp_listvalue"
+        },
+        {
+          "display": "Size",
+          "logical": "wp_sizeid",
+          "type": "lookup",
+          "target": "wp_size"
+        },
+        {
+          "display": "MW override",
+          "logical": "wp_sizeoverride",
+          "type": "decimal"
+        },
+        {
+          "display": "Priority",
+          "logical": "wp_priority",
+          "type": "text"
+        },
+        {
+          "display": "Confidence",
+          "logical": "wp_confidence",
+          "type": "text"
+        },
+        {
+          "display": "Commitment",
+          "logical": "wp_commitment",
+          "type": "picklist",
+          "optionSet": "wp_workitem_wp_commitment",
+          "options": [
+            {
+              "value": 100000000,
+              "label": "Proposed"
+            },
+            {
+              "value": 100000001,
+              "label": "Committed"
+            }
+          ]
+        },
+        {
+          "display": "Start sprint",
+          "logical": "wp_startsprint",
+          "type": "int"
+        },
+        {
+          "display": "End sprint",
+          "logical": "wp_endsprint",
+          "type": "int"
+        },
+        {
+          "display": "Absolute start sprint",
+          "logical": "wp_spanstart",
+          "type": "int"
+        },
+        {
+          "display": "Absolute end sprint",
+          "logical": "wp_spanend",
+          "type": "int"
+        },
+        {
+          "display": "Assessed by",
+          "logical": "wp_assessedbyid",
+          "type": "lookup",
+          "target": "wp_person"
+        },
+        {
+          "display": "Assessed on",
+          "logical": "wp_assessedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Validated on",
+          "logical": "wp_validatedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Product owner",
+          "logical": "wp_productownerid",
+          "type": "lookup",
+          "target": "wp_person"
+        },
+        {
+          "display": "Jira key",
+          "logical": "wp_jira",
+          "type": "text"
+        },
+        {
+          "display": "Jira Align ID",
+          "logical": "wp_jiraalign",
+          "type": "text"
+        },
+        {
+          "display": "FTE released",
+          "logical": "wp_claimedfte",
+          "type": "decimal"
+        },
+        {
+          "display": "Landing month",
+          "logical": "wp_landingmonth",
+          "type": "picklist",
+          "optionSet": "wp_workitem_wp_landingmonth",
+          "options": [
+            {
+              "value": 100000001,
+              "label": "Jan"
+            },
+            {
+              "value": 100000002,
+              "label": "Feb"
+            },
+            {
+              "value": 100000003,
+              "label": "Mar"
+            },
+            {
+              "value": 100000004,
+              "label": "Apr"
+            },
+            {
+              "value": 100000005,
+              "label": "May"
+            },
+            {
+              "value": 100000006,
+              "label": "Jun"
+            },
+            {
+              "value": 100000007,
+              "label": "Jul"
+            },
+            {
+              "value": 100000008,
+              "label": "Aug"
+            },
+            {
+              "value": 100000009,
+              "label": "Sep"
+            },
+            {
+              "value": 100000010,
+              "label": "Oct"
+            },
+            {
+              "value": 100000011,
+              "label": "Nov"
+            },
+            {
+              "value": 100000012,
+              "label": "Dec"
+            }
+          ]
+        },
+        {
+          "display": "Landing year",
+          "logical": "wp_landingyear",
+          "type": "int"
+        },
+        {
+          "display": "Business grade",
+          "logical": "wp_gradeid",
+          "type": "lookup",
+          "target": "wp_graderate"
+        },
+        {
+          "display": "Grade blend",
+          "logical": "wp_gradeblendid",
+          "type": "lookup",
+          "target": "wp_gradeblend"
+        },
+        {
+          "display": "Cancellation reason",
+          "logical": "wp_cancelreason",
+          "type": "memo"
+        },
+        {
+          "display": "Stopped reason",
+          "logical": "wp_stoppedreason",
+          "type": "memo"
+        },
+        {
+          "display": "Original estimate (MW)",
+          "logical": "wp_originalestimate",
+          "type": "decimal"
+        },
+        {
+          "display": "Actual effort (MW)",
+          "logical": "wp_actualeffort",
+          "type": "decimal"
+        },
+        {
+          "display": "Done in sprint",
+          "logical": "wp_doneinsprint",
+          "type": "int"
+        },
+        {
+          "display": "Depends on",
+          "logical": "wp_dependsonid",
+          "type": "lookup",
+          "target": "wp_workitem"
+        },
+        {
+          "display": "Archived in quarter",
+          "logical": "wp_archivedinquarter",
+          "type": "lookup",
+          "target": "wp_quarter"
+        },
+        {
+          "display": "Spike question",
+          "logical": "wp_question",
+          "type": "memo"
+        },
+        {
+          "display": "Timebox (sprints)",
+          "logical": "wp_timeboxsprints",
+          "type": "int"
+        },
+        {
+          "display": "Spike outcome",
+          "logical": "wp_spikeoutcome",
+          "type": "picklist",
+          "optionSet": "wp_workitem_wp_spikeoutcome",
+          "options": [
+            {
+              "value": 100000000,
+              "label": "Feasible"
+            },
+            {
+              "value": 100000001,
+              "label": "Not feasible"
+            },
+            {
+              "value": 100000002,
+              "label": "More discovery"
+            }
+          ]
+        },
+        {
+          "display": "Findings",
+          "logical": "wp_findings",
+          "type": "memo"
+        },
+        {
+          "display": "Converted to",
+          "logical": "wp_convertedtoid",
+          "type": "lookup",
+          "target": "wp_workitem"
+        },
+        {
+          "display": "Converted from",
+          "logical": "wp_convertedfromid",
+          "type": "lookup",
+          "target": "wp_workitem"
+        },
+        {
+          "display": "Notes",
+          "logical": "wp_notes",
+          "type": "memo"
+        },
+        {
+          "display": "Team",
+          "logical": "wp_teamid",
+          "type": "lookup",
+          "target": "wp_team"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_workitem_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_workitem_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    },
+    {
+      "display": "Work states",
+      "singular": "Work state",
+      "logical": "wp_workstate",
+      "primaryName": "State",
+      "columns": [
+        {
+          "display": "Work state id",
+          "logical": "wp_workstateid",
+          "type": "guid"
+        },
+        {
+          "display": "State",
+          "logical": "wp_name",
+          "type": "text",
+          "primaryName": true
+        },
+        {
+          "display": "Jira Align states",
+          "logical": "wp_jiraalign",
+          "type": "text"
+        },
+        {
+          "display": "Capacity impact",
+          "logical": "wp_impact",
+          "type": "picklist",
+          "optionSet": "wp_workstate_wp_impact",
+          "options": [
+            {
+              "value": 100000000,
+              "label": "None"
+            },
+            {
+              "value": 100000001,
+              "label": "Reserved"
+            },
+            {
+              "value": 100000002,
+              "label": "Allocated"
+            },
+            {
+              "value": 100000003,
+              "label": "Consumed"
+            },
+            {
+              "value": 100000004,
+              "label": "Historical"
+            },
+            {
+              "value": 100000005,
+              "label": "Hold"
+            },
+            {
+              "value": 100000006,
+              "label": "Removed"
+            }
+          ]
+        },
+        {
+          "display": "Note",
+          "logical": "wp_note",
+          "type": "text"
+        },
+        {
+          "display": "Order",
+          "logical": "wp_sequence",
+          "type": "int"
+        },
+        {
+          "display": "Team",
+          "logical": "wp_teamid",
+          "type": "lookup",
+          "target": "wp_team"
+        },
+        {
+          "display": "Status",
+          "logical": "statecode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 0,
+              "label": "Active"
+            },
+            {
+              "value": 1,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_workstate_statecode"
+        },
+        {
+          "display": "Status Reason",
+          "logical": "statuscode",
+          "type": "picklist",
+          "options": [
+            {
+              "value": 1,
+              "label": "Active"
+            },
+            {
+              "value": 2,
+              "label": "Inactive"
+            }
+          ],
+          "optionSet": "wp_workstate_statuscode"
+        },
+        {
+          "display": "Created On",
+          "logical": "createdon",
+          "type": "datetime"
+        },
+        {
+          "display": "Modified On",
+          "logical": "modifiedon",
+          "type": "datetime"
+        },
+        {
+          "display": "Owner",
+          "logical": "ownerid",
+          "type": "lookup",
+          "target": "systemuser"
+        }
+      ]
+    }
+  ]
+}

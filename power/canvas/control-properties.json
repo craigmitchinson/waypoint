@@ -1,0 +1,68 @@
+{
+  "note": "Per-control-type property rules for the `properties` check in scripts/preflight.mjs, one entry per control identifier used in power/canvas/build/Src. `deny` lists property names Studio rejects on that control (PA2108); `allow`, where present, is the closed set of names permitted on it. Where a control's rules differ by variant, `variants` maps the variant name onto its own `deny`/`allow`, and that entry replaces the control-level one. `confirmed` names a property Studio has written on that control in a source we no longer hold, which the `confirmed` check (37) adds to the type's set alongside `allow` and the properties it reads out of the Studio-opened packages. Every entry is read off power/canvas/CONTROLS.md or a Studio rejection we have already paid for.",
+  "controls": {
+    "Badge@0.0.24": {
+      "deny": ["OnSelect", "Color", "Size", "BasePaletteColor", "FontColor"],
+      "reason": "Badge is not interactive, and it never went through the Color/Size rename: its text size is FontSize. BasePaletteColor and FontColor: dark-mode contrast fault 20 Sep 2026; theme supplies contrast; Appearance must be Filled (checked by preflight 18)."
+    },
+    "CanvasComponent": {
+      "deny": ["FillPortions"],
+      "reason": "A component instance carries only its own custom properties; layout portions belong to the container around it.",
+      "confirmed": ["Kind", "Stage", "Stopped"],
+      "confirmedReason": "cmpStepper's kind-aware custom properties (power/app/Components.pa.yaml), not yet in a Studio-opened corpus."
+    },
+    "Classic/Button@2.2.0": {
+      "deny": ["AccessibleLabel", "PressedBorderThickness"],
+      "reason": "Studio PA2108, 20 Sep 2026 (AccessibleLabel); PressedBorderThickness rejected 21 Sep 2026, PA2108 x16"
+    },
+    "Classic/TextInput@2.3.2": {},
+    "Gallery@2.15.0": {},
+    "GroupContainer@1.5.0": {
+      "deny": ["OnSelect", "AccessibleLabel", "Tooltip"],
+      "reason": "A container is not a control a user can reach: Studio rejects the interactive and labelling properties on it.",
+      "confirmed": ["LayoutMinHeight"],
+      "confirmedReason": "Studio wrote LayoutMinHeight on the blank app's Screen1 (power/canvas/CONTROLS.md, GroupContainer@1.5.0); that download is no longer held, so check 37's corpus cannot see it.",
+      "variants": {
+        "ManualLayout": {
+          "deny": ["OnSelect", "AccessibleLabel", "Tooltip", "LayoutOverflowX", "LayoutOverflowY", "LayoutDirection", "LayoutJustifyContent", "LayoutAlignItems", "LayoutGap", "LayoutWrap"],
+          "reason": "Studio PA2108, 20 Sep 2026: a ManualLayout container takes none of the auto-layout properties, overflow included; it clips by nature."
+        },
+        "AutoLayout": {
+          "deny": ["OnSelect", "AccessibleLabel", "Tooltip"],
+          "reason": "Studio PA2108, 20 Sep 2026: the layout and overflow properties are confirmed on AutoLayout; only the interactive and labelling ones are rejected."
+        }
+      }
+    },
+    "Image@2.2.3": {},
+    "Label@2.5.1": {
+      "deny": ["FillPortions", "LayoutMinWidth", "AccessibleLabel"],
+      "reason": "A Label is not a container: the portion and minimum-width properties belong to the auto-layout container around it. Studio PA2108 20 Sep 2026 (same as Classic/Button)."
+    },
+    "ModernAvatar@1.1.0": {},
+    "ModernButton@1.0.0": {
+      "confirmed": ["IconStyle"],
+      "confirmedReason": "IconStyle confirmed in Studio builds 20 onward (rail footer, cmpRail); the downloads are no longer held."
+    },
+    "ModernCombobox@1.1.1": {
+      "deny": ["FillPortions", "AutoHeight"],
+      "reason": "observed in Studio-written skeleton; properties per corpus"
+    },
+    "ModernDropdown@1.0.2": {},
+    "ModernProgressBar@1.0.0": {},
+    "ModernTabList@1.0.1": {},
+    "ModernText@1.0.0": {
+      "deny": ["*"],
+      "allow": [],
+      "reason": "replaced by Label@2.5.1 20 Sep 2026: draws scroll arrows at any height. No property is permitted because no instance is; preflight check 19 refuses the control itself."
+    },
+    "ModernTextInput@1.1.1": {},
+    "ModernToggle@1.0.0": {
+      "deny": ["Checked"],
+      "reason": "Studio PA2108, 21 Sep 2026: 'Unknown property 'Checked' for control type 'ModernToggle@1.0.0'' — qcForce sets varQcForce via OnCheck/OnUncheck instead, and Reset(qcForce) in OnVisible restores the control's own visual state."
+    },
+    "Rectangle@2.3.0": {
+      "deny": ["RadiusTopLeft", "RadiusTopRight", "RadiusBottomLeft", "RadiusBottomRight"],
+      "reason": "Studio PA2108, 22 Sep 2026: a Rectangle takes no corner radius (scrTimeline, tlPeekEdge); Image and Classic/Button do."
+    }
+  }
+}

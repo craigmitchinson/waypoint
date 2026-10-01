@@ -1,0 +1,2175 @@
+# Waypoint canvas app: the front door, the queue a product owner screens.
+#
+# power/design-work-flow.md, section 5: the screen is the screening queue and nothing else. The
+# request form is not in Waypoint; a requester app or a SharePoint list writes wp_request, and
+# this screen reads the New and Screened rows oldest first, opens one in the screening panel, and
+# carries Screen, Promote to feature, Promote to spike and Decline.
+#
+# THIS SCREEN IS FLAG-GATED. Requests, Labs and Teams are not connected in Studio yet, so
+# scripts/assemble-canvas.mjs carries neither this file nor Formulas.frontdoor.yaml into the
+# build while its `includeFrontDoor` flag is false (power/RUNBOOK.md, section 4, "The front
+# door flag"). Nothing here is proven in the player.
+#
+# The shell is scrImport's, unchanged: fdRoot is a vertical GroupContainer the size of the
+# screen, holding the header and a horizontal row of the rail and the body. The panel follows the
+# person panel on Team (power/RUNBOOK.md, section 4, "Forms"): the request's answers read-only
+# over a foot of the notes, the decline answers, one error line and the four moves.
+Screens:
+  scrFrontDoor:
+    Properties:
+      Fill: =NeutralCanvas
+      # The screening panel opens on a row, never on a screen visit.
+      OnVisible: |
+        =Set(varFrontDoorScreenOpen, false);
+         Set(varFrontDoorScreenError, "")
+
+    Children:
+
+      # ---- the root: one vertical auto-layout container the size of the screen ----
+      - fdRoot:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            LayoutOverflowX: =LayoutOverflow.Hide
+            LayoutOverflowY: =LayoutOverflow.Hide
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =Parent.Height
+            Fill: =NeutralCanvas
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutGap: =0
+          Children:
+
+            # ---- shell: the app header ----
+            - fdHeader:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  LayoutOverflowX: =LayoutOverflow.Hide
+                  LayoutOverflowY: =LayoutOverflow.Hide
+                  FillPortions: =0
+                  Height: =AppHeaderH
+                  Fill: =BrandBg
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                  LayoutGap: =Gap
+                  PaddingLeft: =Pad
+                  PaddingRight: =Pad
+                Children:
+                  - fdHeaderName:
+                      Control: Label@2.5.1
+                      Properties:
+                        Width: =Parent.Width / 3
+                        Height: =AppHeaderH
+                        Text: ="Waypoint"
+                        Size: =TypeSubtitle
+                        FontWeight: =FontWeight.Semibold
+                        Font: =FontUI
+                        VerticalAlign: =VerticalAlign.Middle
+                        Color: =BrandFg
+                        Wrap: =true
+                        Overflow: =Overflow.Hidden
+                        PaddingTop: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        AutoHeight: =true
+                  - fdHeaderQuarter:
+                      Control: Label@2.5.1
+                      Properties:
+                        Width: =Parent.Width / 3
+                        Height: =AppHeaderH
+                        Text: =CurrentQuarter.Label & " · capacity planner"
+                        Size: =TypeCaption
+                        Font: =FontUI
+                        Align: =Align.Right
+                        VerticalAlign: =VerticalAlign.Middle
+                        Color: =ColorFade(BrandFg, -0.2)
+                        Wrap: =true
+                        Overflow: =Overflow.Hidden
+                        PaddingTop: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        AutoHeight: =true
+
+            # ---- shell: the rail, and the body beside it ----
+            - fdMain:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  LayoutOverflowX: =LayoutOverflow.Hide
+                  LayoutOverflowY: =LayoutOverflow.Hide
+                  FillPortions: =1
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutGap: =0
+                Children:
+
+                  - fdRail:
+                      Control: CanvasComponent
+                      ComponentName: cmpRail
+                      Properties:
+                        LayoutMinWidth: =If(RailCollapsed, RailWidthTight, NavW)
+                        Width: =If(RailCollapsed, RailWidthTight, NavW)
+                        Height: =Parent.Height
+                        Active: ="FrontDoor"
+
+                  # ---- the body: the page head, the note and the screening queue ----
+                  - fdBody:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        LayoutOverflowX: =LayoutOverflow.Hide
+                        LayoutOverflowY: =LayoutOverflow.Scroll
+                        FillPortions: =1
+                        Fill: =NeutralBg3
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutGap: =Gap
+                        PaddingLeft: =Pad
+                        PaddingRight: =Pad
+                        PaddingTop: =Pad
+                        PaddingBottom: =Pad
+                      Children:
+
+                        # ---- page head: the eyebrow and the one h1 ----
+                        - fdPageHead:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =0
+                              Height: =PageHeadH
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutGap: =0
+                            Children:
+                              - fdEyebrow:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =TypeKickerLine
+                                    Visible: =!IsCompact
+                                    Text: ="Screen what the business has asked for"
+                                    Size: =TypeCaption
+                                    FontWeight: =FontWeight.Semibold
+                                    Font: =FontUI
+                                    Color: =NeutralFg2
+                                    Wrap: =false
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                              - fdTitle:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =TypeDisplayLine
+                                    Text: ="Front door"
+                                    Size: =TypeTitle
+                                    FontWeight: =FontWeight.Semibold
+                                    Font: =FontUI
+                                    Color: =NeutralFg1
+                                    Wrap: =true
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    AutoHeight: =true
+
+                        # ---- the one line about the form, which is not in Waypoint ----
+                        # The request form lives in the requester app or the SharePoint list
+                        # (power/design-work-flow.md, section 5): Waypoint screens what arrives.
+                        - fdNote:
+                            Control: Label@2.5.1
+                            Properties:
+                              Height: =TypeBodyLine
+                              Text: |
+                                ="Requests are raised in the requester app or the SharePoint list, "
+                                 & "not here. " & FrontDoorNewCount & " new to screen."
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              VerticalAlign: =VerticalAlign.Middle
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+
+                        # ---- screening: the queue the product owner works, oldest first ----
+                        # New and Screened requests, the lifecycle in power/design-front-door.md,
+                        # section 3. A row opens the screening panel over the right of the screen.
+                        - fdScreenCard:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =0
+                              Height: =FrontDoorScreenCardH
+                              Visible: |
+                                =// The queue is the Waypoint Team's work, and the Waypoint Team role
+                                 // will gate this section once the roles are in the environment; until
+                                 // then everybody who can open the front door can see it.
+                                 true
+                              Fill: =NeutralBg1
+                              BorderColor: =NeutralStroke1
+                              BorderThickness: =1
+                              RadiusTopLeft: =CardR
+                              RadiusTopRight: =CardR
+                              RadiusBottomLeft: =CardR
+                              RadiusBottomRight: =CardR
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutGap: =0
+                              PaddingLeft: =Pad
+                              PaddingRight: =Pad
+                              PaddingTop: =Pad
+                              PaddingBottom: =Pad
+                            Children:
+                              - fdScreenTitle:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =TypeBodyLine
+                                    Text: ="Screening · " & FrontDoorScreenCount
+                                    Size: =TypeSubtitle
+                                    FontWeight: =FontWeight.Semibold
+                                    Font: =FontUI
+                                    Color: =NeutralFg1
+                                    VerticalAlign: =VerticalAlign.Middle
+                                    Wrap: =false
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                              - fdScreenHead:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    FillPortions: =0
+                                    Width: =Max(Parent.Width - Pad * 2 - 16, 898)
+                                    Height: =RowHeight
+                                  Children:
+                                    - fdScreenHeadRequester:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =Max(Parent.Width * FrontDoorScrShareRaised, FrontDoorScrMinRaised)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FrontDoorScrShareRequester, FrontDoorScrMinRequester) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Requester"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fdScreenHeadArea:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * FrontDoorScrShareRaised, FrontDoorScrMinRaised)
+                                             + Max(Parent.Width * FrontDoorScrShareRequester, FrontDoorScrMinRequester)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FrontDoorScrShareArea, FrontDoorScrMinArea) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Business area"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fdScreenHeadProduct:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * FrontDoorScrShareRaised, FrontDoorScrMinRaised)
+                                             + Max(Parent.Width * FrontDoorScrShareRequester, FrontDoorScrMinRequester)
+                                             + Max(Parent.Width * FrontDoorScrShareArea, FrontDoorScrMinArea)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FrontDoorScrShareProduct, FrontDoorScrMinProduct) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Product line"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fdScreenHeadTitle:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * FrontDoorScrShareRaised, FrontDoorScrMinRaised)
+                                             + Max(Parent.Width * FrontDoorScrShareRequester, FrontDoorScrMinRequester)
+                                             + Max(Parent.Width * FrontDoorScrShareArea, FrontDoorScrMinArea)
+                                             + Max(Parent.Width * FrontDoorScrShareProduct, FrontDoorScrMinProduct)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FrontDoorScrShareTitle, FrontDoorScrMinTitle) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Request"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fdScreenHeadUrgency:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * FrontDoorScrShareRaised, FrontDoorScrMinRaised)
+                                             + Max(Parent.Width * FrontDoorScrShareRequester, FrontDoorScrMinRequester)
+                                             + Max(Parent.Width * FrontDoorScrShareArea, FrontDoorScrMinArea)
+                                             + Max(Parent.Width * FrontDoorScrShareProduct, FrontDoorScrMinProduct)
+                                             + Max(Parent.Width * FrontDoorScrShareTitle, FrontDoorScrMinTitle)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FrontDoorScrShareUrgency, FrontDoorScrMinUrgency) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Urgency"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fdScreenHeadRaised:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FrontDoorScrShareRaised, FrontDoorScrMinRaised) - 8
+                                          Height: =TypeLabelLine
+                                          Text: ="Raised"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fdScreenHeadStatus:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.Width * FrontDoorScrShareRaised, FrontDoorScrMinRaised)
+                                             + Max(Parent.Width * FrontDoorScrShareRequester, FrontDoorScrMinRequester)
+                                             + Max(Parent.Width * FrontDoorScrShareArea, FrontDoorScrMinArea)
+                                             + Max(Parent.Width * FrontDoorScrShareProduct, FrontDoorScrMinProduct)
+                                             + Max(Parent.Width * FrontDoorScrShareTitle, FrontDoorScrMinTitle)
+                                             + Max(Parent.Width * FrontDoorScrShareUrgency, FrontDoorScrMinUrgency)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: =Max(Parent.Width * FrontDoorScrShareStatus, FrontDoorScrMinStatus)
+                                          Height: =TypeLabelLine
+                                          Text: ="Request status"
+                                          Size: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                              - fdScreenEmpty:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =RowHeight
+                                    Visible: =FrontDoorScreenCount = 0
+                                    Text: ="Nothing waiting. Every request has been decided."
+                                    Size: =TypeBody
+                                    Font: =FontUI
+                                    Color: =NeutralFg2
+                                    VerticalAlign: =VerticalAlign.Middle
+                                    Wrap: =false
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                              - fdScreenList:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Width: =Max(Parent.Width - Pad * 2, 914)
+                                    Height: =FrontDoorScreenListH
+                                    ShowScrollbar: =true
+                                    TemplatePadding: =0
+                                    FillPortions: =0
+                                    Visible: =FrontDoorScreenCount > 0
+                                    Items: =FrontDoorScreenQueue
+                                    TemplateSize: =RowHeight
+                                    AccessibleLabel: |
+                                      ="Screening queue: every request still New or Screened, oldest "
+                                       & "first, with the date it was raised, the requester, the area, "
+                                       & "the product line, the request, its urgency and its status."
+                                  Children:
+                                    - fdScreenRowRequester:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =Max(Parent.TemplateWidth * FrontDoorScrShareRaised, FrontDoorScrMinRaised)
+                                          Y: =(RowHeight - TypeBodyLine) / 2
+                                          Width: =Max(Parent.TemplateWidth * FrontDoorScrShareRequester, FrontDoorScrMinRequester) - 8
+                                          Height: =TypeBodyLine
+                                          Text: =ThisItem.'Requester name'
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fdScreenRowArea:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * FrontDoorScrShareRaised, FrontDoorScrMinRaised)
+                                             + Max(Parent.TemplateWidth * FrontDoorScrShareRequester, FrontDoorScrMinRequester)
+                                          Y: =(RowHeight - TypeBodyLine) / 2
+                                          Width: =Max(Parent.TemplateWidth * FrontDoorScrShareArea, FrontDoorScrMinArea) - 8
+                                          Height: =TypeBodyLine
+                                          Text: =ThisItem.'Business area'
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fdScreenRowProduct:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * FrontDoorScrShareRaised, FrontDoorScrMinRaised)
+                                             + Max(Parent.TemplateWidth * FrontDoorScrShareRequester, FrontDoorScrMinRequester)
+                                             + Max(Parent.TemplateWidth * FrontDoorScrShareArea, FrontDoorScrMinArea)
+                                          Y: =(RowHeight - TypeBodyLine) / 2
+                                          Width: =Max(Parent.TemplateWidth * FrontDoorScrShareProduct, FrontDoorScrMinProduct) - 8
+                                          Height: =TypeBodyLine
+                                          Text: =Text(ThisItem.'Product line')
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fdScreenRowTitle:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * FrontDoorScrShareRaised, FrontDoorScrMinRaised)
+                                             + Max(Parent.TemplateWidth * FrontDoorScrShareRequester, FrontDoorScrMinRequester)
+                                             + Max(Parent.TemplateWidth * FrontDoorScrShareArea, FrontDoorScrMinArea)
+                                             + Max(Parent.TemplateWidth * FrontDoorScrShareProduct, FrontDoorScrMinProduct)
+                                          Y: =(RowHeight - TypeBodyLine) / 2
+                                          Width: =Max(Parent.TemplateWidth * FrontDoorScrShareTitle, FrontDoorScrMinTitle) - 8
+                                          Height: =TypeBodyLine
+                                          Text: =ThisItem.Title
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Color: =NeutralFg1
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fdScreenRowUrgency:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * FrontDoorScrShareRaised, FrontDoorScrMinRaised)
+                                             + Max(Parent.TemplateWidth * FrontDoorScrShareRequester, FrontDoorScrMinRequester)
+                                             + Max(Parent.TemplateWidth * FrontDoorScrShareArea, FrontDoorScrMinArea)
+                                             + Max(Parent.TemplateWidth * FrontDoorScrShareProduct, FrontDoorScrMinProduct)
+                                             + Max(Parent.TemplateWidth * FrontDoorScrShareTitle, FrontDoorScrMinTitle)
+                                          Y: =(RowHeight - TypeBodyLine) / 2
+                                          Width: =Max(Parent.TemplateWidth * FrontDoorScrShareUrgency, FrontDoorScrMinUrgency) - 8
+                                          Height: =TypeBodyLine
+                                          Text: =Text(ThisItem.Urgency)
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - fdScreenRowRaised:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          X: =0
+                                          Y: =(RowHeight - TypeBodyLine) / 2
+                                          Width: =Max(Parent.TemplateWidth * FrontDoorScrShareRaised, FrontDoorScrMinRaised) - 8
+                                          Height: =TypeBodyLine
+                                          Text: =Text(ThisItem.'Created On', "[$-en-US]dd mmm yyyy")
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          VerticalAlign: =VerticalAlign.Middle
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    # The status badge: the tone is the ThemeColor alone and the word is
+                                    # beside it, so nothing is said by colour only (power/RUNBOOK.md,
+                                    # section 4, "Layout calibration").
+                                    - fdScreenRowStatus:
+                                        Control: Badge@0.0.24
+                                        Properties:
+                                          X: |
+                                            =Max(Parent.TemplateWidth * FrontDoorScrShareRaised, FrontDoorScrMinRaised)
+                                             + Max(Parent.TemplateWidth * FrontDoorScrShareRequester, FrontDoorScrMinRequester)
+                                             + Max(Parent.TemplateWidth * FrontDoorScrShareArea, FrontDoorScrMinArea)
+                                             + Max(Parent.TemplateWidth * FrontDoorScrShareProduct, FrontDoorScrMinProduct)
+                                             + Max(Parent.TemplateWidth * FrontDoorScrShareTitle, FrontDoorScrMinTitle)
+                                             + Max(Parent.TemplateWidth * FrontDoorScrShareUrgency, FrontDoorScrMinUrgency)
+                                          Y: =(RowHeight - TypeLabelLine) / 2
+                                          Width: |
+                                            =With({t: Text(ThisItem.'Request status')}, Min(Max(Len(t) * 7 + 20, 56), 200))
+                                          Height: =TypeLabelLine
+                                          Appearance: ='BadgeCanvas.Appearance'.Filled
+                                          Shape: ='BadgeCanvas.Shape'.Rounded
+                                          ThemeColor: |
+                                            =Switch(Text(ThisItem.'Request status'),
+                                                    "New", 'BadgeCanvas.ThemeColor'.Brand,
+                                                    'BadgeCanvas.ThemeColor'.Informative)
+                                          Content: =Text(ThisItem.'Request status')
+                                          FontSize: =TypeCaption
+                                          FontWeight: =FontWeight.Semibold
+                                          Font: =FontUI
+                                          Align: =Align.Center
+                                          VerticalAlign: =VerticalAlign.Middle
+                                    # The row is the target: the whole row opens the screening panel, as the
+                                    # person rows on Team do (power/RUNBOOK.md, section 4, "Forms").
+                                    - fdScreenRowHit:
+                                        Control: Classic/Button@2.2.0
+                                        Properties:
+                                          X: =2
+                                          Y: =2
+                                          Width: =Parent.TemplateWidth - 4
+                                          Height: =RowHeight - 4
+                                          Text: =""
+                                          Fill: =RGBA(0, 0, 0, 0)
+                                          HoverFill: =RGBA(0, 0, 0, 0)
+                                          PressedFill: =RGBA(0, 0, 0, 0)
+                                          BorderThickness: =0
+                                          FocusedBorderThickness: =2
+                                          TabIndex: =0
+                                          Tooltip: ="Screen " & ThisItem.Title
+                                          FocusedBorderColor: =FocusStroke
+                                          OnSelect: |
+                                            =Set(varFrontDoorScreen, ThisItem);
+                                             Set(varFrontDoorScreenError, "");
+                                             Set(varFrontDoorScreenOpen, true);
+                                             // every input starts from its Default, not the last open
+                                             Reset(fdScrFieldNotes);
+                                             Reset(fdScrFieldCategory);
+                                             Reset(fdScrFieldReason)
+
+      # ---- screening: the scrim, then the panel over the right of the screen ----
+      # The person panel's pattern (power/RUNBOOK.md, section 4, "Forms"), read-only
+      # over the request's own answers, with the four moves the product owner has.
+      - fdScreenScrim:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =Parent.Height
+            Fill: =RGBA(0, 0, 0, 0.4)
+            Visible: =varFrontDoorScreenOpen
+          Children:
+            # A container takes no OnSelect (Studio PA2108), so the scrim's own dismiss is
+            # a transparent button over the whole of it. It closes and changes nothing.
+            - fdScreenScrimHit:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  X: =2
+                  Y: =2
+                  Width: =Parent.Width - 4
+                  Height: =Parent.Height - 4
+                  Text: =""
+                  Fill: =RGBA(0, 0, 0, 0)
+                  HoverFill: =RGBA(0, 0, 0, 0)
+                  PressedFill: =RGBA(0, 0, 0, 0)
+                  BorderThickness: =0
+                  FocusedBorderThickness: =2
+                  TabIndex: =0
+                  Tooltip: ="Close the screening panel"
+                  FocusedBorderColor: =FocusStroke
+                  OnSelect: =Set(varFrontDoorScreenOpen, false)
+      - fdScreenPanel:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Width: =Max(Parent.Width * 0.32, 420)
+            Height: =Parent.Height
+            X: =Parent.Width - Max(Parent.Width * 0.32, 420)
+            Y: =0
+            Fill: =NeutralBg1
+            BorderColor: =NeutralStroke1
+            BorderThickness: =1
+            Visible: =varFrontDoorScreenOpen
+          Children:
+            - fdScrTitle:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =Pad
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeDisplayLine
+                  Text: =FrontDoorScreenPanelTitle
+                  Size: =TypeSubtitle
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg1
+                  Wrap: =true
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  AutoHeight: =true
+            # The request's own answers, read-only: they run past the panel, so the body
+            # scrolls and the foot stays where it is (power/RUNBOOK.md, section 4, "Forms").
+            - fdScrAnswers:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  LayoutOverflowX: =LayoutOverflow.Hide
+                  LayoutOverflowY: =LayoutOverflow.Scroll
+                  X: =Pad
+                  Y: =FormFieldTop
+                  Width: =Parent.Width - Pad * 2
+                  Height: =Parent.Height - FormFieldTop - FrontDoorScreenFootH - Gap
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutGap: =Gap
+                Children:
+                  - fdAnsAbout:
+                      Control: GroupContainer@1.5.0
+                      Variant: ManualLayout
+                      Properties:
+                        FillPortions: =0
+                        Height: =Pad * 2 + GroupHeadH + FrontDoorAnswerStep * 8
+                        Fill: =NeutralBg1
+                        BorderColor: =NeutralStroke1
+                        BorderThickness: =1
+                      Children:
+                        - fdAnsHeadAbout:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad
+                              Width: =Parent.Width - Pad * 2
+                              Height: =GroupHeadH
+                              Text: ="About you"
+                              Size: =TypeSubtitle
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              VerticalAlign: =VerticalAlign.Middle
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblTitle:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 0
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="Request title"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValTitle:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 0 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.Title), "—")
+                              Size: =TypeSubtitle
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              FontWeight: =FontWeight.Semibold
+                        - fdAnsLblName:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 1
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="Their name"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValName:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 1 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.'Requester name'), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblEmail:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 2
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="Their email"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValEmail:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 2 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.'Requester email'), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblArea:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 3
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="Business area"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValArea:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 3 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.'Business area'), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblSponsor:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 4
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="Sponsor"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValSponsor:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 4 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.Sponsor), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblSponsorEmail:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 5
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="Sponsor email"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValSponsorEmail:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 5 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.'Sponsor email'), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblLab:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 6
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="Lab"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValLab:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 6 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.Lab.Lab), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblTeam:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 7
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="Team"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValTeam:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 7 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.Team.Team), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                  - fdAnsProblem:
+                      Control: GroupContainer@1.5.0
+                      Variant: ManualLayout
+                      Properties:
+                        FillPortions: =0
+                        Height: =Pad * 2 + GroupHeadH + FrontDoorAnswerStep * 3
+                        Fill: =NeutralBg1
+                        BorderColor: =NeutralStroke1
+                        BorderThickness: =1
+                      Children:
+                        - fdAnsHeadProblem:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad
+                              Width: =Parent.Width - Pad * 2
+                              Height: =GroupHeadH
+                              Text: ="The problem"
+                              Size: =TypeSubtitle
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              VerticalAlign: =VerticalAlign.Middle
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblProblem:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 0
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="The problem"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValProblem:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 0 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.'The problem'), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblBenefits:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 1
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="Who feels it"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValBenefits:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 1 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.'Who benefits'), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblPeople:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 2
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="People affected"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValPeople:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 2 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.'People affected'), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                  - fdAnsProcess:
+                      Control: GroupContainer@1.5.0
+                      Variant: ManualLayout
+                      Properties:
+                        FillPortions: =0
+                        Height: =Pad * 2 + GroupHeadH + FrontDoorAnswerStep * 6
+                        Fill: =NeutralBg1
+                        BorderColor: =NeutralStroke1
+                        BorderThickness: =1
+                      Children:
+                        - fdAnsHeadProcess:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad
+                              Width: =Parent.Width - Pad * 2
+                              Height: =GroupHeadH
+                              Text: ="The current process"
+                              Size: =TypeSubtitle
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              VerticalAlign: =VerticalAlign.Middle
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblProcess:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 0
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="The process today"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValProcess:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 0 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.'Process today'), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblVolume:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 1
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="Runs per period"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValVolume:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 1 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.'Runs per period'), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblFrequency:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 2
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="How often"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValFrequency:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 2 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.Frequency), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblMinutes:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 3
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="Minutes per run"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValMinutes:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 3 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.'Minutes per run'), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblSystems:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 4
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="Systems touched"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValSystems:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 4 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.'Systems touched'), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblSensitivity:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 5
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="Data involved"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValSensitivity:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 5 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.'Data sensitivity'), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                  - fdAnsOutcome:
+                      Control: GroupContainer@1.5.0
+                      Variant: ManualLayout
+                      Properties:
+                        FillPortions: =0
+                        Height: =Pad * 2 + GroupHeadH + FrontDoorAnswerStep * 6
+                        Fill: =NeutralBg1
+                        BorderColor: =NeutralStroke1
+                        BorderThickness: =1
+                      Children:
+                        - fdAnsHeadOutcome:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad
+                              Width: =Parent.Width - Pad * 2
+                              Height: =GroupHeadH
+                              Text: ="Outcome and benefit"
+                              Size: =TypeSubtitle
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              VerticalAlign: =VerticalAlign.Middle
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblOutcome:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 0
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="What good looks like"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValOutcome:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 0 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.'What good looks like'), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblBenefitType:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 1
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="Benefit type"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValBenefitType:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 1 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.'Benefit type'), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblBenefitSize:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 2
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="Benefit size"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValBenefitSize:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 2 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.'Benefit size'), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblUrgency:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 3
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="Urgency"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValUrgency:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 3 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.Urgency), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblDeadline:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 4
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="Live by"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValDeadline:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 4 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.'Live by'), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblSlips:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 5
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="If it slips"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValSlips:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 5 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.'What happens if it slips'), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                  - fdAnsProduct:
+                      Control: GroupContainer@1.5.0
+                      Variant: ManualLayout
+                      Properties:
+                        FillPortions: =0
+                        Height: =Pad * 2 + GroupHeadH + FrontDoorAnswerStep * 2
+                        Fill: =NeutralBg1
+                        BorderColor: =NeutralStroke1
+                        BorderThickness: =1
+                      Children:
+                        - fdAnsHeadProduct:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad
+                              Width: =Parent.Width - Pad * 2
+                              Height: =GroupHeadH
+                              Text: ="Product line"
+                              Size: =TypeSubtitle
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              VerticalAlign: =VerticalAlign.Middle
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblProductLine:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 0
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="Product line"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValProductLine:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 0 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.'Product line'), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblProductDetail:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 1
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="The product line questions"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValProductDetail:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 1 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.'Other product line'), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                  - fdAnsRisk:
+                      Control: GroupContainer@1.5.0
+                      Variant: ManualLayout
+                      Properties:
+                        FillPortions: =0
+                        Height: =Pad * 2 + GroupHeadH + FrontDoorAnswerStep * 2
+                        Fill: =NeutralBg1
+                        BorderColor: =NeutralStroke1
+                        BorderThickness: =1
+                      Children:
+                        - fdAnsHeadRisk:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad
+                              Width: =Parent.Width - Pad * 2
+                              Height: =GroupHeadH
+                              Text: ="Risks and constraints"
+                              Size: =TypeSubtitle
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              VerticalAlign: =VerticalAlign.Middle
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblConstraints:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 0
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="What could stop this working"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValConstraints:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 0 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.Constraints), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsLblLink:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 1
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeLabelLine
+                              Text: ="Anything else to read"
+                              Size: =TypeCaption
+                              FontWeight: =FontWeight.Semibold
+                              Font: =FontUI
+                              Color: =NeutralFg2
+                              Wrap: =false
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                        - fdAnsValLink:
+                            Control: Label@2.5.1
+                            Properties:
+                              X: =Pad
+                              Y: =Pad + GroupHeadH + FrontDoorAnswerStep * 1 + TypeLabelLine
+                              Width: =Parent.Width - Pad * 2
+                              Height: =TypeBodyLine * 2
+                              Text: =Coalesce(Text(varFrontDoorScreen.Link), "—")
+                              Size: =TypeBody
+                              Font: =FontUI
+                              Color: =NeutralFg1
+                              Wrap: =true
+                              Overflow: =Overflow.Hidden
+                              PaddingTop: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+            # ---- the foot: the notes, the decline answers, one error line, four moves ----
+            # Measured up from the bottom of the panel, as every form's foot is.
+            - fdScrLblNotes:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =Parent.Height - FrontDoorScreenFootH
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: ="Screening notes *"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - fdScrFieldNotes:
+                Control: ModernTextInput@1.1.1
+                Properties:
+                  X: =Pad
+                  Y: =Parent.Height - FrontDoorScreenFootH + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Default: =FrontDoorScreenNotes
+                  Placeholder: ="What you read, and what you think it is"
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="Screening notes, required"
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            - fdScrLblCategory:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =Parent.Height - FrontDoorScreenFootH + FormFieldStep
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: ="Decline category, required to decline"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - fdScrFieldCategory:
+                Control: ModernDropdown@1.0.2
+                Properties:
+                  X: =Pad
+                  Y: =Parent.Height - FrontDoorScreenFootH + FormFieldStep + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Items: =FrontDoorDeclineCategoryOptions
+                  ItemDisplayText: =ThisItem.Value
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="Decline category, required to decline"
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            - fdScrLblReason:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =Parent.Height - FrontDoorScreenFootH + FormFieldStep * 2
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine
+                  Text: ="Decline reason, required to decline"
+                  Size: =TypeCaption
+                  FontWeight: =FontWeight.Semibold
+                  Font: =FontUI
+                  Color: =NeutralFg2
+                  Wrap: =false
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+            - fdScrFieldReason:
+                Control: ModernTextInput@1.1.1
+                Properties:
+                  X: =Pad
+                  Y: =Parent.Height - FrontDoorScreenFootH + FormFieldStep * 2 + TypeLabelLine + 4
+                  Width: =Parent.Width - Pad * 2
+                  Height: =ControlHeight
+                  Default: =""
+                  Placeholder: ="What you would tell the requester"
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  Color: =NeutralFg1
+                  BasePaletteColor: =BrandBg
+                  AccessibleLabel: ="Decline reason, required to decline"
+                  Appearance: =Appearance.Outline
+                  Fill: =NeutralBg1
+            # One error line for the panel: what Dataverse refused, or the first rule
+            # broken. The same condition disables Save notes.
+            - fdScrError:
+                Control: Label@2.5.1
+                Properties:
+                  X: =Pad
+                  Y: =Parent.Height - FrontDoorScreenFootH + FormFieldStep * 3
+                  Width: =Parent.Width - Pad * 2
+                  Height: =TypeLabelLine * 2
+                  Visible: |
+                    =!IsBlank(varFrontDoorScreenError)
+                     || IsBlank(Trim(fdScrFieldNotes.Text))
+                  Text: |
+                    =If(!IsBlank(varFrontDoorScreenError), varFrontDoorScreenError,
+                        IsBlank(Trim(fdScrFieldNotes.Text)),
+                        "Screening notes are required before this request moves on.",
+                        "")
+                  Size: =TypeCaption
+                  Font: =FontUI
+                  Color: =StatusBad
+                  Wrap: =true
+                  Overflow: =Overflow.Hidden
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  AutoHeight: =true
+            - fdScrSpike:
+                Control: ModernButton@1.0.0
+                Properties:
+                  X: =Pad
+                  Y: =Parent.Height - ControlHeight * 2 - Gap - Pad
+                  Width: =(Parent.Width - Pad * 2 - Gap) / 2
+                  Height: =ControlHeight
+                  Appearance: =ButtonAppearance.Subtle
+                  BasePaletteColor: =NeutralBg1
+                  Color: =NeutralFg1
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  RadiusTopLeft: =CtrlR
+                  RadiusTopRight: =CtrlR
+                  RadiusBottomLeft: =CtrlR
+                  RadiusBottomRight: =CtrlR
+                  Text: ="Promote to spike"
+                  AccessibleLabel: ="Promote this request to a spike"
+                  DisplayMode: |
+                    =If(IsBlank(Trim(fdScrFieldNotes.Text)),
+                        DisplayMode.Disabled, DisplayMode.Edit)
+                  OnSelect: |
+                    =// One work item in Shaping at the register's first state, carrying the
+                     // request's own words, its team and the owner who screened it, and saying
+                     // in Source that it came through the front door
+                     // (power/design-work-flow.md, section 5).
+                     IfError(
+                      Set(varFrontDoorPromoted,
+                          Patch('Work items', Defaults('Work items'),
+                                { Title: varFrontDoorScreen.Title,
+                                  Kind: 'Kind (Work items)'.Spike,
+                                  Phase: 'Phase (Work items)'.Shaping,
+                                  Source: 'Source (Work items)'.'Front door',
+                                  State: FormWorkInitialState,
+                                  'Spike question': FrontDoorPromotedProblem,
+                                  Notes: FrontDoorPromotedRest,
+                                  Priority: FrontDoorScreenPriority,
+                                  'Product owner': LookUp(People,
+                                                          'Full name' = User().FullName),
+                                  Team: LookUp(Teams,
+                                               Team = varFrontDoorScreen.Team.Team) })),
+                      Set(varFrontDoorScreenError, FirstError.Message),
+                      // The request closes as Promoted and points at what it became.
+                      Patch('Requests', varFrontDoorScreen,
+                            { 'Request status': 'Request status (Requests)'.Promoted,
+                              'Screening notes': Trim(fdScrFieldNotes.Text),
+                              'Screened by': LookUp(People,
+                                                    'Full name' = User().FullName),
+                              'Screened on': Now(),
+                              'Promoted to': varFrontDoorPromoted });
+                      // The register reads the collection App.OnStart built, so it is
+                      // rebuilt from the table before the panel closes.
+                      ClearCollect(colWork, 'Work items');
+                      Set(varFrontDoorScreenError, "");
+                      Set(varFrontDoorScreenOpen, false);
+                      Notify(varFrontDoorScreen.Title & " promoted to a spike.",
+                             NotificationType.Success))
+            - fdScrFeature:
+                Control: ModernButton@1.0.0
+                Properties:
+                  X: =Pad + (Parent.Width - Pad * 2 - Gap) / 2 + Gap
+                  Y: =Parent.Height - ControlHeight * 2 - Gap - Pad
+                  Width: =(Parent.Width - Pad * 2 - Gap) / 2
+                  Height: =ControlHeight
+                  Appearance: =ButtonAppearance.Subtle
+                  BasePaletteColor: =NeutralBg1
+                  Color: =NeutralFg1
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  RadiusTopLeft: =CtrlR
+                  RadiusTopRight: =CtrlR
+                  RadiusBottomLeft: =CtrlR
+                  RadiusBottomRight: =CtrlR
+                  Text: ="Promote to feature"
+                  AccessibleLabel: ="Promote this request to a feature"
+                  DisplayMode: |
+                    =If(IsBlank(Trim(fdScrFieldNotes.Text)),
+                        DisplayMode.Disabled, DisplayMode.Edit)
+                  OnSelect: |
+                    =// One work item in Shaping at the register's first state, carrying the
+                     // request's own words, its team and the owner who screened it, and saying
+                     // in Source that it came through the front door
+                     // (power/design-work-flow.md, section 5).
+                     IfError(
+                      Set(varFrontDoorPromoted,
+                          Patch('Work items', Defaults('Work items'),
+                                { Title: varFrontDoorScreen.Title,
+                                  Kind: 'Kind (Work items)'.Feature,
+                                  Phase: 'Phase (Work items)'.Shaping,
+                                  Source: 'Source (Work items)'.'Front door',
+                                  State: FormWorkInitialState,
+                                  Notes: FrontDoorPromotedNotes,
+                                  Priority: FrontDoorScreenPriority,
+                                  'Product owner': LookUp(People,
+                                                          'Full name' = User().FullName),
+                                  Team: LookUp(Teams,
+                                               Team = varFrontDoorScreen.Team.Team) })),
+                      Set(varFrontDoorScreenError, FirstError.Message),
+                      // The estimate the requester gave is the feature's first claim, when it
+                      // is a number; a spike carries no claims (power/design-work-flow.md,
+                      // section 4).
+                      If(!IsBlank(FrontDoorClaimValue),
+                         Patch('Benefit claims', Defaults('Benefit claims'),
+                               { Name: varFrontDoorScreen.Title & " · "
+                                       & Lower(Text(varFrontDoorScreen.'Benefit type')),
+                                 'Work item': varFrontDoorPromoted,
+                                 'Benefit type':
+                                     Switch(Text(varFrontDoorScreen.'Benefit type'),
+                                            "FTE released",
+                                            'Benefit type (Benefit claims)'.'FTE released',
+                                            "Cost avoidance",
+                                            'Benefit type (Benefit claims)'.'Cost avoidance',
+                                            "Cycle-time cut",
+                                            'Benefit type (Benefit claims)'.'Cycle-time cut',
+                                            "Error reduction",
+                                            'Benefit type (Benefit claims)'.'Error reduction',
+                                            "Throughput",
+                                            'Benefit type (Benefit claims)'.Throughput,
+                                            "Compliance / risk",
+                                            'Benefit type (Benefit claims)'.'Compliance / risk',
+                                            'Benefit type (Benefit claims)'.'CX / EX uplift'),
+                                 'Claimed value': FrontDoorClaimValue });
+                         ClearCollect(colClaims, 'Benefit claims'));
+                      // The request closes as Promoted and points at what it became.
+                      Patch('Requests', varFrontDoorScreen,
+                            { 'Request status': 'Request status (Requests)'.Promoted,
+                              'Screening notes': Trim(fdScrFieldNotes.Text),
+                              'Screened by': LookUp(People,
+                                                    'Full name' = User().FullName),
+                              'Screened on': Now(),
+                              'Promoted to': varFrontDoorPromoted });
+                      // The register reads the collection App.OnStart built, so it is
+                      // rebuilt from the table before the panel closes.
+                      ClearCollect(colWork, 'Work items');
+                      Set(varFrontDoorScreenError, "");
+                      Set(varFrontDoorScreenOpen, false);
+                      Notify(varFrontDoorScreen.Title & " promoted to a feature.",
+                             NotificationType.Success))
+            - fdScrSave:
+                Control: ModernButton@1.0.0
+                Properties:
+                  X: =Pad
+                  Y: =Parent.Height - ControlHeight - Pad
+                  Width: =(Parent.Width - Pad * 2 - Gap) / 2
+                  Height: =ControlHeight
+                  Appearance: =ButtonAppearance.Primary
+                  BasePaletteColor: =BrandBg
+                  Color: =BrandFg
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  RadiusTopLeft: =CtrlR
+                  RadiusTopRight: =CtrlR
+                  RadiusBottomLeft: =CtrlR
+                  RadiusBottomRight: =CtrlR
+                  Text: ="Save notes"
+                  AccessibleLabel: ="Save the screening notes and mark this request screened"
+                  DisplayMode: |
+                    =If(IsBlank(Trim(fdScrFieldNotes.Text)),
+                        DisplayMode.Disabled, DisplayMode.Edit)
+                  OnSelect: |
+                    =// Screened: the notes are written, the screener and the date with them,
+                     // and the decision itself is still open.
+                     IfError(
+                      Patch('Requests', varFrontDoorScreen,
+                            { 'Request status': 'Request status (Requests)'.Screened,
+                              'Screening notes': Trim(fdScrFieldNotes.Text),
+                              'Screened by': LookUp(People,
+                                                    'Full name' = User().FullName),
+                              'Screened on': Now() }),
+                      Set(varFrontDoorScreenError, FirstError.Message),
+                      Set(varFrontDoorScreenError, "");
+                      Set(varFrontDoorScreenOpen, false);
+                      Notify(varFrontDoorScreen.Title & " screened.",
+                             NotificationType.Success))
+            - fdScrDecline:
+                Control: ModernButton@1.0.0
+                Properties:
+                  X: =Pad + (Parent.Width - Pad * 2 - Gap) / 2 + Gap
+                  Y: =Parent.Height - ControlHeight - Pad
+                  Width: =(Parent.Width - Pad * 2 - Gap) / 2
+                  Height: =ControlHeight
+                  Appearance: =ButtonAppearance.Subtle
+                  BasePaletteColor: =NeutralBg1
+                  Color: =NeutralFg1
+                  Font: =FontUI
+                  Size: =TypeBodyPx
+                  RadiusTopLeft: =CtrlR
+                  RadiusTopRight: =CtrlR
+                  RadiusBottomLeft: =CtrlR
+                  RadiusBottomRight: =CtrlR
+                  Text: ="Decline"
+                  AccessibleLabel: ="Decline this request with a category and a reason"
+                  DisplayMode: |
+                    =If(IsBlank(Trim(fdScrFieldNotes.Text))
+                        || IsBlank(fdScrFieldCategory.Selected.Value)
+                        || IsBlank(Trim(fdScrFieldReason.Text)),
+                        DisplayMode.Disabled, DisplayMode.Edit)
+                  OnSelect: |
+                    =// A decline is never bare: the category and the reason are both on the
+                     // row, so the requester can be told why.
+                     IfError(
+                      Patch('Requests', varFrontDoorScreen,
+                            { 'Request status': 'Request status (Requests)'.Declined,
+                              'Decline category': fdScrFieldCategory.Selected.Value,
+                              'Decline reason': Trim(fdScrFieldReason.Text) }),
+                      Set(varFrontDoorScreenError, FirstError.Message),
+                      // The same line the Command card's Reject writes, so a rejection reads the
+                      // same in the log whichever door it was taken at.
+                      Patch('Activity log', Defaults('Activity log'),
+                            { Label: varFrontDoorScreen.Title & " · rejected",
+                              Summary: Coalesce(ItemMeName, "Someone")
+                                       & " rejected this request at the front door: "
+                                       & Trim(fdScrFieldReason.Text),
+                              Action: 'Action (Activity log)'.'Stage action',
+                              Table: "wp_request",
+                              Record: Text(varFrontDoorScreen.'Request id'),
+                              'Record name': varFrontDoorScreen.Title,
+                              Before: Text(varFrontDoorScreen.'Request status'),
+                              After: "Declined",
+                              At: Now() });
+                      ClearCollect(colActivity, 'Activity log');
+                      Set(varFrontDoorScreenError, "");
+                      Set(varFrontDoorScreenOpen, false);
+                      Notify(varFrontDoorScreen.Title & " declined.",
+                             NotificationType.Success))

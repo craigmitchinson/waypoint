@@ -1,0 +1,2568 @@
+# Waypoint canvas app: the Settings screen, every number the engine reads and the record of
+# what has been changed.
+#
+# Valid against pa.schema.yaml (v3.0): a Screens map, each screen with a Properties formula map and a
+# Children sequence whose items are single-key maps of control name to control instance.
+#
+# Settings is src/pages/Settings.tsx: nine tabs over one card. Quarter, Money and Links are forms
+# read straight off the settings singleton and the current quarter and written back with Patch;
+# States, Lists, Grades and blends and Outcomes are galleries over the tables behind them; Data is
+# the three operations that are Power Automate flows at work; Activity is the log, newest first,
+# with a search over it.
+#
+# The shell is scrTeam's, unchanged: stRoot is a vertical GroupContainer the size of the screen,
+# holding the 48px header and a horizontal row of the rail and the body. X and Y appear only inside
+# the gallery templates, which are not auto-layout.
+#
+# The pivot is one ModernTabList. Its selection lands in varSetTab, and SettingsTab is the formula
+# every panel's Visible reads, so the screen opens on Quarter before the tab list is ever touched.
+#
+# What is hidden, and why: every row's Edit button and every Add button is Visible: false until the
+# form behind it exists. The three buttons on the Data tab stay, and say what the operation will do
+# at work.
+Screens:
+  scrSettings:
+    Properties:
+      Fill: =NeutralCanvas
+      OnVisible: |
+        =// The screen opens with no refusal on show and no save attempted yet.
+        Set(varSetProblem, "");
+        Set(varSetTried, false)
+
+    Children:
+
+      # ---- the root: one vertical auto-layout container the size of the screen ----
+      - stRoot:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            LayoutOverflowX: =LayoutOverflow.Hide
+            LayoutOverflowY: =LayoutOverflow.Hide
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =Parent.Height
+            Fill: =NeutralCanvas
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutGap: =0
+          Children:
+
+            # ---- shell: the app header ----
+            - stHeader:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  LayoutOverflowX: =LayoutOverflow.Hide
+                  LayoutOverflowY: =LayoutOverflow.Hide
+                  FillPortions: =0
+                  Height: =AppHeaderH
+                  Fill: =BrandBg
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                  LayoutGap: =Gap
+                  PaddingLeft: =Pad
+                  PaddingRight: =Pad
+                Children:
+                  - stHeaderName:
+                      Control: Label@2.5.1
+                      Properties:
+                        Width: =Parent.Width / 3
+                        Height: =AppHeaderH
+                        Text: ="Waypoint"
+                        Size: =TypeSubtitle
+                        FontWeight: =FontWeight.Semibold
+                        Font: =FontUI
+                        VerticalAlign: =VerticalAlign.Middle
+                        Color: =BrandFg
+                        Wrap: =true
+                        Overflow: =Overflow.Hidden
+                        PaddingTop: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        AutoHeight: =true
+                  # ---- shell: the scope selector, one cmpScope instance for every screen ----
+                  - stHeaderScope:
+                      Control: CanvasComponent
+                      ComponentName: cmpScope
+                      Properties:
+                        Width: =Max(Parent.Width * 0.14, 180)
+                        Height: =ControlHeight
+                        Visible: =IncludeScope
+                  # ---- shell: the header search, one cmpSearch instance for every screen ----
+                  - stHeaderSearch:
+                      Control: CanvasComponent
+                      ComponentName: cmpSearch
+                      Properties:
+                        Width: =Max(Parent.Width * 0.24, 280)
+                        Height: =ControlHeight
+                  - stHeaderQuarter:
+                      Control: Label@2.5.1
+                      Properties:
+                        Width: =Parent.Width / 3
+                        Height: =AppHeaderH
+                        Text: =CurrentQuarter.Label & " · capacity planner"
+                        Size: =TypeCaption
+                        Font: =FontUI
+                        Align: =Align.Right
+                        VerticalAlign: =VerticalAlign.Middle
+                        Color: =ColorFade(BrandFg, -0.2)
+                        Wrap: =true
+                        Overflow: =Overflow.Hidden
+                        PaddingTop: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        AutoHeight: =true
+
+            # ---- shell: the rail, and the body beside it ----
+            - stMain:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  LayoutOverflowX: =LayoutOverflow.Hide
+                  LayoutOverflowY: =LayoutOverflow.Hide
+                  FillPortions: =1
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutGap: =0
+                Children:
+
+                  # ---- shell: the rail, one cmpRail instance for every screen ----
+                  - stRail:
+                      Control: CanvasComponent
+                      ComponentName: cmpRail
+                      Properties:
+                        LayoutMinWidth: =If(RailCollapsed, RailWidthTight, NavW)
+                        Width: =If(RailCollapsed, RailWidthTight, NavW)
+                        Height: =Parent.Height
+                        Active: ="Settings"
+
+                  # ---- shell: the body everything else sits inside ----
+                  - stBody:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        LayoutOverflowX: =LayoutOverflow.Hide
+                        LayoutOverflowY: =LayoutOverflow.Scroll
+                        FillPortions: =1
+                        Fill: =NeutralBg3
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutGap: =Gap
+                        PaddingLeft: =Pad
+                        PaddingRight: =Pad
+                        PaddingTop: =Pad
+                        PaddingBottom: =Pad
+                      Children:
+
+                        # ---- page head: the eyebrow and the one h1 ----
+                        - stPageHead:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =0
+                              Height: =PageHeadH
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutGap: =0
+                            Children:
+                              - stEyebrow:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =TypeKickerLine
+                                    Visible: =!IsCompact
+                                    Text: =CurrentQuarter.Label
+                                    Size: =TypeCaption
+                                    FontWeight: =FontWeight.Semibold
+                                    Font: =FontUI
+                                    Color: =NeutralFg2
+                                    Wrap: =false
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                              - stTitle:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Height: =TypeDisplayLine
+                                    Text: ="Settings"
+                                    Size: =TypeTitle
+                                    FontWeight: =FontWeight.Semibold
+                                    Font: =FontUI
+                                    Color: =NeutralFg1
+                                    Wrap: =true
+                                    Overflow: =Overflow.Hidden
+                                    PaddingTop: =0
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    AutoHeight: =true
+
+                        # ---- the pivot: the nine tabs Settings.tsx carries, in its own order ----
+                        - stPivot:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =0
+                              Height: =ControlHeight + 16
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutGap: =Gap
+                            Children:
+                              - stTabs:
+                                  Control: ModernTabList@1.0.1
+                                  Properties:
+                                    Width: =Parent.Width
+                                    Height: =ControlHeight + 8
+                                    Items: |
+                                      =Table({Value:"Quarter"}, {Value:"States"}, {Value:"Lists"}, {Value:"Grades and blends"},
+                                        {Value:"Financials"}, {Value:"Outcomes"}, {Value:"Links"}, {Value:"Data"}, {Value:"Activity"})
+                                    Default: ={Value:"Quarter"}
+                                    Font: =FontUI
+                                    Size: =TypeBodyPx
+                                    Color: =NeutralFg1
+                                    BasePaletteColor: =BrandBg
+                                    AccessibleLabel: ="Settings views"
+                                    OnChange: =Set(varSetTab, stTabs.Selected.Value)
+                                    FontWeight: =FontWeight.Semibold
+
+                        # ---- the card every tab draws inside ----
+                        - stCard:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutOverflowX: =LayoutOverflow.Hide
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =1
+                              Fill: =NeutralBg1
+                              BorderColor: =NeutralStroke1
+                              BorderThickness: =1
+                              RadiusTopLeft: =CardR
+                              RadiusTopRight: =CardR
+                              RadiusBottomLeft: =CardR
+                              RadiusBottomRight: =CardR
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutGap: =8
+                              PaddingLeft: =Pad
+                              PaddingRight: =Pad
+                              PaddingTop: =Pad
+                              PaddingBottom: =Pad
+                            Children:
+
+                              - stQuarter:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =1
+                                    Visible: =SettingsTab = "Quarter"
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutGap: =8
+                                  Children:
+                                    - stRowQ1:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Height: =SetFieldRowH
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutGap: =Gap
+                                        Children:
+                                          - stFldQLabel:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: AutoLayout
+                                              Properties:
+                                                LayoutOverflowX: =LayoutOverflow.Hide
+                                                LayoutOverflowY: =LayoutOverflow.Hide
+                                                FillPortions: =1
+                                                LayoutDirection: =LayoutDirection.Vertical
+                                                LayoutAlignItems: =LayoutAlignItems.Stretch
+                                                LayoutGap: =4
+                                              Children:
+                                                - stLblQLabel:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      Height: =SetFieldLabelH
+                                                      Text: ="Quarter label"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - stInQLabel:
+                                                    Control: ModernTextInput@1.1.1
+                                                    Properties:
+                                                      Height: =ControlHeight
+                                                      Default: =CurrentQuarter.Label
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      Color: =NeutralFg1
+                                                      BasePaletteColor: =BrandBg
+                                                      AccessibleLabel: ="Quarter label"
+                                                      Appearance: =Appearance.Outline
+                                                      Fill: =NeutralBg1
+                                          - stFldQEpoch:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: AutoLayout
+                                              Properties:
+                                                LayoutOverflowX: =LayoutOverflow.Hide
+                                                LayoutOverflowY: =LayoutOverflow.Hide
+                                                FillPortions: =1
+                                                LayoutDirection: =LayoutDirection.Vertical
+                                                LayoutAlignItems: =LayoutAlignItems.Stretch
+                                                LayoutGap: =4
+                                              Children:
+                                                - stLblQEpoch:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      Height: =SetFieldLabelH
+                                                      Text: ="Sprint 1 started"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - stInQEpoch:
+                                                    Control: ModernTextInput@1.1.1
+                                                    Properties:
+                                                      Height: =ControlHeight
+                                                      Default: =Text(Epoch, "[$-en-US]yyyy-mm-dd")
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      Color: =NeutralFg1
+                                                      BasePaletteColor: =BrandBg
+                                                      AccessibleLabel: ="Sprint 1 started"
+                                                      Appearance: =Appearance.Outline
+                                                      Fill: =NeutralBg1
+                                    - stRowQ2:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Height: =SetFieldRowH
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutGap: =Gap
+                                        Children:
+                                          - stFldQSprintDays:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: AutoLayout
+                                              Properties:
+                                                LayoutOverflowX: =LayoutOverflow.Hide
+                                                LayoutOverflowY: =LayoutOverflow.Hide
+                                                FillPortions: =1
+                                                LayoutDirection: =LayoutDirection.Vertical
+                                                LayoutAlignItems: =LayoutAlignItems.Stretch
+                                                LayoutGap: =4
+                                              Children:
+                                                - stLblQSprintDays:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      Height: =SetFieldLabelH
+                                                      Text: ="Sprint days"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - stInQSprintDays:
+                                                    Control: ModernTextInput@1.1.1
+                                                    Properties:
+                                                      Height: =ControlHeight
+                                                      Default: =Text(SprintDays, "[$-en-US]#,##0")
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      Color: =NeutralFg1
+                                                      BasePaletteColor: =BrandBg
+                                                      AccessibleLabel: ="Sprint days"
+                                                      Appearance: =Appearance.Outline
+                                                      Fill: =NeutralBg1
+                                          - stFldQMwDays:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: AutoLayout
+                                              Properties:
+                                                LayoutOverflowX: =LayoutOverflow.Hide
+                                                LayoutOverflowY: =LayoutOverflow.Hide
+                                                FillPortions: =1
+                                                LayoutDirection: =LayoutDirection.Vertical
+                                                LayoutAlignItems: =LayoutAlignItems.Stretch
+                                                LayoutGap: =4
+                                              Children:
+                                                - stLblQMwDays:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      Height: =SetFieldLabelH
+                                                      Text: ="Days in one member week"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - stInQMwDays:
+                                                    Control: ModernTextInput@1.1.1
+                                                    Properties:
+                                                      Height: =ControlHeight
+                                                      Default: =Text(MWDays, "[$-en-US]#,##0.0")
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      Color: =NeutralFg1
+                                                      BasePaletteColor: =BrandBg
+                                                      AccessibleLabel: ="Days in one member week"
+                                                      Appearance: =Appearance.Outline
+                                                      Fill: =NeutralBg1
+                                    - stRowQ3:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Height: =SetFieldRowH
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutGap: =Gap
+                                        Children:
+                                          - stFldQDefMod:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: AutoLayout
+                                              Properties:
+                                                LayoutOverflowX: =LayoutOverflow.Hide
+                                                LayoutOverflowY: =LayoutOverflow.Hide
+                                                FillPortions: =1
+                                                LayoutDirection: =LayoutDirection.Vertical
+                                                LayoutAlignItems: =LayoutAlignItems.Stretch
+                                                LayoutGap: =4
+                                              Children:
+                                                - stLblQDefMod:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      Height: =SetFieldLabelH
+                                                      Text: ="Default modifier (%)"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - stInQDefMod:
+                                                    Control: ModernTextInput@1.1.1
+                                                    Properties:
+                                                      Height: =ControlHeight
+                                                      Default: =Text(DefaultModifier * 100, "[$-en-US]#,##0")
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      Color: =NeutralFg1
+                                                      BasePaletteColor: =BrandBg
+                                                      AccessibleLabel: ="Default modifier (%)"
+                                                      Appearance: =Appearance.Outline
+                                                      Fill: =NeutralBg1
+                                          - stFldQLeadMod:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: AutoLayout
+                                              Properties:
+                                                LayoutOverflowX: =LayoutOverflow.Hide
+                                                LayoutOverflowY: =LayoutOverflow.Hide
+                                                FillPortions: =1
+                                                LayoutDirection: =LayoutDirection.Vertical
+                                                LayoutAlignItems: =LayoutAlignItems.Stretch
+                                                LayoutGap: =4
+                                              Children:
+                                                - stLblQLeadMod:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      Height: =SetFieldLabelH
+                                                      Text: ="Lead modifier (%)"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - stInQLeadMod:
+                                                    Control: ModernTextInput@1.1.1
+                                                    Properties:
+                                                      Height: =ControlHeight
+                                                      Default: =Text(LeadModifier * 100, "[$-en-US]#,##0")
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      Color: =NeutralFg1
+                                                      BasePaletteColor: =BrandBg
+                                                      AccessibleLabel: ="Lead modifier (%)"
+                                                      Appearance: =Appearance.Outline
+                                                      Fill: =NeutralBg1
+                                    - stRowQ4:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Height: =SetFieldRowH
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutGap: =Gap
+                                        Children:
+                                          - stFldQBenefitYear:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: AutoLayout
+                                              Properties:
+                                                LayoutOverflowX: =LayoutOverflow.Hide
+                                                LayoutOverflowY: =LayoutOverflow.Hide
+                                                FillPortions: =1
+                                                LayoutDirection: =LayoutDirection.Vertical
+                                                LayoutAlignItems: =LayoutAlignItems.Stretch
+                                                LayoutGap: =4
+                                              Children:
+                                                - stLblQBenefitYear:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      Height: =SetFieldLabelH
+                                                      Text: ="Benefit year"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - stInQBenefitYear:
+                                                    Control: ModernTextInput@1.1.1
+                                                    Properties:
+                                                      Height: =ControlHeight
+                                                      Default: =Text(BenefitYear, "[$-en-US]#,##0")
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      Color: =NeutralFg1
+                                                      BasePaletteColor: =BrandBg
+                                                      AccessibleLabel: ="Benefit year"
+                                                      Appearance: =Appearance.Outline
+                                                      Fill: =NeutralBg1
+                                          - stFldQDeduct:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: AutoLayout
+                                              Properties:
+                                                LayoutOverflowX: =LayoutOverflow.Hide
+                                                LayoutOverflowY: =LayoutOverflow.Hide
+                                                FillPortions: =1
+                                                LayoutDirection: =LayoutDirection.Vertical
+                                                LayoutAlignItems: =LayoutAlignItems.Stretch
+                                                LayoutGap: =4
+                                              Children:
+                                                - stLblQDeduct:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      Height: =SetFieldLabelH
+                                                      Text: ="Deduct logged absences and bank holidays"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - stInQDeduct:
+                                                    Control: ModernDropdown@1.0.2
+                                                    Properties:
+                                                      Height: =ControlHeight
+                                                      Items: =SettingsYesNo
+                                                      ItemDisplayText: =ThisItem.Value
+                                                      Default: ={Value:If(LogAbsences, "Yes", "No")}
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      Color: =NeutralFg1
+                                                      BasePaletteColor: =BrandBg
+                                                      AccessibleLabel: ="Deduct logged absences and bank holidays"
+                                                      Appearance: =Appearance.Outline
+                                                      Fill: =NeutralBg1
+                                    - stRowQ5:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Height: =SetFieldRowH
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutGap: =Gap
+                                        Children:
+                                          - stFldQTargetFte:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: AutoLayout
+                                              Properties:
+                                                LayoutOverflowX: =LayoutOverflow.Hide
+                                                LayoutOverflowY: =LayoutOverflow.Hide
+                                                FillPortions: =1
+                                                LayoutDirection: =LayoutDirection.Vertical
+                                                LayoutAlignItems: =LayoutAlignItems.Stretch
+                                                LayoutGap: =4
+                                              Children:
+                                                - stLblQTargetFte:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      Height: =SetFieldLabelH
+                                                      Text: ="Target FTE released"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - stInQTargetFte:
+                                                    Control: ModernTextInput@1.1.1
+                                                    Properties:
+                                                      Height: =ControlHeight
+                                                      Default: =Text(FteTarget, "[$-en-US]#,##0.0")
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      Color: =NeutralFg1
+                                                      BasePaletteColor: =BrandBg
+                                                      AccessibleLabel: ="Target FTE released"
+                                                      Appearance: =Appearance.Outline
+                                                      Fill: =NeutralBg1
+                                          - stFldQTargetGbp:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: AutoLayout
+                                              Properties:
+                                                LayoutOverflowX: =LayoutOverflow.Hide
+                                                LayoutOverflowY: =LayoutOverflow.Hide
+                                                FillPortions: =1
+                                                LayoutDirection: =LayoutDirection.Vertical
+                                                LayoutAlignItems: =LayoutAlignItems.Stretch
+                                                LayoutGap: =4
+                                              Children:
+                                                - stLblQTargetGbp:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      Height: =SetFieldLabelH
+                                                      Text: ="Target benefit (GBP)"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - stInQTargetGbp:
+                                                    Control: ModernTextInput@1.1.1
+                                                    Properties:
+                                                      Height: =ControlHeight
+                                                      Default: =Text(GbpTarget, "[$-en-US]#,##0")
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      Color: =NeutralFg1
+                                                      BasePaletteColor: =BrandBg
+                                                      AccessibleLabel: ="Target benefit (GBP)"
+                                                      Appearance: =Appearance.Outline
+                                                      Fill: =NeutralBg1
+                                    - stRowQ6:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Height: =SetFieldRowH
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutGap: =Gap
+                                        Children:
+                                          - stFldQAmber:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: AutoLayout
+                                              Properties:
+                                                LayoutOverflowX: =LayoutOverflow.Hide
+                                                LayoutOverflowY: =LayoutOverflow.Hide
+                                                FillPortions: =1
+                                                LayoutDirection: =LayoutDirection.Vertical
+                                                LayoutAlignItems: =LayoutAlignItems.Stretch
+                                                LayoutGap: =4
+                                              Children:
+                                                - stLblQAmber:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      Height: =SetFieldLabelH
+                                                      Text: ="Amber utilisation from (%)"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - stInQAmber:
+                                                    Control: ModernTextInput@1.1.1
+                                                    Properties:
+                                                      Height: =ControlHeight
+                                                      Default: =Text(UtilisationWarn * 100, "[$-en-US]#,##0")
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      Color: =NeutralFg1
+                                                      BasePaletteColor: =BrandBg
+                                                      AccessibleLabel: ="Amber utilisation from (%)"
+                                                      Appearance: =Appearance.Outline
+                                                      Fill: =NeutralBg1
+                                          - stFldQRed:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: AutoLayout
+                                              Properties:
+                                                LayoutOverflowX: =LayoutOverflow.Hide
+                                                LayoutOverflowY: =LayoutOverflow.Hide
+                                                FillPortions: =1
+                                                LayoutDirection: =LayoutDirection.Vertical
+                                                LayoutAlignItems: =LayoutAlignItems.Stretch
+                                                LayoutGap: =4
+                                              Children:
+                                                - stLblQRed:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      Height: =SetFieldLabelH
+                                                      Text: ="Red utilisation from (%)"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - stInQRed:
+                                                    Control: ModernTextInput@1.1.1
+                                                    Properties:
+                                                      Height: =ControlHeight
+                                                      Default: =Text(UtilisationBad * 100, "[$-en-US]#,##0")
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      Color: =NeutralFg1
+                                                      BasePaletteColor: =BrandBg
+                                                      AccessibleLabel: ="Red utilisation from (%)"
+                                                      Appearance: =Appearance.Outline
+                                                      Fill: =NeutralBg1
+                                    - stQuarterNote:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeBodyLine * 2
+                                          Text: |
+                                            ="The quarter's own dates, targets and sprint length are held on the quarter; the modifiers, the member week and the thresholds are held on the settings singleton. Save writes both."
+                                          Size: =TypeCaption
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                          FontWeight: =FontWeight.Normal
+                                    # Validation is inline, as the forms are: one rule per field, in
+                                    # field order, and nothing is written while the line reads.
+                                    - stQuarterError:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeLabelLine
+                                          Visible: =varSetTried && stQuarterError.Text <> ""
+                                          Text: |
+                                            =If(IsBlank(Trim(stInQLabel.Text)), "A quarter label is required.",
+                                                IsBlank(DateValue(stInQEpoch.Text)),
+                                                "Sprint 1 started must be a date, as yyyy-mm-dd.",
+                                                !IsNumeric(stInQSprintDays.Text), "Sprint days must be a number.",
+                                                !IsNumeric(stInQMwDays.Text),
+                                                "Days in one member week must be a number.",
+                                                !IsNumeric(stInQDefMod.Text),
+                                                "The default modifier must be a number.",
+                                                !IsNumeric(stInQLeadMod.Text), "The lead modifier must be a number.",
+                                                !IsNumeric(stInQBenefitYear.Text), "The benefit year must be a number.",
+                                                !IsNumeric(stInQTargetFte.Text),
+                                                "The target FTE released must be a number.",
+                                                !IsNumeric(stInQTargetGbp.Text), "The target benefit must be a number.",
+                                                !IsNumeric(stInQAmber.Text),
+                                                "The amber utilisation threshold must be a number.",
+                                                !IsNumeric(stInQRed.Text),
+                                                "The red utilisation threshold must be a number.", "")
+                                          Size: =TypeCaption
+                                          Font: =FontUI
+                                          Color: =StatusBad
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    # What Dataverse answered when it refused the save.
+                                    - stQuarterProblem:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeLabelLine
+                                          Visible: =!IsBlank(varSetProblem)
+                                          Text: =varSetProblem
+                                          Size: =TypeCaption
+                                          Font: =FontUI
+                                          Color: =StatusBad
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - stQuarterFill:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =1
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutGap: =0
+                                    - stQuarterActions:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Height: =ControlHeight
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutJustifyContent: =LayoutJustifyContent.End
+                                          LayoutGap: =Gap
+                                        Children:
+                                          - stQuarterSave:
+                                              Control: ModernButton@1.0.0
+                                              Properties:
+                                                Appearance: =ButtonAppearance.Primary
+                                                BasePaletteColor: =BrandBg
+                                                Color: =BrandFg
+                                                Font: =FontUI
+                                                Size: =TypeBodyPx
+                                                RadiusTopLeft: =CtrlR
+                                                RadiusTopRight: =CtrlR
+                                                RadiusBottomLeft: =CtrlR
+                                                RadiusBottomRight: =CtrlR
+                                                Width: =Max(Parent.Width * 0.13, 220)
+                                                Height: =ControlHeight
+                                                Text: ="Save"
+                                                AccessibleLabel: ="Save"
+                                                DisplayMode: |
+                                                  =If(varSetTried && stQuarterError.Text <> "",
+                                                      DisplayMode.Disabled, DisplayMode.Edit)
+                                                OnSelect: |
+                                                  =Set(varSetTried, true);
+                                                   If(stQuarterError.Text = "",
+                                                   IfError(
+                                                   Patch([@Settings], First([@Settings]),
+                                                         { 'Days in a member week': Value(stInQMwDays.Text),
+                                                           'Default modifier': Value(stInQDefMod.Text) / 100,
+                                                           'Lead modifier': Value(stInQLeadMod.Text) / 100,
+                                                           'Deduct absences': stInQDeduct.Selected.Value = "Yes",
+                                                           'Amber utilisation from': Value(stInQAmber.Text) / 100,
+                                                           'Red utilisation from': Value(stInQRed.Text) / 100 });
+                                                   // The quarter is found by the flag, never by the
+                                                   // label this save is rewriting.
+                                                   Patch(Quarters, LookUp(Quarters, 'Current quarter' = true),
+                                                         { Label: stInQLabel.Text,
+                                                           'Sprint 1 started': DateValue(stInQEpoch.Text),
+                                                           'Sprint length (days)': Value(stInQSprintDays.Text),
+                                                           'Benefit year': Value(stInQBenefitYear.Text),
+                                                           'Target FTE released': Value(stInQTargetFte.Text),
+                                                           'Target benefit': Value(stInQTargetGbp.Text) }),
+                                                   Set(varSetProblem, FirstError.Message),
+                                                   Concurrent(ClearCollect(colSettings, [@Settings]),
+                                                              ClearCollect(colQuarters, Quarters));
+                                                   Set(varSetProblem, "");
+                                                   Notify("The quarter and the settings are saved.",
+                                                          NotificationType.Success)))
+
+                              - stStates:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =1
+                                    Visible: =SettingsTab = "States"
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutGap: =8
+                                  Children:
+                                    - stStatesNote:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeBodyLine * 2
+                                          Text: |
+                                            ="Every work state, what it does to capacity, and the Jira Align states it stands for. Editing a state is a later unit."
+                                          Size: =TypeCaption
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                          FontWeight: =FontWeight.Normal
+                                    - stHeadStates:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          Width: =Parent.Width
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Height: =TypeLabelLine + 8
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutGap: =8
+                                        Children:
+                                          - stHdFirstStates:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Parent.Width * 0.3
+                                                Height: =TypeLabelLine
+                                                Text: ="State"
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - stHdStatesJira:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Parent.Width * 0.34
+                                                Height: =TypeLabelLine
+                                                Text: ="Jira Align states"
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - stHdStatesImpact:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Parent.Width * 0.24
+                                                Height: =TypeLabelLine
+                                                Text: ="Capacity impact"
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - stHdStatesOrder:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Parent.Width * 0.12
+                                                Height: =TypeLabelLine
+                                                Text: ="Order"
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                    - stStatesList:
+                                        Control: Gallery@2.15.0
+                                        Variant: Vertical
+                                        Properties:
+                                          Width: =Parent.Width
+                                          TemplatePadding: =0
+                                          BorderColor: =RGBA(0, 0, 0, 0)
+                                          ShowScrollbar: =true
+                                          FillPortions: =1
+                                          Items: =SettingsStateRows
+                                          TemplateSize: =RowHeight
+                                          AccessibleLabel: |
+                                            ="Work states: the capacity impact and the order each one sits in."
+                                        Children:
+                                        - stCellStName:
+                                            Control: Label@2.5.1
+                                            Properties:
+                                              X: =0
+                                              Width: =Parent.TemplateWidth * 0.3
+                                              Y: =0
+                                              Height: =RowHeight
+                                              Text: =ThisItem.State
+                                              Size: =TypeBody
+                                              FontWeight: =FontWeight.Semibold
+                                              Font: =FontUI
+                                              VerticalAlign: =VerticalAlign.Middle
+                                              Color: =NeutralFg1
+                                              Wrap: =true
+                                              Overflow: =Overflow.Hidden
+                                              PaddingTop: =0
+                                              PaddingBottom: =0
+                                              PaddingLeft: =0
+                                              PaddingRight: =0
+                                              AutoHeight: =true
+                                        - stCellStJira:
+                                            Control: Label@2.5.1
+                                            Properties:
+                                              X: =0
+                                              Width: =Parent.TemplateWidth * 0.34
+                                              Y: =0
+                                              Height: =RowHeight
+                                              Text: =If(IsBlank(ThisItem.'Jira Align states'), "—", ThisItem.'Jira Align states')
+                                              Size: =TypeCaption
+                                              Font: =FontUI
+                                              VerticalAlign: =VerticalAlign.Middle
+                                              Color: =NeutralFg2
+                                              Wrap: =true
+                                              Overflow: =Overflow.Hidden
+                                              PaddingTop: =0
+                                              PaddingBottom: =0
+                                              PaddingLeft: =0
+                                              PaddingRight: =0
+                                              AutoHeight: =true
+                                        - stCellStImpact:
+                                            Control: Label@2.5.1
+                                            Properties:
+                                              X: =0
+                                              Width: =Parent.TemplateWidth * 0.24
+                                              Y: =0
+                                              Height: =RowHeight
+                                              Text: =Text(ThisItem.'Capacity impact')
+                                              Size: =TypeBody
+                                              Font: =FontUI
+                                              VerticalAlign: =VerticalAlign.Middle
+                                              Color: =NeutralFg1
+                                              Wrap: =true
+                                              Overflow: =Overflow.Hidden
+                                              PaddingTop: =0
+                                              PaddingBottom: =0
+                                              PaddingLeft: =0
+                                              PaddingRight: =0
+                                              AutoHeight: =true
+                                        - stCellStOrder:
+                                            Control: Label@2.5.1
+                                            Properties:
+                                              X: =0
+                                              Width: =Parent.TemplateWidth * 0.12
+                                              Y: =0
+                                              Height: =RowHeight
+                                              Text: =Text(ThisItem.Order, "[$-en-US]#,##0")
+                                              Size: =TypeBody
+                                              Font: =FontUI
+                                              Align: =Align.Right
+                                              VerticalAlign: =VerticalAlign.Middle
+                                              Color: =NeutralFg1
+                                              Wrap: =true
+                                              Overflow: =Overflow.Hidden
+                                              PaddingTop: =0
+                                              PaddingBottom: =0
+                                              PaddingLeft: =0
+                                              PaddingRight: =0
+                                              AutoHeight: =true
+                                    - stStatesEmpty:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeBodyLine
+                                          Align: =Align.Left
+                                          Visible: =CountRows(stStatesList.AllItems) = 0
+                                          Text: ="No work states defined."
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+
+                              - stLists:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =1
+                                    Visible: =SettingsTab = "Lists"
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutGap: =8
+                                  Children:
+                                    - stListsNote:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeBodyLine * 2
+                                          Text: |
+                                            ="The five lists the model reads: skills, regions, roles, absence types and reservation categories, grouped by list. Editing a value is a later unit."
+                                          Size: =TypeCaption
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                          FontWeight: =FontWeight.Normal
+                                    - stHeadLists:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          Width: =Parent.Width
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Height: =TypeLabelLine + 8
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutGap: =8
+                                        Children:
+                                          - stHdListsList:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Parent.Width * 0.2
+                                                Height: =TypeLabelLine
+                                                Text: ="List"
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - stHdFirstLists:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Parent.Width * 0.6
+                                                Height: =TypeLabelLine
+                                                Text: ="Value"
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - stHdListsOrder:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Parent.Width * 0.2
+                                                Height: =TypeLabelLine
+                                                Text: ="Order"
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                    - stListsList:
+                                        Control: Gallery@2.15.0
+                                        Variant: Vertical
+                                        Properties:
+                                          Width: =Parent.Width
+                                          TemplatePadding: =0
+                                          BorderColor: =RGBA(0, 0, 0, 0)
+                                          ShowScrollbar: =true
+                                          FillPortions: =1
+                                          Items: |
+                                            =Sort(SettingsListRows,
+                                                  Text(List) & "|" & Text(Order, "[$-en-US]0000"))
+                                          TemplateSize: =RowHeight
+                                          AccessibleLabel: |
+                                            ="List values: the list each value belongs to and the order it sits in."
+                                        Children:
+                                        - stCellLvValue:
+                                            Control: Label@2.5.1
+                                            Properties:
+                                              X: =0
+                                              Width: =Parent.TemplateWidth * 0.6
+                                              Y: =0
+                                              Height: =RowHeight
+                                              Text: =ThisItem.Value
+                                              Size: =TypeBody
+                                              FontWeight: =FontWeight.Semibold
+                                              Font: =FontUI
+                                              VerticalAlign: =VerticalAlign.Middle
+                                              Color: =NeutralFg1
+                                              Wrap: =true
+                                              Overflow: =Overflow.Hidden
+                                              PaddingTop: =0
+                                              PaddingBottom: =0
+                                              PaddingLeft: =0
+                                              PaddingRight: =0
+                                              AutoHeight: =true
+                                        - stCellLvList:
+                                            Control: Label@2.5.1
+                                            Properties:
+                                              X: =0
+                                              Width: =Parent.TemplateWidth * 0.2
+                                              Y: =0
+                                              Height: =RowHeight
+                                              Text: =Text(ThisItem.List)
+                                              Size: =TypeCaption
+                                              Font: =FontUI
+                                              VerticalAlign: =VerticalAlign.Middle
+                                              Color: =NeutralFg2
+                                              Wrap: =true
+                                              Overflow: =Overflow.Hidden
+                                              PaddingTop: =0
+                                              PaddingBottom: =0
+                                              PaddingLeft: =0
+                                              PaddingRight: =0
+                                              AutoHeight: =true
+                                        - stCellLvOrder:
+                                            Control: Label@2.5.1
+                                            Properties:
+                                              X: =0
+                                              Width: =Parent.TemplateWidth * 0.2
+                                              Y: =0
+                                              Height: =RowHeight
+                                              Text: =Text(ThisItem.Order, "[$-en-US]#,##0")
+                                              Size: =TypeBody
+                                              Font: =FontUI
+                                              Align: =Align.Right
+                                              VerticalAlign: =VerticalAlign.Middle
+                                              Color: =NeutralFg1
+                                              Wrap: =true
+                                              Overflow: =Overflow.Hidden
+                                              PaddingTop: =0
+                                              PaddingBottom: =0
+                                              PaddingLeft: =0
+                                              PaddingRight: =0
+                                              AutoHeight: =true
+                                    - stListsEmpty:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeBodyLine
+                                          Align: =Align.Left
+                                          Visible: =CountRows(stListsList.AllItems) = 0
+                                          Text: ="No list values yet."
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+
+                              - stGrades:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =1
+                                    Visible: =SettingsTab = "Grades and blends"
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutGap: =8
+                                  Children:
+                                    - stGradesNote:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeBodyLine * 2
+                                          Text: |
+                                            ="The business grades and their annual cost per FTE, and the blends the financial model prices a squad from."
+                                          Size: =TypeCaption
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                          FontWeight: =FontWeight.Normal
+                                    - stHeadGrades:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          Width: =Parent.Width
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Height: =TypeLabelLine + 8
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutGap: =8
+                                        Children:
+                                          - stHdFirstGrades:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Parent.Width * 0.55
+                                                Height: =TypeLabelLine
+                                                Text: ="Business grade"
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - stHdGradesRate:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Parent.Width * 0.45
+                                                Height: =TypeLabelLine
+                                                Text: ="GBP per FTE"
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                    - stGradesList:
+                                        Control: Gallery@2.15.0
+                                        Variant: Vertical
+                                        Properties:
+                                          Width: =Parent.Width
+                                          TemplatePadding: =0
+                                          BorderColor: =RGBA(0, 0, 0, 0)
+                                          ShowScrollbar: =true
+                                          FillPortions: =0
+                                          Height: =RowHeight * Max(CountRows(SettingsGradeRows), 1)
+                                          Items: =SettingsGradeRows
+                                          TemplateSize: =RowHeight
+                                          AccessibleLabel: |
+                                            ="Business grades: the annual cost of one FTE at each grade."
+                                        Children:
+                                        - stCellGrName:
+                                            Control: Label@2.5.1
+                                            Properties:
+                                              X: =0
+                                              Width: =Parent.TemplateWidth * 0.55
+                                              Y: =0
+                                              Height: =RowHeight
+                                              Text: =ThisItem.'Business grade'
+                                              Size: =TypeBody
+                                              FontWeight: =FontWeight.Semibold
+                                              Font: =FontUI
+                                              VerticalAlign: =VerticalAlign.Middle
+                                              Color: =NeutralFg1
+                                              Wrap: =true
+                                              Overflow: =Overflow.Hidden
+                                              PaddingTop: =0
+                                              PaddingBottom: =0
+                                              PaddingLeft: =0
+                                              PaddingRight: =0
+                                              AutoHeight: =true
+                                        - stCellGrRate:
+                                            Control: Label@2.5.1
+                                            Properties:
+                                              X: =0
+                                              Width: =Parent.TemplateWidth * 0.45
+                                              Y: =0
+                                              Height: =RowHeight
+                                              Text: ="£" & Text(ThisItem.'GBP per FTE', "[$-en-US]#,##0")
+                                              Size: =TypeBody
+                                              Font: =FontUI
+                                              Align: =Align.Right
+                                              VerticalAlign: =VerticalAlign.Middle
+                                              Color: =NeutralFg1
+                                              Wrap: =true
+                                              Overflow: =Overflow.Hidden
+                                              PaddingTop: =0
+                                              PaddingBottom: =0
+                                              PaddingLeft: =0
+                                              PaddingRight: =0
+                                              AutoHeight: =true
+                                    - stGradesEmpty:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeBodyLine
+                                          Align: =Align.Left
+                                          Visible: =CountRows(stGradesList.AllItems) = 0
+                                          Text: ="No grades defined."
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - stHeadBlends:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          Width: =Parent.Width
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Height: =TypeLabelLine + 8
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutGap: =8
+                                        Children:
+                                          - stHdFirstBlends:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Parent.Width * 0.3
+                                                Height: =TypeLabelLine
+                                                Text: ="Grade blend"
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - stHdBlendsMix:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Parent.Width * 0.5
+                                                Height: =TypeLabelLine
+                                                Text: ="Mix"
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - stHdBlendsHeads:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Parent.Width * 0.2
+                                                Height: =TypeLabelLine
+                                                Text: ="Heads"
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                    - stBlendsList:
+                                        Control: Gallery@2.15.0
+                                        Variant: Vertical
+                                        Properties:
+                                          Width: =Parent.Width
+                                          TemplatePadding: =0
+                                          BorderColor: =RGBA(0, 0, 0, 0)
+                                          ShowScrollbar: =true
+                                          FillPortions: =1
+                                          Items: =SettingsBlendRows
+                                          TemplateSize: =RowHeight
+                                          AccessibleLabel: |
+                                            ="Grade blends: the named mixes of grades a squad is priced from."
+                                        Children:
+                                        - stCellBlName:
+                                            Control: Label@2.5.1
+                                            Properties:
+                                              X: =0
+                                              Width: =Parent.TemplateWidth * 0.3
+                                              Y: =0
+                                              Height: =RowHeight
+                                              Text: =ThisItem.'Blend name'
+                                              Size: =TypeBody
+                                              FontWeight: =FontWeight.Semibold
+                                              Font: =FontUI
+                                              VerticalAlign: =VerticalAlign.Middle
+                                              Color: =NeutralFg1
+                                              Wrap: =true
+                                              Overflow: =Overflow.Hidden
+                                              PaddingTop: =0
+                                              PaddingBottom: =0
+                                              PaddingLeft: =0
+                                              PaddingRight: =0
+                                              AutoHeight: =true
+                                        - stCellBlMix:
+                                            Control: Label@2.5.1
+                                            Properties:
+                                              X: =0
+                                              Width: =Parent.TemplateWidth * 0.5
+                                              Y: =0
+                                              Height: =RowHeight
+                                              Text: |
+                                                =If(IsEmpty(Filter(colBlendLines, Blend.'Blend name' = ThisItem.'Blend name')),
+                                                    "No grades in this blend yet",
+                                                    Concat(Filter(colBlendLines, Blend.'Blend name' = ThisItem.'Blend name') As L,
+                                                           Text(L.Heads, "[$-en-US]#,##0") & " x " & L.'Business grade'.'Business grade',
+                                                           ", "))
+                                              Size: =TypeCaption
+                                              Font: =FontUI
+                                              VerticalAlign: =VerticalAlign.Middle
+                                              Color: =NeutralFg2
+                                              Wrap: =false
+                                              Overflow: =Overflow.Hidden
+                                              PaddingTop: =0
+                                              PaddingBottom: =0
+                                              PaddingLeft: =0
+                                              PaddingRight: =0
+                                        - stCellBlHeads:
+                                            Control: Label@2.5.1
+                                            Properties:
+                                              X: =0
+                                              Width: =Parent.TemplateWidth * 0.2
+                                              Y: =0
+                                              Height: =RowHeight
+                                              Text: |
+                                                =Text(Coalesce(Sum(Filter(colBlendLines,
+                                                                      Blend.'Blend name' = ThisItem.'Blend name'), Heads), 0),
+                                                      "[$-en-US]#,##0")
+                                              Size: =TypeBody
+                                              Font: =FontUI
+                                              Align: =Align.Right
+                                              VerticalAlign: =VerticalAlign.Middle
+                                              Color: =NeutralFg1
+                                              Wrap: =false
+                                              Overflow: =Overflow.Hidden
+                                              PaddingTop: =0
+                                              PaddingBottom: =0
+                                              PaddingLeft: =0
+                                              PaddingRight: =0
+                                    - stBlendsEmpty:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeBodyLine
+                                          Align: =Align.Left
+                                          Visible: =CountRows(stBlendsList.AllItems) = 0
+                                          Text: ="No grade blends defined."
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+
+                              - stMoney:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =1
+                                    Visible: =SettingsTab = "Financials"
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutGap: =8
+                                  Children:
+                                    - stRowM1:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Height: =SetFieldRowH
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutGap: =Gap
+                                        Children:
+                                          - stFldMTeam:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: AutoLayout
+                                              Properties:
+                                                LayoutOverflowX: =LayoutOverflow.Hide
+                                                LayoutOverflowY: =LayoutOverflow.Hide
+                                                FillPortions: =1
+                                                LayoutDirection: =LayoutDirection.Vertical
+                                                LayoutAlignItems: =LayoutAlignItems.Stretch
+                                                LayoutGap: =4
+                                              Children:
+                                                - stLblMTeam:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      Height: =SetFieldLabelH
+                                                      Text: ="Team / organisation"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - stInMTeam:
+                                                    Control: ModernTextInput@1.1.1
+                                                    Properties:
+                                                      Height: =ControlHeight
+                                                      Default: =Waypoint.'Team / organisation'
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      Color: =NeutralFg1
+                                                      BasePaletteColor: =BrandBg
+                                                      AccessibleLabel: ="Team / organisation"
+                                                      Appearance: =Appearance.Outline
+                                                      Fill: =NeutralBg1
+                                          - stFldMPrepared:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: AutoLayout
+                                              Properties:
+                                                LayoutOverflowX: =LayoutOverflow.Hide
+                                                LayoutOverflowY: =LayoutOverflow.Hide
+                                                FillPortions: =1
+                                                LayoutDirection: =LayoutDirection.Vertical
+                                                LayoutAlignItems: =LayoutAlignItems.Stretch
+                                                LayoutGap: =4
+                                              Children:
+                                                - stLblMPrepared:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      Height: =SetFieldLabelH
+                                                      Text: ="Prepared by"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - stInMPrepared:
+                                                    Control: ModernTextInput@1.1.1
+                                                    Properties:
+                                                      Height: =ControlHeight
+                                                      Default: =Waypoint.'Prepared by'
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      Color: =NeutralFg1
+                                                      BasePaletteColor: =BrandBg
+                                                      AccessibleLabel: ="Prepared by"
+                                                      Appearance: =Appearance.Outline
+                                                      Fill: =NeutralBg1
+                                    - stRowM2:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Height: =SetFieldRowH
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutGap: =Gap
+                                        Children:
+                                          - stFldMBaseline:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: AutoLayout
+                                              Properties:
+                                                LayoutOverflowX: =LayoutOverflow.Hide
+                                                LayoutOverflowY: =LayoutOverflow.Hide
+                                                FillPortions: =1
+                                                LayoutDirection: =LayoutDirection.Vertical
+                                                LayoutAlignItems: =LayoutAlignItems.Stretch
+                                                LayoutGap: =4
+                                              Children:
+                                                - stLblMBaseline:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      Height: =SetFieldLabelH
+                                                      Text: ="Estate baseline (GBP in-year)"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - stInMBaseline:
+                                                    Control: ModernTextInput@1.1.1
+                                                    Properties:
+                                                      Height: =ControlHeight
+                                                      Default: =Text(Waypoint.'Baseline value in-year', "[$-en-US]#,##0")
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      Color: =NeutralFg1
+                                                      BasePaletteColor: =BrandBg
+                                                      AccessibleLabel: ="Estate baseline (GBP in-year)"
+                                                      Appearance: =Appearance.Outline
+                                                      Fill: =NeutralBg1
+                                          - stFldMRunning:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: AutoLayout
+                                              Properties:
+                                                LayoutOverflowX: =LayoutOverflow.Hide
+                                                LayoutOverflowY: =LayoutOverflow.Hide
+                                                FillPortions: =1
+                                                LayoutDirection: =LayoutDirection.Vertical
+                                                LayoutAlignItems: =LayoutAlignItems.Stretch
+                                                LayoutGap: =4
+                                              Children:
+                                                - stLblMRunning:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      Height: =SetFieldLabelH
+                                                      Text: ="Running total on Work follows"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - stInMRunning:
+                                                    Control: ModernDropdown@1.0.2
+                                                    Properties:
+                                                      Height: =ControlHeight
+                                                      Items: =SettingsRunningOptions
+                                                      ItemDisplayText: =ThisItem.Value
+                                                      Default: ={Value:Coalesce(Waypoint.'Running total follows', "Latest")}
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      Color: =NeutralFg1
+                                                      BasePaletteColor: =BrandBg
+                                                      AccessibleLabel: ="Running total on Work follows"
+                                                      Appearance: =Appearance.Outline
+                                                      Fill: =NeutralBg1
+                                    - stMoneyNote:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeBodyLine * 2
+                                          Text: |
+                                            ="The figures the financial model and the exported pack are headed with. The grade costs themselves are on the Grades and blends tab."
+                                          Size: =TypeCaption
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                          FontWeight: =FontWeight.Normal
+                                    # What Dataverse answered when it refused the save.
+                                    - stMoneyProblem:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeLabelLine
+                                          Visible: =!IsBlank(varSetProblem)
+                                          Text: =varSetProblem
+                                          Size: =TypeCaption
+                                          Font: =FontUI
+                                          Color: =StatusBad
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - stMoneyFill:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =1
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutGap: =0
+                                    - stMoneyActions:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Height: =ControlHeight
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutJustifyContent: =LayoutJustifyContent.End
+                                          LayoutGap: =Gap
+                                        Children:
+                                          - stMoneySave:
+                                              Control: ModernButton@1.0.0
+                                              Properties:
+                                                Appearance: =ButtonAppearance.Primary
+                                                BasePaletteColor: =BrandBg
+                                                Color: =BrandFg
+                                                Font: =FontUI
+                                                Size: =TypeBodyPx
+                                                RadiusTopLeft: =CtrlR
+                                                RadiusTopRight: =CtrlR
+                                                RadiusBottomLeft: =CtrlR
+                                                RadiusBottomRight: =CtrlR
+                                                Width: =Max(Parent.Width * 0.13, 220)
+                                                Height: =ControlHeight
+                                                Text: ="Save"
+                                                AccessibleLabel: ="Save"
+                                                OnSelect: |
+                                                  =IfError(
+                                                   Patch([@Settings], First([@Settings]),
+                                                         { 'Team / organisation': stInMTeam.Text,
+                                                           'Prepared by': stInMPrepared.Text,
+                                                           'Baseline value in-year': Value(stInMBaseline.Text),
+                                                           'Running total follows': stInMRunning.Selected.Value }),
+                                                   Set(varSetProblem, FirstError.Message),
+                                                   ClearCollect(colSettings, [@Settings]);
+                                                   Set(varSetProblem, "");
+                                                   Notify("The financial settings are saved.",
+                                                          NotificationType.Success))
+
+                              - stOutcomes:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =1
+                                    Visible: =SettingsTab = "Outcomes"
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutGap: =8
+                                  Children:
+                                    - stOutcomesNote:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeBodyLine * 2
+                                          Text: |
+                                            ="The outcomes work is filed under, and the Jira Align key each one carries. Editing an outcome is a later unit."
+                                          Size: =TypeCaption
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                          FontWeight: =FontWeight.Normal
+                                    - stHeadOutcomes:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          Width: =Parent.Width
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Height: =TypeLabelLine + 8
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutGap: =8
+                                        Children:
+                                          - stHdFirstOutcomes:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Parent.Width * 0.6
+                                                Height: =TypeLabelLine
+                                                Text: ="Outcome"
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - stHdOutcomesKey:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Parent.Width * 0.4
+                                                Height: =TypeLabelLine
+                                                Text: ="Jira Align key"
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                    - stOutcomesList:
+                                        Control: Gallery@2.15.0
+                                        Variant: Vertical
+                                        Properties:
+                                          Width: =Parent.Width
+                                          TemplatePadding: =0
+                                          BorderColor: =RGBA(0, 0, 0, 0)
+                                          ShowScrollbar: =true
+                                          FillPortions: =1
+                                          Items: =SettingsOutcomeRows
+                                          TemplateSize: =RowHeight
+                                          AccessibleLabel: |
+                                            ="Outcomes: the benefit each epic is filed under."
+                                        Children:
+                                        - stCellOuName:
+                                            Control: Label@2.5.1
+                                            Properties:
+                                              X: =0
+                                              Width: =Parent.TemplateWidth * 0.6
+                                              Y: =0
+                                              Height: =RowHeight
+                                              Text: =ThisItem.Outcome
+                                              Size: =TypeBody
+                                              FontWeight: =FontWeight.Semibold
+                                              Font: =FontUI
+                                              VerticalAlign: =VerticalAlign.Middle
+                                              Color: =NeutralFg1
+                                              Wrap: =true
+                                              Overflow: =Overflow.Hidden
+                                              PaddingTop: =0
+                                              PaddingBottom: =0
+                                              PaddingLeft: =0
+                                              PaddingRight: =0
+                                              AutoHeight: =true
+                                        - stCellOuKey:
+                                            Control: Label@2.5.1
+                                            Properties:
+                                              X: =0
+                                              Width: =Parent.TemplateWidth * 0.4
+                                              Y: =0
+                                              Height: =RowHeight
+                                              Text: =If(IsBlank(ThisItem.'Jira Align key'), "—", ThisItem.'Jira Align key')
+                                              Size: =TypeCaption
+                                              Font: =FontUI
+                                              VerticalAlign: =VerticalAlign.Middle
+                                              Color: =NeutralFg2
+                                              Wrap: =true
+                                              Overflow: =Overflow.Hidden
+                                              PaddingTop: =0
+                                              PaddingBottom: =0
+                                              PaddingLeft: =0
+                                              PaddingRight: =0
+                                              AutoHeight: =true
+                                    - stOutcomesEmpty:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeBodyLine
+                                          Align: =Align.Left
+                                          Visible: =CountRows(stOutcomesList.AllItems) = 0
+                                          Text: ="No outcomes defined."
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+
+                              - stLinks:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =1
+                                    Visible: =SettingsTab = "Links"
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutGap: =8
+                                  Children:
+                                    - stRowL1:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Height: =SetFieldRowH
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutGap: =Gap
+                                        Children:
+                                          - stFldLAlign:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: AutoLayout
+                                              Properties:
+                                                LayoutOverflowX: =LayoutOverflow.Hide
+                                                LayoutOverflowY: =LayoutOverflow.Hide
+                                                FillPortions: =1
+                                                LayoutDirection: =LayoutDirection.Vertical
+                                                LayoutAlignItems: =LayoutAlignItems.Stretch
+                                                LayoutGap: =4
+                                              Children:
+                                                - stLblLAlign:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      Height: =SetFieldLabelH
+                                                      Text: ="Jira Align base URL"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - stInLAlign:
+                                                    Control: ModernTextInput@1.1.1
+                                                    Properties:
+                                                      Height: =ControlHeight
+                                                      Default: =Waypoint.'Jira Align base URL'
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      Color: =NeutralFg1
+                                                      BasePaletteColor: =BrandBg
+                                                      AccessibleLabel: ="Jira Align base URL"
+                                                      Appearance: =Appearance.Outline
+                                                      Fill: =NeutralBg1
+                                          - stFldLJira:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: AutoLayout
+                                              Properties:
+                                                LayoutOverflowX: =LayoutOverflow.Hide
+                                                LayoutOverflowY: =LayoutOverflow.Hide
+                                                FillPortions: =1
+                                                LayoutDirection: =LayoutDirection.Vertical
+                                                LayoutAlignItems: =LayoutAlignItems.Stretch
+                                                LayoutGap: =4
+                                              Children:
+                                                - stLblLJira:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      Height: =SetFieldLabelH
+                                                      Text: ="Jira base URL"
+                                                      Size: =TypeCaption
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Font: =FontUI
+                                                      Color: =NeutralFg2
+                                                      Wrap: =false
+                                                      Overflow: =Overflow.Hidden
+                                                      PaddingTop: =0
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                - stInLJira:
+                                                    Control: ModernTextInput@1.1.1
+                                                    Properties:
+                                                      Height: =ControlHeight
+                                                      Default: =Waypoint.'Jira base URL'
+                                                      Font: =FontUI
+                                                      Size: =TypeBodyPx
+                                                      Color: =NeutralFg1
+                                                      BasePaletteColor: =BrandBg
+                                                      AccessibleLabel: ="Jira base URL"
+                                                      Appearance: =Appearance.Outline
+                                                      Fill: =NeutralBg1
+                                    - stLinksNote:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeBodyLine * 2
+                                          Text: |
+                                            ="The two bases every link in the app is built on: Jira Align for outcomes and epics, Jira for features."
+                                          Size: =TypeCaption
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                          FontWeight: =FontWeight.Normal
+                                    # What Dataverse answered when it refused the save.
+                                    - stLinksProblem:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeLabelLine
+                                          Visible: =!IsBlank(varSetProblem)
+                                          Text: =varSetProblem
+                                          Size: =TypeCaption
+                                          Font: =FontUI
+                                          Color: =StatusBad
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                    - stLinksFill:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =1
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutGap: =0
+                                    - stLinksActions:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Height: =ControlHeight
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutJustifyContent: =LayoutJustifyContent.End
+                                          LayoutGap: =Gap
+                                        Children:
+                                          - stLinksSave:
+                                              Control: ModernButton@1.0.0
+                                              Properties:
+                                                Appearance: =ButtonAppearance.Primary
+                                                BasePaletteColor: =BrandBg
+                                                Color: =BrandFg
+                                                Font: =FontUI
+                                                Size: =TypeBodyPx
+                                                RadiusTopLeft: =CtrlR
+                                                RadiusTopRight: =CtrlR
+                                                RadiusBottomLeft: =CtrlR
+                                                RadiusBottomRight: =CtrlR
+                                                Width: =Max(Parent.Width * 0.13, 220)
+                                                Height: =ControlHeight
+                                                Text: ="Save"
+                                                AccessibleLabel: ="Save"
+                                                OnSelect: |
+                                                  =IfError(
+                                                   Patch([@Settings], First([@Settings]),
+                                                         { 'Jira Align base URL': stInLAlign.Text,
+                                                           'Jira base URL': stInLJira.Text }),
+                                                   Set(varSetProblem, FirstError.Message),
+                                                   ClearCollect(colSettings, [@Settings]);
+                                                   Set(varSetProblem, "");
+                                                   Notify("The links are saved.", NotificationType.Success))
+
+                              - stData:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =1
+                                    Visible: =SettingsTab = "Data"
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutGap: =8
+                                  Children:
+                                    - stDataNote:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeBodyLine
+                                          Text: |
+                                            ="Import a Workday absence report or a Jira issue export. Reading the file is a flow at work."
+                                          Size: =TypeCaption
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =true
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          AutoHeight: =true
+                                          FontWeight: =FontWeight.Normal
+                                    - stDataActions:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Height: =ControlHeight
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutJustifyContent: =LayoutJustifyContent.Start
+                                          LayoutGap: =Gap
+                                        Children:
+                                          - stDataImport:
+                                              Control: ModernButton@1.0.0
+                                              Properties:
+                                                Appearance: =ButtonAppearance.Outline
+                                                BasePaletteColor: =NeutralBg1
+                                                Color: =NeutralFg1
+                                                Font: =FontUI
+                                                Size: =TypeBodyPx
+                                                RadiusTopLeft: =CtrlR
+                                                RadiusTopRight: =CtrlR
+                                                RadiusBottomLeft: =CtrlR
+                                                RadiusBottomRight: =CtrlR
+                                                Width: =Max(Len("Import data") * 7 + 24, 120)
+                                                Height: =ControlHeight
+                                                Text: ="Import data"
+                                                AccessibleLabel: ="Import data"
+                                                OnSelect: =Navigate(scrImport, ScreenTransition.None)
+
+                              - stActivity:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    LayoutOverflowX: =LayoutOverflow.Hide
+                                    LayoutOverflowY: =LayoutOverflow.Hide
+                                    FillPortions: =1
+                                    Visible: =SettingsTab = "Activity"
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutGap: =8
+                                  Children:
+                                    - stActivitySearchBox:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Height: =ControlHeight + 8
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutGap: =Gap
+                                        Children:
+                                          - stActivitySearch:
+                                              Control: ModernTextInput@1.1.1
+                                              Properties:
+                                                Width: =Max(Parent.Width * 0.25, 240)
+                                                Height: =ControlHeight
+                                                Default: =""
+                                                Placeholder: ="Search the log"
+                                                Font: =FontUI
+                                                Size: =TypeBodyPx
+                                                Color: =NeutralFg1
+                                                BasePaletteColor: =BrandBg
+                                                AccessibleLabel: ="Search the activity log"
+                                                OnChange: =Set(varSetSearch, stActivitySearch.Text)
+                                                Appearance: =Appearance.Outline
+                                                Fill: =NeutralBg1
+                                          - stActivityCount:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Max(Parent.Width * 0.25, 240)
+                                                Height: =ControlHeight
+                                                Text: |
+                                                  =Text(CountRows(SettingsActivityRows), "[$-en-US]#,##0") & " of "
+                                                   & Text(CountRows(colActivity), "[$-en-US]#,##0") & " entries"
+                                                Size: =TypeCaption
+                                                Font: =FontUI
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Color: =NeutralFg2
+                                                Wrap: =true
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                AutoHeight: =true
+                                                FontWeight: =FontWeight.Normal
+                                    - stHeadActivity:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          Width: =Parent.Width
+                                          LayoutOverflowX: =LayoutOverflow.Hide
+                                          LayoutOverflowY: =LayoutOverflow.Hide
+                                          FillPortions: =0
+                                          Height: =TypeLabelLine + 8
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutGap: =8
+                                        Children:
+                                          - stHdFirstActivity:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Parent.Width * 0.4
+                                                Height: =TypeLabelLine
+                                                Text: ="What was done"
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - stHdActivityAction:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Parent.Width * 0.18
+                                                Height: =TypeLabelLine
+                                                Text: ="Action"
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - stHdActivityTable:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Parent.Width * 0.22
+                                                Height: =TypeLabelLine
+                                                Text: ="Table"
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                          - stHdActivityWhen:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Width: =Parent.Width * 0.2
+                                                Height: =TypeLabelLine
+                                                Text: ="When"
+                                                Size: =TypeCaption
+                                                FontWeight: =FontWeight.Semibold
+                                                Font: =FontUI
+                                                Align: =Align.Right
+                                                Color: =NeutralFg2
+                                                Wrap: =false
+                                                Overflow: =Overflow.Hidden
+                                                PaddingTop: =0
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                    - stActivityEmpty:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Height: =TypeBodyLine
+                                          Align: =Align.Left
+                                          Visible: =CountRows(stActivityList.AllItems) = 0
+                                          Text: ="No activity recorded yet."
+                                          Size: =TypeBody
+                                          Font: =FontUI
+                                          Color: =NeutralFg2
+                                          Wrap: =false
+                                          Overflow: =Overflow.Hidden
+                                          PaddingTop: =0
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                    - stActivityList:
+                                        Control: Gallery@2.15.0
+                                        Variant: Vertical
+                                        Properties:
+                                          Width: =Parent.Width
+                                          TemplatePadding: =0
+                                          BorderColor: =RGBA(0, 0, 0, 0)
+                                          ShowScrollbar: =true
+                                          FillPortions: =1
+                                          Items: =SettingsActivityRows
+                                          TemplateSize: =WorkRowH
+                                          AccessibleLabel: |
+                                            ="The activity log: what was done, to what, by whom and when, newest first."
+                                        Children:
+                                        - stCellAcLabel:
+                                            Control: Label@2.5.1
+                                            Properties:
+                                              X: =0
+                                              Width: =Parent.TemplateWidth * 0.4
+                                              Y: =0
+                                              Height: =TypeBodyLine
+                                              Text: =ThisItem.Label
+                                              Size: =TypeBody
+                                              FontWeight: =FontWeight.Semibold
+                                              Font: =FontUI
+                                              VerticalAlign: =VerticalAlign.Middle
+                                              Color: =NeutralFg1
+                                              Wrap: =false
+                                              Overflow: =Overflow.Hidden
+                                              PaddingTop: =0
+                                              PaddingBottom: =0
+                                              PaddingLeft: =0
+                                              PaddingRight: =0
+                                        - stCellAcSummary:
+                                            Control: Label@2.5.1
+                                            Properties:
+                                              X: =0
+                                              Width: =Parent.TemplateWidth * 0.4
+                                              Y: =TypeBodyLine
+                                              Height: =TypeLabelLine
+                                              Text: =If(IsBlank(ThisItem.Summary), ThisItem.'Record name', ThisItem.Summary)
+                                              Size: =TypeCaption
+                                              Font: =FontUI
+                                              VerticalAlign: =VerticalAlign.Middle
+                                              Color: =NeutralFg2
+                                              Wrap: =false
+                                              Overflow: =Overflow.Hidden
+                                              PaddingTop: =0
+                                              PaddingBottom: =0
+                                              PaddingLeft: =0
+                                              PaddingRight: =0
+                                        - stCellAcAction:
+                                            Control: Label@2.5.1
+                                            Properties:
+                                              X: =0
+                                              Width: =Parent.TemplateWidth * 0.18
+                                              Y: =0
+                                              Height: =RowHeight
+                                              Text: =Text(ThisItem.Action)
+                                              Size: =TypeBody
+                                              Font: =FontUI
+                                              VerticalAlign: =VerticalAlign.Middle
+                                              Color: =NeutralFg1
+                                              Wrap: =true
+                                              Overflow: =Overflow.Hidden
+                                              PaddingTop: =0
+                                              PaddingBottom: =0
+                                              PaddingLeft: =0
+                                              PaddingRight: =0
+                                              AutoHeight: =true
+                                        - stCellAcTable:
+                                            Control: Label@2.5.1
+                                            Properties:
+                                              X: =0
+                                              Width: =Parent.TemplateWidth * 0.22
+                                              Y: =0
+                                              Height: =RowHeight
+                                              Text: =If(IsBlank(ThisItem.Table), "—", ThisItem.Table)
+                                              Size: =TypeCaption
+                                              Font: =FontUI
+                                              VerticalAlign: =VerticalAlign.Middle
+                                              Color: =NeutralFg2
+                                              Wrap: =true
+                                              Overflow: =Overflow.Hidden
+                                              PaddingTop: =0
+                                              PaddingBottom: =0
+                                              PaddingLeft: =0
+                                              PaddingRight: =0
+                                              AutoHeight: =true
+                                        - stCellAcWhen:
+                                            Control: Label@2.5.1
+                                            Properties:
+                                              X: =0
+                                              Width: =Parent.TemplateWidth * 0.2
+                                              Y: =0
+                                              Height: =RowHeight
+                                              Text: =Text(ThisItem.At, "[$-en-US]yyyy-mm-dd hh:mm")
+                                              Size: =TypeCaption
+                                              Font: =FontUI
+                                              Align: =Align.Right
+                                              VerticalAlign: =VerticalAlign.Middle
+                                              Color: =NeutralFg2
+                                              Wrap: =true
+                                              Overflow: =Overflow.Hidden
+                                              PaddingTop: =0
+                                              PaddingBottom: =0
+                                              PaddingLeft: =0
+                                              PaddingRight: =0
+                                              AutoHeight: =true

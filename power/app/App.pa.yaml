@@ -1,0 +1,288 @@
+# Waypoint canvas app: the App entity.
+#
+# Valid against pa.schema.yaml (v3.0): the App entity allows a single Properties map, whose values
+# are Power Fx formulas beginning with "=". Named formulas and user-defined functions therefore sit
+# inside the Formulas property as one block, which is how pac canvas unpack writes them.
+#
+# The engine is not here. Every rule from ../../src/engine is written out in `Formulas.pa.yaml`
+# beside this file, in the engine's own order, and that file is the authority: where a rule appears
+# in both, the copy below is dropped when the two are packed into one App entity. The values those
+# formulas have to produce are in `../tests/expected.json`, and `../compatibility.md` says which
+# surface binds to which of them.
+#
+# Colours are the suite tokens from @ccs/ui, resolved to their literal values because Power Fx has no
+# CSS custom properties. Light and dark are one formula each, so no control ever knows which theme it
+# is in. The type roles are the Fluent 2 ramp the mock's power skin maps onto.
+
+App:
+  Properties:
+    StartScreen: =scrCommand
+
+    OnStart: |
+      =// Only the things a named formula cannot do: the collections the screens bind to.
+      // Everything derived stays in Formulas below.
+      //
+      // The table names are the display collection names from ../waypoint.model.yaml, which is what
+      // Studio calls a Dataverse table once it is added with Add data. The settings singleton is
+      // [@Settings], disambiguated from the Power Apps host object of the same name.
+      //
+      // Every read is inside IfError, so a table that is not connected yet leaves its collection
+      // empty and the screens still open.
+      //
+      // The scope the app opens on: blank is every team the signed-in user can see. cmpScope's
+      // dropdown sets it again, and the scoped reads that follow it are flag-gated
+      // (power/app/App.scope.yaml, power/RUNBOOK.md, section 4, "The scope flag").
+      Set(varScopeTeam, "");
+      Concurrent(
+          IfError(ClearCollect(colSettings, [@Settings]), Clear(colSettings)),
+          IfError(ClearCollect(colQuarters, Quarters), Clear(colQuarters)),
+          IfError(ClearCollect(colPeople, People), Clear(colPeople)),
+          IfError(ClearCollect(colSquads, Squads), Clear(colSquads)),
+          IfError(ClearCollect(colWork, 'Work items'), Clear(colWork)),
+          IfError(ClearCollect(colAssignees, Assignees), Clear(colAssignees)),
+          IfError(ClearCollect(colAssignments, Assignments), Clear(colAssignments)),
+          IfError(ClearCollect(colAbsences, Absences), Clear(colAbsences)),
+          IfError(ClearCollect(colReservations, Reservations), Clear(colReservations)),
+          IfError(ClearCollect(colStates, 'Work states'), Clear(colStates)),
+          IfError(ClearCollect(colEpics, Epics), Clear(colEpics)),
+          IfError(ClearCollect(colSizes, 'Size bands'), Clear(colSizes)),
+          IfError(ClearCollect(colListValues, 'List values'), Clear(colListValues)),
+          IfError(ClearCollect(colBankHolidays, 'Bank holidays'), Clear(colBankHolidays)),
+          IfError(ClearCollect(colClaims, 'Benefit claims'), Clear(colClaims)),
+          IfError(ClearCollect(colBlendLines, 'Grade blend lines'), Clear(colBlendLines)),
+          IfError(ClearCollect(colActuals, 'Benefit actuals'), Clear(colActuals)),
+          IfError(ClearCollect(colTeamGradeCosts, 'Team grade costs'), Clear(colTeamGradeCosts)),
+          IfError(ClearCollect(colCostLines, 'Cost lines'), Clear(colCostLines)),
+          IfError(ClearCollect(colSnapshots, 'Quarter snapshots'), Clear(colSnapshots)),
+          IfError(ClearCollect(colArchive, Archive), Clear(colArchive)),
+          IfError(ClearCollect(colGrades, 'Business grades'), Clear(colGrades)),
+          IfError(ClearCollect(colBlends, 'Grade blends'), Clear(colBlends)),
+          IfError(ClearCollect(colOutcomes, Outcomes), Clear(colOutcomes)),
+          IfError(ClearCollect(colActivity, 'Activity log'), Clear(colActivity)),
+          IfError(ClearCollect(colImportRuns, 'Import runs'), Clear(colImportRuns))
+      );
+      // The theme is the user's own preference, saved on this device the last time they set the
+      // toggle in the rail foot. Light until they say otherwise.
+      // colPreferences is shaped before it is loaded: a collection with no Collect behind it has
+      // no columns, so Theme below would be a name nothing defines.
+      // SaveData and LoadData are canvas only, and they do nothing in a browser while the app is
+      // open in Studio: power/reference/INDEX.md, "SaveData, LoadData, and ClearData functions" —
+      // "Canvas: yes · Model-driven: no · Power Pages: no · Desktop flows: no · Copilot Studio: no
+      // · Formula columns: no · Dataverse functions: no · CLI: no". The theme therefore only
+      // survives a session in the player and on mobile; the Studio preview always opens light.
+      ClearCollect(colPreferences, { Theme: "light" });
+      Clear(colPreferences);
+      LoadData(colPreferences, "waypoint-prefs", true);
+      Set(varTheme, If(Lower(Coalesce(First(colPreferences).Theme, "light")) = "dark", "dark", "light"));
+      // The shell's own state: the rail starts open, and the work item screen always has an item.
+      // StartScreen above opens scrCommand. Navigate() is not permitted in OnStart.
+      Set(varNavOpen, true);
+      // cmpRail's own collapse state: the rail opens full width and the foot's chevron flips it.
+      Set(varNavCollapsed, false);
+      // The register opens on every phase: the lifecycle strip's four buttons toggle this, and a
+      // blank means no phase filter at all.
+      Set(varWorkPhase, "");
+      // The Financials pivot opens on the squad table; fnTabs writes this from then on.
+      Set(varFinTab, "Squads");
+      Set(varItem, First(colWork));
+      // The action a decision row on Command handed off to scrWorkItem, consumed by its OnVisible
+      // and cleared there. Blank means "just opened", not "do something".
+      Set(varItemAction, "");
+      // The timeline's own state: the reading, the sprint the grid is on, the squad chip, the free
+      // days Gaps is asked for and the cell the code component last handed back.
+      Set(varTlReading, "Sprint");
+      Set(varTlSprint, Blank());
+      Set(varSnapSquad, "");
+      Set(varTlGapNeed, 3);
+      Set(varAvailSkill, "");
+      Set(varEditCell, "");
+      // The cell peek card on Timeline: closed, on no cell. The record is set here so every
+      // TlPeek* formula has its four columns before a cell is ever picked.
+      Set(varPeekOpen, false);
+      Set(varPeekCell, { Person: "", Date: "", Kind: "", ItemTitle: "" });
+      // The absence panel on Team: closed, with nothing refused. Blank is a new absence, taken
+      // for one or many people at once, rather than a row being edited.
+      Set(varAbsOpen, false);
+      Set(varAbsEdit, Blank());
+      Set(varAbsSaveError, "");
+      // Whether the From week has been picked this time the panel was opened: until it has, the
+      // To week follows the record's own dates rather than the From control.
+      Set(varAbsFromPicked, false);
+      // The week each dropdown is sitting on, read by FormAbsenceFromMonday and
+      // FormAbsenceToMonday: a named formula cannot read a control, so tmAbsFrom.OnChange and
+      // tmAbsTo.OnChange write here instead, and the panel's open OnSelect sets the same starting
+      // value the Default properties use.
+      Set(varAbsFromWeek, "");
+      Set(varAbsToWeek, "");
+      // The person form on Team: closed, on nobody, with nothing refused.
+      Set(varPersonFormOpen, false);
+      Set(varPersonEdit, Blank());
+      Set(varPersonSaveError, "");
+      // The Record actual section on the work item's Value tab: nothing refused yet.
+      Set(varActualMsg, "");
+      // The new work panel on Work: closed, with no kind chosen and nothing refused.
+      Set(varWorkFormOpen, false);
+      Set(varWorkNewKind, "");
+      Set(varWorkSaveError, "");
+      // Whether the sprint grid draws through the code component or the galleries behind it, read
+      // from the wp_UseGridControl environment variable (RUNBOOK section 7): this environment's
+      // own value first, then the definition's default, then false. The value is held as text, so
+      // it is compared as text; the definition's default is the string "false".
+      Set(varUseGridControl,
+          Lower(Coalesce(LookUp('Environment Variable Values',
+                                'Environment Variable Definition'.'Schema Name'
+                                  = "wp_UseGridControl").Value,
+                         LookUp('Environment Variable Definitions',
+                                'Schema Name' = "wp_UseGridControl").'Default Value',
+                         "false")) = "true")
+
+    Formulas: |
+      =
+      // ---------------------------------------------------------------------
+      // Theme. One switch, two palettes, both from @ccs/ui tokens.
+      // ---------------------------------------------------------------------
+      IsDark = varTheme = "dark";
+
+      // Fluent neutral roles, mapped onto the suite's neutrals (src/skins/power.css).
+      NeutralBg1     = If(IsDark, ColorValue("#17201F"), ColorValue("#FFFFFF"));
+      NeutralBg2     = If(IsDark, ColorValue("#1C2522"), ColorValue("#F7F5F0"));
+      NeutralBg3     = If(IsDark, ColorValue("#1F2A27"), ColorValue("#EFECE5"));
+      NeutralBgAlt   = If(IsDark, ColorValue("#243029"), ColorValue("#E8E4DB"));
+      NeutralCanvas  = If(IsDark, ColorValue("#0E1416"), ColorValue("#FAF7F2"));
+      NeutralFg1     = If(IsDark, ColorValue("#EAF1EE"), ColorValue("#0B3239"));
+      // Secondary text in dark mode is --c-muted lifted a quarter of the way to white: the token
+      // itself reads too faint on a tinted row at caption size in the player (21 Sep 2026), and the
+      // dark ramp has no lighter muted to move to, so the step is taken off the token rather than
+      // typed as a hex the suite does not carry.
+      NeutralFg2     = If(IsDark, ColorFade(ColorValue("#A2B4B0"), 0.25), ColorValue("#5B6B6E"));
+      // Light: a quarter of the way to white put tertiary text at 3.29:1 on NeutralBg1, under the
+      // 4.5:1 check 35 holds every text token to, so the step is 0.09 and the ratio 4.58:1.
+      NeutralFg3     = ColorFade(NeutralFg2, If(IsDark, -0.25, 0.09));
+      NeutralStroke1 = If(IsDark, ColorValue("#2C3835"), ColorValue("#D9D4CC"));
+
+      // Text on a modern input. A modern input takes no theme: its colours are properties, and
+      // BasePaletteColor is the one the control derives its own foreground from, so a base of
+      // NeutralBg1 (white in light) gives a near-white value on a near-white fill. Bound as
+      // Appearance: =Appearance.Outline, BasePaletteColor: =BrandBg, Fill: =NeutralBg1 and
+      // Color: =NeutralFg1, the light ratios are 13.73:1 for the value and 5.57:1 for a
+      // placeholder or hint over NeutralBg1, both over 4.5:1. The names above are already the
+      // tokens, so no alias is added. power/canvas/CONTROLS.md, "ModernTextInput@1.1.1".
+
+      // Brand and status. A modern control takes one colour, BasePaletteColor, and works its own
+      // hover, pressed and disabled states out of it: BrandBg on a primary button, the surface the
+      // control sits on for a flat one. Surfaces and text are still Fill and Color. Every name here
+      // switches on IsDark, so light and dark bind through the same property.
+      BrandBg      = If(IsDark, ColorValue("#1E5F6B"), ColorValue("#0B3239"));
+      BrandBgHover = If(IsDark, ColorValue("#2A6E7A"), ColorValue("#1C4A52"));
+      BrandFg      = ColorValue("#FFFFFF");
+      // Brand as text, not as a surface: in dark the brand teal reads 2.30:1 on NeutralBg1, so the
+      // text name lifts to a lighter teal of the same hue, 6.04:1 on NeutralBg1 and 5.37:1 on
+      // NeutralBg3. In light the brand ink is already 13.73:1, so it is BrandBg itself.
+      BrandText    = If(IsDark, ColorValue("#4FA8B8"), BrandBg);
+      StatusGood   = If(IsDark, ColorValue("#5FBE89"), ColorValue("#2E7D5B"));
+      // Light warn and bad are the text colours, so they carry the amber-brown and the deep red
+      // that clear 4.5:1 on NeutralBg1, NeutralBg2 and NeutralBg3: 5.90:1, 5.42:1 and 5.01:1 for
+      // the amber, 6.54:1, 6.00:1 and 5.54:1 for the red.
+      StatusWarn   = If(IsDark, ColorValue("#D6A23D"), ColorValue("#8A5A18"));
+      StatusBad    = If(IsDark, ColorValue("#FF6052"), ColorValue("#B3261E"));
+      // A fill is never a text colour. The tints stay the ones the screens were drawn against, so
+      // in light they fade from the original warn and bad hues rather than from the text tokens
+      // above; the good tint fades a little further, to take NeutralFg2 over 4.5:1 on it.
+      StatusGoodFill = ColorFade(StatusGood, If(IsDark, -0.8, 0.86));
+      StatusWarnFill = ColorFade(If(IsDark, StatusWarn, ColorValue("#B5762B")), If(IsDark, -0.8, 0.82));
+      StatusBadFill  = ColorFade(If(IsDark, StatusBad,  ColorValue("#E0432E")), If(IsDark, -0.8, 0.82));
+      AccentFg     = StatusBad;
+      FocusStroke  = If(IsDark, ColorValue("#EAF1EE"), ColorValue("#0B3239"));
+
+      // ---------------------------------------------------------------------
+      // Layout. The eight-point scale src/skins/power.css is built on, as the numbers every
+      // screen sizes from. Nothing here is a screen size: the app fills the window, so the
+      // screens are auto-layout containers off Parent.Width and Parent.Height and these are
+      // only the fixed bands, gutters and radii inside them.
+      // ---------------------------------------------------------------------
+      // The bands that hold text are derived from the line heights below, never typed as a literal:
+      // a band shorter than its own text shows scroll arrows on every control in it.
+      AppHeaderH = TypeHeadingLine + 16;
+      PageHeadH  = TypeKickerLine + TypeDisplayLine + 8;
+      BandH      = TypeLabelLine + TypeNumberLine + TypeLabelLine + 20;
+      GroupHeadH = TypeBodyLine + 4;
+      // Responsive breakpoints: App.Width against named thresholds, the documented mechanism
+      // (canvas-apps-07, "Screen sizes and breakpoints"). Scale to fit is off, so App.Width is the
+      // window's own width and these three names are the only sizes a screen switches on.
+      IsNarrow   = App.Width < 1280;
+      IsStacked  = App.Width < 1100;
+      IsCompact  = App.Width < 900;
+      // Compact halves the gutter and the gap; every other band is derived, not typed.
+      Gap        = If(IsCompact, 8, 16);
+      Pad        = If(IsCompact, 8, 16);
+      CardR      = 8;
+      CtrlR      = 4;
+      RailW      = 320;
+      // The band's kicker cell: a named width, so the stats beside it can take the rest.
+      BandKickerW = 150;
+
+      // Metrics.
+      RadiusControl = CtrlR;
+      // Held at 30 (the old TypeBodyLine 26 + 4) so the control doesn't shrink now TypeBodyLine is 24.
+      ControlHeight = 30;
+      RowHeight     = 36;
+      RailWidth     = 220;
+      RailWidthTight = 56;
+      // The one width the shell is built from: the rail's own Width and its LayoutMinWidth.
+      // Nothing in a screen reads the two widths above directly.
+      NavW          = RailWidth;
+      // The rail collapses itself once the window is narrow, and stays wherever the user last put
+      // it after that: varNavUserChoice is blank until the collapse button is pressed for the
+      // first time, and varNavCollapsed is the user's own choice from then on.
+      RailCollapsed = If(IsBlank(varNavUserChoice), IsNarrow, varNavCollapsed);
+      AppHeaderHeight = AppHeaderH;
+      CanvasWidth   = 1600;
+      CanvasHeight  = 900;
+
+      // ---------------------------------------------------------------------
+      // The six type roles, from the mock's type scale remapped onto Fluent 2.
+      // FontName: Segoe UI is the Fluent face. Power Fx has no line-height property,
+      // so the paired line heights are applied as the Height of a single-line Text.
+      // ---------------------------------------------------------------------
+      // The ramp is the prototype's own: title 20 semibold, subtitle 16 semibold, body 14,
+      // caption 12. Size is in points, not pixels (canvas-apps-04): 1pt = 4/3 px, so a Size 14
+      // body line draws at about 18.7px and needs far more height than 14.
+      FontUI          = Font.'Segoe UI';
+      TypeTitle       = 18;
+      TypeSubtitle    = 14;
+      TypeBody        = 10;
+      TypeCaption     = 10;
+
+      TypeFace        = FontUI;
+      // A line height is the height one line of that Size draws in, in pixels: the Size converted
+      // to pixels, times the Fluent line height of 1.4, plus 4px for the modern Text's own
+      // padding. Size 12 is 26px a line, 14 is 30, 16 is 34, 20 is 42, 28 is 56. A ModernText
+      // shorter than its own content shows scroll arrows, so every Text's Height is lines x the
+      // line height for its Size, and these are the only numbers that go in one.
+      TypeDisplaySize = TypeTitle;    TypeDisplayLine = 38;   TypeDisplayWeight = FontWeight.Semibold;
+      TypeNumberSize  = 24;           TypeNumberLine  = 50;   TypeNumberWeight  = FontWeight.Semibold;
+      TypeHeadingSize = TypeSubtitle; TypeHeadingLine = 30;   TypeHeadingWeight = FontWeight.Semibold;
+      TypeBodySize    = TypeBody;     TypeBodyLine    = 24;
+      TypeLabelSize   = TypeCaption;  TypeLabelLine   = 24;   TypeLabelWeight   = FontWeight.Normal;
+      TypeKickerSize  = TypeCaption;  TypeKickerLine  = 24;   TypeKickerWeight  = FontWeight.Semibold;
+      // TypeNav is the rail's own role: cmpRail's item labels, its theme toggle and its brand name,
+      // never a screen. 12 is one point above the ramp's TypeBody/TypeCaption (both 10).
+      TypeNav         = 12;           TypeNavLine     = 26;
+
+      // Size is in points on Label@2.5.1 and in pixels on every modern control (ModernButton,
+      // ModernTextInput, ModernDropdown, ModernCombobox, ModernTabList, ModernToggle and the
+      // rest): canvas-apps-04, "Font size changes from points to pixels". 1pt = 4/3 px, so a
+      // modern control at Size 10 draws smaller than a Label at Size 10. These are the ramp above
+      // as Round(pt * 4/3), and they belong on a modern control only, never on a Label.
+      TypeBodyPx      = 13;
+      TypeCaptionPx   = 13;
+      TypeNavPx       = 14;
+      TypeSubtitlePx  = 19;
+      TypeTitlePx     = 24;
+
+      // ---------------------------------------------------------------------
+      // The engine is not here. Every rule, and every one of the collections and thresholds the
+      // screens read, is in Formulas.pa.yaml beside this file, written as named formulas with no
+      // user-defined function among them. This block is the theme and the metrics only, so the two
+      // halves of the App entity cannot define the same name twice.
+      // ---------------------------------------------------------------------

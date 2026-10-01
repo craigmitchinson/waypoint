@@ -1,0 +1,259 @@
+/* Benefits only: the roll-up's three levels, told apart by weight and indent. Tokens only. */
+.wp-benefits-rollup tfoot th,
+.wp-benefits-rollup tfoot td {
+  border-top: 1px solid var(--c-line);
+  font-weight: 600;
+}
+
+.wp-benefits-row--outcome > th {
+  font-weight: 600;
+}
+
+.wp-benefits-row--epic > th {
+  padding-left: 26px;
+  font-weight: 500;
+}
+
+.wp-benefits-row--item > th {
+  padding-left: 46px;
+  font-weight: 400;
+  color: var(--c-muted);
+}
+
+/* Power Apps preview: a Fluent pivot in place of the button row. */
+html[data-mode="power"] .wp-tabs.wp-benefits-tabs {
+  gap: 0;
+  border-bottom: 1px solid var(--pa-neutral-stroke-2);
+}
+
+html[data-mode="power"] .wp-tabs.wp-benefits-tabs button {
+  height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: var(--pa-neutral-fg-2);
+  font-size: var(--pa-fs-body);
+  font-weight: 400;
+}
+
+html[data-mode="power"] .wp-tabs.wp-benefits-tabs button:hover {
+  background: var(--pa-neutral-bg-3);
+  color: var(--pa-neutral-fg-1);
+}
+
+html[data-mode="power"] .wp-tabs.wp-benefits-tabs button[aria-pressed="true"] {
+  background: none;
+  border-bottom-color: var(--pa-brand-bg);
+  color: var(--pa-neutral-fg-1);
+  font-weight: 600;
+}
+
+html[data-mode="power"] .wp-benefits-rollup td,
+html[data-mode="power"] .wp-benefits-rollup th {
+  white-space: nowrap;
+}
+
+.wp-cal-measure {
+  margin-bottom: 0;
+}
+
+.wp-cal-wrap {
+  overflow: auto;
+  max-height: calc(100vh - 340px);
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+}
+
+.wp-cal-table {
+  table-layout: fixed;
+  width: 100%;
+  font-size: var(--wp-fs-body);
+  white-space: nowrap;
+}
+
+/* The item column is fixed, the three closing columns are fixed, and the twelve months share
+   whatever is left, so a year always fits the width. */
+.wp-cal-col--item {
+  width: 320px;
+}
+
+.wp-cal-col--fte {
+  width: 80px;
+}
+
+.wp-cal-col--total {
+  width: 90px;
+}
+
+.wp-cal-col--state {
+  width: 110px;
+}
+
+.wp-cal-table th,
+.wp-cal-table td {
+  height: 36px;
+  padding: 0 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.wp-cal-table th[scope="row"] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.wp-cal-row__meta {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--c-muted);
+}
+
+.wp-cal-row--undated th[scope="row"] a {
+  color: var(--c-muted);
+}
+
+.wp-cal-group th {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--c-muted);
+  text-align: left;
+  border-top: 1px solid var(--c-line);
+}
+
+.wp-cal-cell--month {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Odd months carry a faint tint so the columns read as bands, in header and cells alike. */
+.wp-cal-cell--band {
+  background-color: var(--c-cream);
+}
+
+.wp-cal-table thead th.wp-cal-cell--band {
+  background-color: var(--c-cream);
+}
+
+.wp-cal-table tfoot td.wp-cal-cell--band {
+  background-color: var(--c-cream);
+}
+
+/* The months a claim is live in read as one run across the row, with the landing month edged.
+   A brand tint at low alpha, layered as an image over the band's colour so both stay visible. */
+.wp-cal-cell--live {
+  background-image: linear-gradient(
+    color-mix(in srgb, var(--c-brand) 8%, transparent),
+    color-mix(in srgb, var(--c-brand) 8%, transparent)
+  );
+}
+
+.wp-cal-cell--lands {
+  border-left: 2px solid var(--c-brand);
+}
+
+.wp-cal-cell--now {
+  text-decoration: underline;
+  font-weight: 700;
+}
+
+.wp-cal-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--c-panel);
+}
+
+.wp-cal-table tbody th[scope="row"] {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--c-surface);
+  text-align: left;
+  font-weight: 400;
+}
+
+.wp-cal-table thead th:first-child {
+  left: 0;
+  z-index: 3;
+}
+
+/* The totals are the block the rows end at, scrolled to rather than pinned over them. */
+.wp-cal-table tfoot th,
+.wp-cal-table tfoot td {
+  background: var(--c-panel);
+  font-weight: 600;
+}
+
+.wp-cal-table tfoot th {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  text-align: left;
+}
+
+.wp-cal-table tfoot tr:first-child th,
+.wp-cal-table tfoot tr:first-child td {
+  border-top: 1px solid var(--c-line);
+}
+
+/* The filter row is one 40px line: each label sits beside its control, and the measure toggle
+   closes the row rather than stacking under it. */
+html[data-mode="power"] .wp-toolbar:has(.wp-cal-measure) {
+  min-height: 40px;
+  padding: 0;
+}
+
+html[data-mode="power"] .wp-toolbar:has(.wp-cal-measure) .wp-toolbar__filters {
+  align-items: center;
+  min-height: 40px;
+}
+
+html[data-mode="power"] .wp-toolbar:has(.wp-cal-measure) .wp-field {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
+html[data-mode="power"] .wp-cal-measure {
+  align-self: center;
+  border-bottom: 0;
+}
+
+html[data-mode="power"] .wp-cal-table {
+  font-size: var(--pa-fs-caption);
+}
+
+html[data-mode="power"] .wp-cal-table thead th,
+html[data-mode="power"] .wp-cal-table tfoot th,
+html[data-mode="power"] .wp-cal-table tfoot td {
+  background: var(--pa-neutral-bg-3);
+}
+
+html[data-mode="power"] .wp-cal-table tbody th[scope="row"] {
+  background: var(--pa-neutral-bg-1);
+}
+
+html[data-mode="power"] .wp-cal-cell--band {
+  background-color: var(--pa-neutral-bg-2);
+}
+
+html[data-mode="power"] .wp-cal-table thead th.wp-cal-cell--band {
+  background-color: var(--pa-neutral-bg-2);
+}
+
+html[data-mode="power"] .wp-cal-table tfoot td.wp-cal-cell--band {
+  background-color: var(--pa-neutral-bg-2);
+}
+
+html[data-mode="power"] .wp-cal-wrap {
+  border-color: var(--pa-neutral-stroke-2);
+  max-height: none;
+}

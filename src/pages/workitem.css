@@ -1,0 +1,397 @@
+/* The work item page: header, stage strip, the two columns and the right rail. Tokens only. */
+.wp-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wp-crumb {
+  margin: 0;
+  font-size: var(--wp-fs-label);
+  line-height: 16px;
+  color: var(--c-muted);
+}
+
+/* The identity row: kind, title, state, squad and owner read as one line. */
+.wp-item__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 44px;
+  height: 44px;
+  min-width: 0;
+}
+
+.wp-item__head h1 {
+  margin: 0;
+  font-size: var(--wp-fs-display);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wp-item__head .wp-muted {
+  white-space: nowrap;
+}
+
+.wp-item__stage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex: 0 0 40px;
+  height: 40px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+  background: var(--c-surface);
+  padding: 0 10px;
+}
+
+.wp-stepper {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--wp-fs-body);
+}
+
+.wp-stepper__step {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--c-muted);
+  white-space: nowrap;
+}
+
+.wp-stepper__step.is-done {
+  color: var(--c-ink);
+}
+
+.wp-stepper__step.is-current {
+  color: var(--c-brand);
+  font-weight: 600;
+}
+
+.wp-stage__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wp-stage__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: var(--wp-fs-body);
+  padding: 5px 10px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+  background: var(--c-surface);
+  color: inherit;
+  cursor: pointer;
+}
+
+.wp-stage__btn--quiet {
+  border-color: transparent;
+  background: none;
+  color: var(--c-muted);
+}
+
+.wp-overflow {
+  position: relative;
+}
+
+.wp-item__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 24px;
+  align-items: stretch;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.wp-item__main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.wp-item__panel {
+  overflow-y: auto;
+  max-height: calc(100vh - 340px);
+  padding: 12px 4px 0 0;
+}
+
+/* Each tab's form: two columns, with the long fields taking the pair. */
+.wp-item__form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 24px;
+  align-items: start;
+}
+
+.wp-item__form .wp-field {
+  margin-bottom: 0;
+  min-width: 0;
+}
+
+.wp-item__form .wp-field input,
+.wp-item__form .wp-field select,
+.wp-item__form .wp-field textarea {
+  width: 100%;
+  min-width: 0;
+}
+
+.wp-item__form > .wp-item__wide,
+.wp-item__form > .wp-card,
+.wp-item__form > .wp-btn-primary {
+  grid-column: 1 / -1;
+}
+
+.wp-item__form > .wp-btn-primary {
+  justify-self: start;
+}
+
+/* Save and Discard stay in sight whatever the form's scroll position. */
+.wp-item__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex: 0 0 40px;
+  height: 40px;
+  border-top: 1px solid var(--c-line);
+  background: var(--c-surface);
+}
+
+/* The assignees: chips for who is on it, a select to add the next one. */
+.wp-assignees__label {
+  display: block;
+  margin-bottom: 4px;
+  font-family: var(--font-body);
+  font-size: var(--wp-fs-label);
+  font-weight: 500;
+  color: var(--c-muted);
+}
+
+.wp-assignees__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
+  font-size: var(--wp-fs-label);
+}
+
+.wp-assignees__drop {
+  font: inherit;
+  line-height: 1;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--c-muted);
+  cursor: pointer;
+}
+
+.wp-item__panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.wp-item__panel-head .wp-h2 {
+  margin: 0;
+}
+
+.wp-item__rail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.wp-item__card {
+  padding: 10px 12px;
+}
+
+.wp-item__rail .wp-item__card {
+  padding: 16px;
+}
+
+.wp-item__card .wp-card-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.wp-item__card p {
+  margin: 0 0 6px;
+  font-size: var(--wp-fs-body);
+}
+
+.wp-item__note {
+  margin: 6px 0 0;
+  font-size: var(--wp-fs-label);
+  color: var(--c-muted);
+}
+
+.wp-item__claims {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+}
+
+.wp-item__claims div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: var(--wp-fs-label);
+}
+
+/* At a glance: one reading per 28px row. */
+.wp-item__rail .wp-item__claims {
+  gap: 0;
+}
+
+.wp-item__rail .wp-item__claims div {
+  min-height: 28px;
+}
+
+.wp-item__claims dt {
+  color: var(--c-muted);
+}
+
+.wp-item__claims dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.wp-item__people {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--wp-fs-label);
+}
+
+.wp-item__people li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.wp-item__activity {
+  margin: 0;
+  padding-left: 18px;
+  font-size: var(--wp-fs-body);
+}
+
+.wp-item__activity li {
+  margin-bottom: 4px;
+}
+
+.wp-item__breakdown-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.wp-proposal {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.wp-proposal .wp-field {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.wp-form-dialog__body {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* Power Apps preview: the page sits inside the canvas, so the tab panel takes the scroll and the
+   page itself never moves. */
+html[data-mode="power"] .wp-item__panel {
+  max-height: none;
+}
+
+html[data-mode="power"] .wp-item__form .wp-field__hint,
+html[data-mode="power"] .wp-item__form .wp-field__error {
+  font-size: var(--pa-fs-caption);
+  line-height: var(--pa-lh-caption);
+}
+
+html[data-mode="power"] .wp-item__form .wp-field__hint {
+  color: var(--pa-neutral-fg-3);
+}
+
+html[data-mode="power"] .wp-stage__btn {
+  height: var(--pa-control-height);
+  border-color: var(--pa-neutral-stroke-1);
+  background: var(--pa-neutral-bg-1);
+  border-radius: var(--pa-radius);
+}
+
+html[data-mode="power"] .wp-stage__btn--quiet {
+  border-color: transparent;
+  background: none;
+}
+
+html[data-mode="power"] .wp-item__stage {
+  background: var(--pa-neutral-bg-1);
+  border-color: var(--pa-neutral-stroke-2);
+}
+
+html[data-mode="power"] .wp-crumb,
+html[data-mode="power"] .wp-item__note {
+  font-size: var(--pa-fs-caption);
+  color: var(--pa-neutral-fg-3);
+}
+
+/* The header overflow's menu: the same popup the split button uses, on its own page. */
+.wp-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  padding: 4px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+}
+
+.wp-menu button {
+  font: inherit;
+  font-size: var(--wp-fs-body);
+  text-align: left;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.wp-menu button:hover {
+  background: var(--c-panel);
+}

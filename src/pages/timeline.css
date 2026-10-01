@@ -1,0 +1,813 @@
+/* Timeline only: the reading pivot, the squad snap row, the sprint grid, the week grid and the gaps
+   panels. Tokens only, and every scrolling region is handed its height by .wp-page. */
+
+/* The grid regions read at caption size and never below it: the scale is remapped here so the page
+   itself never writes a size. */
+.wp-sp-cmd,
+.wp-tl-snap,
+.wp-sp-wrap,
+.wp-spp-wrap,
+.wp-gap-panels {
+  --wp-fs-label: 12px;
+  --wp-fs-kicker: 12px;
+}
+
+/* ---- the reading pivot ---- */
+.wp-tl-readings {
+  margin: 0;
+}
+
+/* ---- the squad snap row, shared by Sprint and Quarter: one segmented control, split evenly ---- */
+.wp-tl-snap {
+  flex: 0 0 32px;
+  display: grid;
+  grid-template-columns: repeat(var(--wp-tl-snap-cells), minmax(0, 1fr));
+  height: 32px;
+  border-bottom: 1px solid var(--c-line);
+}
+
+.wp-tl-snap__cell {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  height: 32px;
+  padding: 0 10px;
+  font: inherit;
+  font-size: var(--wp-fs-label);
+  line-height: 32px;
+  border: 0;
+  border-right: 1px solid var(--c-gridline);
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.wp-tl-snap__cell:last-child {
+  border-right: 0;
+}
+
+.wp-tl-snap__name {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wp-tl-snap__pct {
+  flex: none;
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.wp-tl-snap__cell[aria-pressed="true"] {
+  color: var(--c-brand);
+  font-weight: 600;
+  border-bottom-color: var(--c-brand);
+}
+
+html[data-mode="power"] .wp-tl-snap {
+  border-bottom-color: var(--pa-neutral-stroke-1);
+}
+
+html[data-mode="power"] .wp-tl-snap__cell {
+  border-right-color: var(--pa-neutral-stroke-2);
+}
+
+html[data-mode="power"] .wp-tl-snap__cell[aria-pressed="true"] {
+  color: var(--pa-brand-bg);
+  border-bottom-color: var(--pa-brand-bg);
+}
+
+/* ---- the sprint command row ---- */
+.wp-sp-cmd {
+  flex: 0 0 44px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 44px;
+}
+
+.wp-sp-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wp-sp-step button[disabled] {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.wp-sp-figs {
+  margin: 0;
+  font-size: var(--wp-fs-label);
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.wp-sp-cmd .wp-legend {
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  overflow: hidden;
+}
+
+/* Work is surface on surface, so its swatch is read by its outline alone. */
+.wp-sp-cmd .wp-legend__swatch.wp-cell-work {
+  border: 1px solid var(--pa-neutral-stroke-1);
+}
+
+/* The legend is the quietest line on the row: the grid says it, the legend only names it. */
+.wp-sp-cmd .wp-legend__label {
+  color: var(--pa-neutral-fg-3, var(--c-muted));
+}
+
+/* At risk and Late are a border on the cell, so the legend shows that border, not a block. */
+.wp-sp-edge {
+  border: 1px solid var(--c-gridline);
+  background: var(--c-surface);
+}
+
+.wp-sp-edge--atrisk {
+  border-left: 6px solid var(--c-warn);
+}
+
+.wp-sp-edge--late {
+  border-left: 6px solid var(--c-bad);
+}
+
+/* ---- the sprint grid: the one scrolling region on the page ---- */
+.wp-sp-wrap {
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+  background: var(--c-surface);
+  margin: 8px 0 0;
+}
+
+/* Studio has no fixed canvas to fill, so the grids take a share of the viewport instead. */
+html:not([data-mode="power"]) .wp-sp-wrap,
+html:not([data-mode="power"]) .wp-spp-wrap {
+  max-height: 70vh;
+}
+
+.wp-sp-grid {
+  font-size: var(--wp-fs-label);
+}
+
+.wp-sp-row {
+  display: grid;
+  grid-template-columns: 200px repeat(var(--wp-sp-days), minmax(0, 1fr));
+  height: 32px;
+  border-bottom: 1px solid var(--c-gridline);
+}
+
+.wp-sp-row--head {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  height: 32px;
+  background: var(--c-panel);
+}
+
+/* The squad's name stays under the day header while its own people scroll past. */
+.wp-sp-row--group {
+  position: sticky;
+  top: 32px;
+  z-index: 3;
+  height: 28px;
+  background: var(--c-panel-alt);
+}
+
+.wp-sp-name {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px;
+  background: var(--c-surface);
+  border-right: 1px solid var(--c-line);
+  overflow: hidden;
+}
+
+.wp-sp-name .wp-avatar {
+  flex: none;
+}
+
+.wp-sp-name--head,
+.wp-sp-row--head .wp-sp-name {
+  background: var(--c-panel);
+  font-family: var(--font-body);
+  font-size: var(--wp-fs-label);
+  font-weight: 500;
+  color: var(--c-muted);
+}
+
+.wp-sp-row--group .wp-sp-name {
+  background: var(--c-panel-alt);
+}
+
+.wp-sp-day {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 8px;
+  line-height: 1.3;
+  border-right: 1px solid var(--c-gridline);
+  overflow: hidden;
+}
+
+.wp-sp-day__name {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--wp-track);
+  color: var(--c-muted);
+}
+
+.wp-sp-day__date {
+  min-width: 0;
+  font-size: var(--wp-fs-label);
+  font-weight: 500;
+  color: var(--c-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* A day outside the quarter carries a dot; the header's title says so in words. */
+.wp-sp-day__dot {
+  flex: none;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--c-muted);
+}
+
+.wp-sp-group__name {
+  font-family: var(--font-body);
+  font-size: var(--wp-fs-label);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wp-sp-group__meta {
+  grid-column: 2 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 10px;
+  font-size: var(--wp-fs-label);
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+}
+
+.wp-sp-group__figs {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wp-sp-person {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.wp-sp-person__name {
+  font-size: var(--wp-fs-label);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wp-sp-person__line {
+  display: flex;
+  align-items: baseline;
+  min-width: 0;
+  font-size: var(--wp-fs-label);
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.wp-sp-person__role {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wp-sp-person__figs {
+  flex: none;
+}
+
+/* One line of text per cell; the status is a border down its left edge and a word in the text. */
+.wp-sp-cell {
+  font: inherit;
+  font-size: var(--wp-fs-label);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  padding: 0 6px;
+  border: 0;
+  border-left: 6px solid transparent;
+  border-right: 1px solid var(--c-gridline);
+  cursor: pointer;
+  overflow: hidden;
+  text-align: left;
+}
+
+.wp-sp-cell__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wp-sp-cell.wp-cell-open {
+  border-left-color: var(--c-red);
+}
+
+.wp-sp-cell.wp-cell-leave {
+  border-left-color: var(--c-purple-dk);
+}
+
+.wp-sp-cell.wp-cell-training {
+  border-left-color: var(--c-pink-mid);
+}
+
+.wp-sp-cell.wp-cell-bankhol {
+  border-left-color: var(--c-brand-mid);
+}
+
+.wp-sp-cell.wp-cell-work {
+  border-left-color: var(--c-brand-soft);
+}
+
+.wp-sp-cell.wp-cell-atrisk {
+  border: 0;
+  border-left: 6px solid var(--c-warn);
+  border-right: 1px solid var(--c-gridline);
+}
+
+.wp-sp-cell.wp-cell-blocked {
+  border-left-color: var(--c-bad);
+}
+
+/* ---- the quarter reading: the same grid, a column per week of the quarter ---- */
+.wp-sp-day--week {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: center;
+  column-gap: 6px;
+}
+
+.wp-sp-day--week .wp-sp-day__name {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.wp-sp-day--week .wp-sp-day__date {
+  grid-column: 1 / -1;
+}
+
+/* The week today falls in; the sr-only table names it in words. */
+.wp-sp-day--now {
+  background: var(--c-panel-alt);
+  outline: 2px solid var(--c-brand);
+  outline-offset: -2px;
+}
+
+.wp-sp-day__now {
+  grid-column: 2;
+  grid-row: 1;
+  font-family: var(--font-mono);
+  font-size: var(--wp-fs-kicker);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--wp-track);
+  color: var(--c-brand);
+}
+
+/* A week cell: the work, the days it books, and a bar of booked days against free ones. */
+.wp-sp-cell--week {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: center;
+  column-gap: 6px;
+  row-gap: 3px;
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+
+.wp-sp-cell__days {
+  grid-column: 2;
+  grid-row: 1;
+  white-space: nowrap;
+}
+
+.wp-sp-cell__bar {
+  grid-column: 1 / -1;
+  display: block;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--c-pink);
+  overflow: hidden;
+}
+
+.wp-sp-cell__fill {
+  display: block;
+  height: 3px;
+  background: var(--c-ink);
+}
+
+html[data-mode="power"] .wp-sp-cell__bar {
+  background: var(--pa-neutral-bg-3);
+}
+
+html[data-mode="power"] .wp-sp-cell__fill {
+  background: var(--pa-brand-bg);
+}
+
+/* ---- Sprints: the sprint plan matrix, a squad per row and a sprint per column ---- */
+.wp-sp-cmd .wp-spp-unit {
+  margin-left: auto;
+}
+
+.wp-spp-wrap {
+  overflow: auto;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+  background: var(--c-surface);
+  margin: 8px 0 0;
+}
+
+.wp-spp-grid {
+  font-size: var(--wp-fs-label);
+}
+
+.wp-spp-row {
+  display: grid;
+  grid-template-columns: 200px repeat(var(--wp-spp-cols), minmax(0, 1fr)) 132px;
+  height: 36px;
+  border-bottom: 1px solid var(--c-gridline);
+}
+
+.wp-spp-row--head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--c-panel);
+}
+
+.wp-spp-row--total {
+  border-bottom: 0;
+  background: var(--c-panel-alt);
+  font-weight: 600;
+}
+
+.wp-spp-name {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-right: 1px solid var(--c-line);
+}
+
+.wp-spp-name--head {
+  font-family: var(--font-body);
+  font-weight: 500;
+  color: var(--c-muted);
+}
+
+.wp-spp-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: center;
+  column-gap: 6px;
+  padding: 0 8px;
+  line-height: 1.25;
+  border-right: 1px solid var(--c-gridline);
+  overflow: hidden;
+}
+
+.wp-spp-head__date {
+  grid-column: 1 / -1;
+}
+
+.wp-spp-head__label {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.wp-spp-head__date {
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.wp-spp-head__now {
+  grid-column: 2;
+  grid-row: 1;
+  font-family: var(--font-mono);
+  font-size: var(--wp-fs-kicker);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--wp-track);
+  color: var(--c-brand);
+}
+
+.wp-spp-head--now,
+.wp-spp-cell--now {
+  background: var(--c-panel-alt);
+}
+
+.wp-spp-head--now {
+  outline: 2px solid var(--c-brand);
+  outline-offset: -2px;
+}
+
+/* One cell: what is committed against what is there, the bar, and the utilisation in words. */
+.wp-spp-cell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: center;
+  column-gap: 6px;
+  row-gap: 3px;
+  width: 100%;
+  height: 100%;
+  padding: 0 8px;
+  font: inherit;
+  font-size: var(--wp-fs-label);
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  border: 0;
+  border-right: 1px solid var(--c-gridline);
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.wp-spp-cell--total {
+  cursor: default;
+  background: var(--c-panel-alt);
+}
+
+.wp-spp-cell__lead {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.wp-spp-cell__bar {
+  grid-column: 1 / -1;
+  display: block;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--c-panel-alt);
+  overflow: hidden;
+}
+
+.wp-spp-cell--now .wp-spp-cell__bar,
+.wp-spp-cell--total .wp-spp-cell__bar,
+.wp-spp-row--total .wp-spp-cell__bar {
+  background: var(--c-panel);
+}
+
+.wp-spp-cell__fill {
+  display: block;
+  height: 4px;
+  background: var(--c-brand-soft);
+}
+
+.wp-spp-cell__fill--hot {
+  background: var(--c-warn);
+}
+
+.wp-spp-cell__fill--over {
+  background: var(--c-bad);
+}
+
+.wp-spp-cell__trail {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  color: var(--c-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+html[data-mode="power"] .wp-spp-wrap {
+  border-color: var(--pa-neutral-stroke-1);
+}
+
+html[data-mode="power"] .wp-spp-cell,
+html[data-mode="power"] .wp-spp-head {
+  border-right-color: var(--pa-neutral-stroke-2);
+}
+
+/* ---- Gaps: two panels, each scrolling on its own ---- */
+.wp-gap-panels {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: 12px;
+  margin: 8px 0 0;
+  overflow: hidden;
+}
+
+/* The panels row fills the page; each panel hands its own table the remaining height. */
+html[data-mode="power"] .wp-gap-panels.wp-fill {
+  overflow: hidden;
+}
+
+html:not([data-mode="power"]) .wp-gap-panels {
+  max-height: 70vh;
+}
+
+.wp-gap-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0 12px 12px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+  background: var(--c-surface);
+}
+
+.wp-gap-panel__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.wp-gap-panel__head .wp-h2 {
+  margin: 12px 0 8px;
+}
+
+.wp-gap-panel__head .wp-field {
+  margin-bottom: 8px;
+}
+
+.wp-gap-panel__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wp-gap-scroll {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.wp-gap-matrix th,
+.wp-gap-matrix td,
+.wp-gap-windows th,
+.wp-gap-windows td {
+  white-space: nowrap;
+}
+
+/* Every week of the quarter sits in the card: the matrix is fixed, so the thirteen columns
+   share whatever is left beside the skill name. */
+.wp-gap-matrix {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.wp-gap-matrix th:first-child {
+  width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wp-gap-matrix thead th + th {
+  padding: 6px 2px;
+  text-align: center;
+}
+
+.wp-gap-windows th,
+.wp-gap-windows td {
+  height: 32px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.wp-gap-matrix thead th,
+.wp-gap-windows thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--c-panel);
+}
+
+.wp-gap-matrix .wp-gap-cell {
+  padding: 2px;
+}
+
+.wp-gap-cell__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 28px;
+  font: inherit;
+  font-size: var(--wp-fs-label);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  padding: 0 4px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
+  color: var(--c-ink);
+  cursor: pointer;
+}
+
+.wp-gap-cell__btn--0 {
+  background: var(--c-panel);
+  color: var(--c-muted);
+}
+
+.wp-gap-cell__btn--1 {
+  background: var(--c-panel-alt);
+}
+
+.wp-gap-cell__btn--2 {
+  background: var(--c-brand-soft);
+  color: var(--c-surface);
+}
+
+.wp-gap-cell__btn--3 {
+  background: var(--c-brand);
+  color: var(--c-surface);
+}
+
+.wp-gap-cell__btn[aria-pressed="true"] {
+  outline: 2px solid var(--c-accent);
+  outline-offset: -2px;
+}
+
+/* Who is free: a disclosure under the matrix, open only once a cell is. */
+.wp-gap-who {
+  flex: 0 0 auto;
+  max-height: 30%;
+  overflow: auto;
+  border-top: 1px solid var(--c-line);
+  padding-top: 8px;
+}
+
+.wp-gap-who__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.wp-gap-who__title {
+  margin: 0 0 6px;
+  font-size: var(--wp-fs-label);
+  font-weight: 600;
+}
+
+.wp-gap-who__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  font-size: var(--wp-fs-label);
+}
+
+.wp-gap-who__list li {
+  padding: 2px 8px;
+  border: 1px solid var(--c-line);
+  border-radius: 999px;
+  background: var(--c-panel);
+  white-space: nowrap;
+}

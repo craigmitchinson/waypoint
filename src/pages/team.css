@@ -1,0 +1,28 @@
+/* Team only: the tab row and the one-line person cell. Tokens only. */
+.wp-team-tabs button {
+  height: 28px;
+  padding: 0 10px;
+  font-size: var(--wp-fs-label);
+  font-weight: 500;
+}
+
+.wp-team-person {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wp-team-person__name {
+  font-weight: 500;
+}
+
+.wp-team-person__role {
+  font-size: var(--wp-fs-label);
+  color: var(--c-muted);
+}
+
+/* Power Apps preview: the person cell on one line. */
+html[data-mode="power"] .wp-team-person__role {
+  font-size: var(--pa-fs-caption);
+  white-space: nowrap;
+}

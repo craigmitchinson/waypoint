@@ -1,0 +1,23 @@
+# Waypoint canvas app: the named formulas no surface in this slice reads.
+#
+# They are correct, they are checked against power/canvas/columns.json like the rest
+# (node scripts/check-formulas.mjs), and they come back into Formulas.pa.yaml with the screen that
+# needs them. Nothing packs this file: scripts/assemble-canvas.mjs reads Formulas.pa.yaml alone, so
+# every name here is out of the app and out of Studio's error list until it is moved back.
+#
+# Why they are parked. Studio validates the whole App entity at once and one broken named formula
+# takes every formula that reads it with it, so the shorter the block, the readable the errors.
+# Fewer formulas, fewer errors.
+
+App:
+  Properties:
+    Formulas: |
+      =
+      // ---------------------------------------------------------------------
+      // Theme names from App.pa.yaml that no surface reads. They cost nothing to compute and
+      // everything to leave in Studio's error list, so they wait here with the rest.
+      // ---------------------------------------------------------------------
+      BrandBgSoft    = If(IsDark, ColorValue("#357E8A"), ColorValue("#3E6B72"));
+      NeutralStroke2 = If(IsDark, ColorValue("#283431"), ColorValue("#E4DFD6"));
+      HeaderHeight     = 40;
+      TypeBodyWeight   = FontWeight.Normal;
